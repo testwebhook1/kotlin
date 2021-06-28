@@ -530,6 +530,7 @@ public class FunctionCodegen {
             }
 
             ParameterDescriptor annotated =
+                    // TODO: Generate annotations for context receivers
                     kind == JvmMethodParameterKind.VALUE
                     ? iterator.next()
                     : kind == JvmMethodParameterKind.RECEIVER
@@ -807,6 +808,7 @@ public class FunctionCodegen {
                             : nameForDestructuredParameter;
                     break;
                 case RECEIVER:
+                case CONTEXT_RECEIVER:
                     parameterName = DescriptorAsmUtil.getNameForReceiverParameter(
                             functionDescriptor, typeMapper.getBindingContext(), state.getLanguageVersionSettings());
                     break;
@@ -1331,7 +1333,7 @@ public class FunctionCodegen {
         }
 
         for (JvmMethodParameterSignature parameter : signature.getValueParameters()) {
-            if (parameter.getKind() == JvmMethodParameterKind.RECEIVER) {
+            if (parameter.getKind() == JvmMethodParameterKind.RECEIVER || parameter.getKind() == JvmMethodParameterKind.CONTEXT_RECEIVER) {
                 if (extensionReceiverParameter != null) {
                     frameMap.enter(extensionReceiverParameter, state.getTypeMapper().mapType(extensionReceiverParameter));
                 }
