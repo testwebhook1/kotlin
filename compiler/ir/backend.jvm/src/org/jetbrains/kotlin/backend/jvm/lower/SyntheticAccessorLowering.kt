@@ -13,7 +13,7 @@ import org.jetbrains.kotlin.backend.jvm.JvmBackendContext
 import org.jetbrains.kotlin.backend.jvm.JvmLoweredDeclarationOrigin
 import org.jetbrains.kotlin.backend.jvm.codegen.isJvmInterface
 import org.jetbrains.kotlin.backend.jvm.intrinsics.receiverAndArgs
-import org.jetbrains.kotlin.backend.jvm.ir.IrInlineReferenceLocator
+import org.jetbrains.kotlin.backend.jvm.ir.findInlineLambdas
 import org.jetbrains.kotlin.backend.jvm.lower.inlineclasses.hasMangledParameters
 import org.jetbrains.kotlin.codegen.AsmUtil
 import org.jetbrains.kotlin.descriptors.DescriptorVisibilities
@@ -44,21 +44,13 @@ internal class SyntheticAccessorLowering(val context: JvmBackendContext) : IrEle
     private val inlineLambdaToCallSite = mutableMapOf<IrFunction, LambdaCallSite>()
 
     override fun lower(irFile: IrFile) {
-        irFile.accept(object : IrInlineReferenceLocator(context) {
-            override fun visitInlineLambda(
-                argument: IrFunctionReference,
-                callee: IrFunction,
-                parameter: IrValueParameter,
-                scope: IrDeclaration
-            ) {
-                // suspendCoroutine and suspendCoroutineUninterceptedOrReturn accept crossinline lambdas to disallow non-local returns,
-                // but these lambdas are effectively inline
-                inlineLambdaToCallSite[argument.symbol.owner] =
-                    LambdaCallSite(scope, parameter.isCrossinline && !callee.isCoroutineIntrinsic())
-            }
-        }, null)
-
+        irFile.findInlineLambdas(context) { argument, callee, parameter, scope ->
+            // suspendCoroutine and suspendCoroutineUninterceptedOrReturn take crossinline lambdas to disallow non-local returns,
+            // but we can assume these lambdas are inlined at root level, not into an object.
+            inlineLambdaToCallSite[argument.symbol.owner] = LambdaCallSite(scope, parameter.isCrossinline && !callee.isCoroutineIntrinsic())
+        }
         irFile.transformChildrenVoid(this)
+        inlineLambdaToCallSite.clear()
 
         for (accessor in pendingAccessorsToAdd) {
             assert(accessor.fileOrNull == irFile) {
@@ -68,6 +60,7 @@ internal class SyntheticAccessorLowering(val context: JvmBackendContext) : IrEle
             }
             (accessor.parent as IrDeclarationContainer).declarations.add(accessor)
         }
+        pendingAccessorsToAdd.clear()
     }
 
     private data class FieldKey(val fieldSymbol: IrFieldSymbol, val parent: IrDeclarationParent, val superQualifierSymbol: IrClassSymbol?)
