@@ -60,6 +60,8 @@ internal class SyntheticAccessorLowering(val context: JvmBackendContext) : IrEle
         }, null)
 
         irFile.transformChildrenVoid(this)
+        inlineLambdaToCallSite.clear()
+        inlineFunctionToCallSites.clear()
 
         for (accessor in pendingAccessorsToAdd) {
             assert(accessor.fileOrNull == irFile) {
@@ -69,6 +71,7 @@ internal class SyntheticAccessorLowering(val context: JvmBackendContext) : IrEle
             }
             (accessor.parent as IrDeclarationContainer).declarations.add(accessor)
         }
+        pendingAccessorsToAdd.clear()
     }
 
     private data class FieldKey(val fieldSymbol: IrFieldSymbol, val parent: IrDeclarationParent, val superQualifierSymbol: IrClassSymbol?)
