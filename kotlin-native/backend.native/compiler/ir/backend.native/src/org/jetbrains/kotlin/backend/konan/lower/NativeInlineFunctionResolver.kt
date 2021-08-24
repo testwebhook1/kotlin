@@ -12,25 +12,36 @@ import org.jetbrains.kotlin.backend.common.lower.inline.LocalClassesExtractionFr
 import org.jetbrains.kotlin.backend.common.lower.inline.LocalClassesInInlineFunctionsLowering
 import org.jetbrains.kotlin.backend.common.lower.inline.LocalClassesInInlineLambdasLowering
 import org.jetbrains.kotlin.backend.konan.Context
+import org.jetbrains.kotlin.backend.konan.InlineFunctionInfo
+import org.jetbrains.kotlin.backend.konan.descriptors.findPackage
 import org.jetbrains.kotlin.ir.declarations.IrFunction
 import org.jetbrains.kotlin.ir.symbols.IrFunctionSymbol
 import org.jetbrains.kotlin.ir.util.dump
-import org.jetbrains.kotlin.ir.util.file
 import org.jetbrains.kotlin.ir.util.fileOrNull
-import org.jetbrains.kotlin.ir.util.getPackageFragment
+import org.jetbrains.kotlin.ir.util.render
 
 // TODO: This is a bit hacky. Think about adopting persistent IR ideas.
 internal class NativeInlineFunctionResolver(override val context: Context) : DefaultInlineFunctionResolver(context) {
     override fun getFunctionDeclaration(symbol: IrFunctionSymbol): IrFunction {
         val function = super.getFunctionDeclaration(symbol)
-        val body = function.body ?: return function
 
         if (function in context.specialDeclarationsFactory.loweredInlineFunctions)
             return function
 
-        context.specialDeclarationsFactory.loweredInlineFunctions.add(function)
+        if (context.llvmModuleSpecification.containsDeclaration(function)) {
+            context.specialDeclarationsFactory.loweredInlineFunctions[function] =
+                    InlineFunctionInfo(function.fileOrNull, function.startOffset, function.endOffset)
+        } else {
+            val packageFragment = function.findPackage()
+            val moduleDescriptor = packageFragment.packageFragmentDescriptor.containingDeclaration
+            val moduleDeserializer = context.irLinker!!.cachedLibraryModuleDeserializers[moduleDescriptor]
+                    ?: error("No module deserializer for ${function.render()}")
+            context.specialDeclarationsFactory.loweredInlineFunctions[function] = moduleDeserializer.deserializeInlineFunction(function)
+        }
 
-        PreInlineLowering(context).lower(body, function)
+        val body = function.body ?: return function
+
+        PreInlineLowering(context).lower(body, function, context.specialDeclarationsFactory.loweredInlineFunctions[function]!!.irFile!!)
 
         ArrayConstructorLowering(context).lower(body, function)
 
@@ -42,7 +53,7 @@ internal class NativeInlineFunctionResolver(override val context: Context) : Def
 
         LocalClassesInInlineLambdasLowering(context).lower(body, function)
 
-        if (context.llvmModuleSpecification.containsPackageFragment(function.getPackageFragment()!!)) {
+        if (context.llvmModuleSpecification.containsDeclaration(function)) {
             // Do not extract local classes off of inline functions from cached libraries.
             LocalClassesInInlineFunctionsLowering(context).lower(body, function)
             LocalClassesExtractionFromInlineFunctionsLowering(context).lower(body, function)

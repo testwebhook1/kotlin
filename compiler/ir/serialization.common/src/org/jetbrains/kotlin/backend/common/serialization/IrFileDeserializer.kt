@@ -57,8 +57,9 @@ class IrFileDeserializer(
 
 class FileDeserializationState(
     val linker: KotlinIrLinker,
+    val fileIndex: Int,
     file: IrFile,
-    fileReader: IrLibraryFile,
+    val fileReader: IrLibraryFile,
     fileProto: ProtoFile,
     deserializeBodies: Boolean,
     allowErrorNodes: Boolean,
@@ -156,7 +157,7 @@ class IrLibraryFileFromKlib(private val klib: IrLibrary, private val fileIndex: 
     override fun debugInfo(index: Int): ByteArray? = klib.debugInfo(index, fileIndex)
 }
 
-internal fun IrLibraryFile.deserializeString(index: Int): String = WobblyTF8.decode(string(index))
+fun IrLibraryFile.deserializeString(index: Int): String = WobblyTF8.decode(string(index))
 internal fun IrLibraryFile.deserializeDebugInfo(index: Int): String? = debugInfo(index)?.let { WobblyTF8.decode(it) }
 
 internal fun IrLibraryFile.deserializeFqName(fqn: List<Int>): String =
