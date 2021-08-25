@@ -187,8 +187,8 @@ class Case() {
         run {
             /*operator*/ fun E.plusAssign(value: Int) {}
 
-            <!DEBUG_INFO_CALL("fqName: libPackage.plusAssign; typeCall: operator extension function")!>e += 1<!>
+            <!DEBUG_INFO_CALL("fqName: testPackCase4.plusAssign; typeCall: operator extension function")!>e += 1<!>
         }
-        <!DEBUG_INFO_CALL("fqName: libPackage.plusAssign; typeCall: operator extension function")!>e += 1<!>
+        <!DEBUG_INFO_CALL("fqName: testPackCase4.plusAssign; typeCall: operator extension function")!>e += 1<!>
     }
 }

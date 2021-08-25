@@ -37,11 +37,11 @@ public fun String?.funWithTrailingLambda( x : Any? = null, body : ()-> String = 
 
 // TESTCASE NUMBER: 1
 fun case1(s: String?) {
-    s.<!DEBUG_INFO_CALL("fqName: libPackage.orEmpty; typeCall: extension function")!>orEmpty()<!>
+    s.<!DEBUG_INFO_CALL("fqName: sentence3.orEmpty; typeCall: extension function")!>orEmpty()<!>
 
-    s.<!DEBUG_INFO_CALL("fqName: libPackage.funWithTrailingLambda; typeCall: extension function")!>funWithTrailingLambda { "ss" }<!>
-    s.<!DEBUG_INFO_CALL("fqName: libPackage.funWithTrailingLambda; typeCall: extension function")!>funWithTrailingLambda (x= 1) { "ss" }<!>
-    s.<!DEBUG_INFO_CALL("fqName: libPackage.funWithTrailingLambda; typeCall: extension function")!>funWithTrailingLambda (body = { "ss" })<!>
-    s.<!DEBUG_INFO_CALL("fqName: libPackage.funWithTrailingLambda; typeCall: extension function")!>funWithTrailingLambda (body = { "ss" }, x = '1')<!>
+    s.<!DEBUG_INFO_CALL("fqName: sentence3.funWithTrailingLambda; typeCall: extension function")!>funWithTrailingLambda { "ss" }<!>
+    s.<!DEBUG_INFO_CALL("fqName: sentence3.funWithTrailingLambda; typeCall: extension function")!>funWithTrailingLambda (x= 1) { "ss" }<!>
+    s.<!DEBUG_INFO_CALL("fqName: sentence3.funWithTrailingLambda; typeCall: extension function")!>funWithTrailingLambda (body = { "ss" })<!>
+    s.<!DEBUG_INFO_CALL("fqName: sentence3.funWithTrailingLambda; typeCall: extension function")!>funWithTrailingLambda (body = { "ss" }, x = '1')<!>
 }
 

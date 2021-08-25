@@ -27,7 +27,7 @@ import libPackageCase1Explicit.emptyArray
 class Case1(){
 
     fun case1() {
-        <!DEBUG_INFO_CALL("fqName: libPackageCase1Explicit.emptyArray; typeCall: extension function")!>emptyArray<Int>()<!>
+        <!DEBUG_INFO_CALL("fqName: testsCase1.emptyArray; typeCall: extension function")!>emptyArray<Int>()<!>
     }
 }
 
@@ -63,7 +63,7 @@ import libPackageCase2Explicit.emptyArray
 class Case2(){
 
     fun case1() {
-        <!DEBUG_INFO_CALL("fqName: libPackageCase2Explicit.emptyArray; typeCall: extension function")!>emptyArray<Int>()<!>
+        <!DEBUG_INFO_CALL("fqName: testsCase2.emptyArray; typeCall: extension function")!>emptyArray<Int>()<!>
     }
 }
 
@@ -107,7 +107,7 @@ import libPackageCase3Explicit.emptyArray
 class Case3(){
 
     fun case1() {
-        <!DEBUG_INFO_CALL("fqName: testsCase3.A.invoke; typeCall: variable&invoke")!>emptyArray<Int>()<!>
+        <!DEBUG_INFO_CALL("fqName: testsCase3.emptyArray; typeCall: extension function")!>emptyArray<Int>()<!>
     }
 }
 

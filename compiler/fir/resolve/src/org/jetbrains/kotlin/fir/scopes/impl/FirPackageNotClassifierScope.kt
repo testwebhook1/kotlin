@@ -13,7 +13,8 @@ import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.Name
 
 class FirPackageNotClassifierScope(
-    val packageMemberScope: FirPackageMemberScope
+    val packageMemberScope: FirPackageMemberScope,
+    val explicitSimpleImportingScope: FirExplicitSimpleImportingScope
 ) : FirScope() {
     override fun processPropertiesByName(name: Name, processor: (FirVariableSymbol<*>) -> Unit) {
         packageMemberScope.processPropertiesByName(name, processor)
@@ -28,6 +29,11 @@ class FirPackageNotClassifierScope(
                 return
             }
         } else {
+            return
+        }
+
+        if ((explicitSimpleImportingScope.simpleImports[name]?.size ?: 0) > 0) {
+            explicitSimpleImportingScope.processFunctionsByName(name, processor)
             return
         }
 

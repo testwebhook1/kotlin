@@ -23,7 +23,7 @@ import libPackageCase1.*
 import libPackageCase1Explicit.emptyArray
 
 fun case1() {
-    <!DEBUG_INFO_CALL("fqName: libPackageCase1Explicit.emptyArray; typeCall: function")!>emptyArray<Int>()<!>
+    <!DEBUG_INFO_CALL("fqName: testsCase1.emptyArray; typeCall: function")!>emptyArray<Int>()<!>
 }
 
 // FILE: Lib1.kt
@@ -49,7 +49,7 @@ import libPackageCase2.*
 import libPackageCase2Explicit.emptyArray
 
 fun case2() {
-    <!DEBUG_INFO_CALL("fqName: libPackageCase2Explicit.emptyArray; typeCall: function")!>emptyArray<Int>()<!>
+    <!DEBUG_INFO_CALL("fqName: testsCase2.emptyArray; typeCall: function")!>emptyArray<Int>()<!>
 }
 class A {
     operator fun <T>invoke(): T = TODO()
@@ -82,7 +82,7 @@ import libPackageCase3.*
 import libPackageCase3Explicit.emptyArray
 
 fun case3() {
-    <!DEBUG_INFO_CALL("fqName: testsCase3.A.invoke; typeCall: variable&invoke")!>emptyArray<Int>()<!>
+    <!DEBUG_INFO_CALL("fqName: testsCase3.emptyArray; typeCall: function")!>emptyArray<Int>()<!>
 }
 class A {
     operator fun <T>invoke(): T = TODO()

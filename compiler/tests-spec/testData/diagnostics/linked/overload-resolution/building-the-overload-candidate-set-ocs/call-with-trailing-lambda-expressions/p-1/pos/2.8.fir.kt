@@ -11,7 +11,7 @@ import libPackageCase1.*
 import libPackageCase1Explicit.listOf
 
 fun case1() {
-    <!DEBUG_INFO_CALL("fqName: libPackageCase1Explicit.listOf; typeCall: function")!>listOf(elements1 = arrayOf(1), body = { "" })<!>
+    <!DEBUG_INFO_CALL("fqName: testsCase1.listOf; typeCall: function")!>listOf(elements1 = arrayOf(1), body = { "" })<!>
 }
 
 // FILE: Lib1.kt
@@ -37,7 +37,7 @@ import libPackageCase2.*
 import libPackageCase2Explicit.listOf
 
 fun case2() {
-    <!DEBUG_INFO_CALL("fqName: libPackageCase2Explicit.listOf; typeCall: function")!>listOf(elements1 = arrayOf(1), body = { "" })<!>
+    <!DEBUG_INFO_CALL("fqName: testsCase2.listOf; typeCall: function")!>listOf(elements1 = arrayOf(1), body = { "" })<!>
 }
 
 class A {
@@ -70,7 +70,7 @@ import libPackageCase3.*
 import libPackageCase3Explicit.listOf
 
 fun case3() {
-    <!DEBUG_INFO_CALL("fqName: testsCase3.A.invoke; typeCall: variable&invoke")!>listOf(elements1 = arrayOf(1), body = { "" })<!>
+    <!DEBUG_INFO_CALL("fqName: testsCase3.listOf; typeCall: function")!>listOf(elements1 = arrayOf(1), body = { "" })<!>
 }
 
 class A {

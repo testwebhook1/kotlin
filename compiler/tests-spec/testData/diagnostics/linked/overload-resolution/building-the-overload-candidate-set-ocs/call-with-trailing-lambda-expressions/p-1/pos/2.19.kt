@@ -36,7 +36,7 @@ import libPackage.trim
 
 
 fun case1() {
-    <!DEBUG_INFO_CALL("fqName: libPackage.trim; typeCall: infix extension function")!>"" trim {true}<!>
+    <!DEBUG_INFO_CALL("fqName: sentence3.trim; typeCall: infix extension function")!>"" trim {true}<!>
 }
 
 // FILE: TestCase2.kt

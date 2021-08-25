@@ -42,6 +42,7 @@ private fun doCreateImportingScopes(
     scopeSession: ScopeSession
 ): List<FirScope> {
     val packageMemberScope = FirPackageMemberScope(file.packageFqName, session)
+    val explicitSimpleImportingScope = FirExplicitSimpleImportingScope(file.imports, session, scopeSession)
     return listOf(
         // from low priority to high priority
         scopeSession.getOrBuild(DefaultImportPriority.LOW, INVISIBLE_DEFAULT_STAR_IMPORT) {
@@ -69,9 +70,9 @@ private fun doCreateImportingScopes(
         scopeSession.getOrBuild(file.packageFqName, PACKAGE_MEMBER) {
             packageMemberScope
         },
-        FirExplicitSimpleImportingScope(file.imports, session, scopeSession),
+        explicitSimpleImportingScope,
         scopeSession.getOrBuild(file.packageFqName, PACKAGE_MEMBER_WITHOUT_CLASSIFIER) {
-            FirPackageNotClassifierScope(packageMemberScope)
+            FirPackageNotClassifierScope(packageMemberScope, explicitSimpleImportingScope)
         },
     )
 }
