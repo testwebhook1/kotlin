@@ -18,6 +18,7 @@ private val INVISIBLE_DEFAULT_STAR_IMPORT = scopeSessionKey<DefaultImportPriorit
 private val VISIBLE_DEFAULT_STAR_IMPORT = scopeSessionKey<DefaultImportPriority, FirDefaultStarImportingScope>()
 private val DEFAULT_SIMPLE_IMPORT = scopeSessionKey<DefaultImportPriority, FirDefaultSimpleImportingScope>()
 val PACKAGE_MEMBER = scopeSessionKey<FqName, FirPackageMemberScope>()
+val PACKAGE_MEMBER_WITHOUT_CLASSIFIER = scopeSessionKey<FqName, FirPackageNotClassifierScope>()
 private val ALL_IMPORTS = scopeSessionKey<FirFile, ListStorageFirScope>()
 
 private class ListStorageFirScope(val result: List<FirScope>) : FirScope()
@@ -40,6 +41,7 @@ private fun doCreateImportingScopes(
     session: FirSession,
     scopeSession: ScopeSession
 ): List<FirScope> {
+    val packageMemberScope = FirPackageMemberScope(file.packageFqName, session)
     return listOf(
         // from low priority to high priority
         scopeSession.getOrBuild(DefaultImportPriority.LOW, INVISIBLE_DEFAULT_STAR_IMPORT) {
@@ -65,10 +67,12 @@ private fun doCreateImportingScopes(
             FirDefaultSimpleImportingScope(session, scopeSession, priority = DefaultImportPriority.HIGH)
         },
         scopeSession.getOrBuild(file.packageFqName, PACKAGE_MEMBER) {
-            FirPackageMemberScope(file.packageFqName, session)
+            packageMemberScope
         },
-        // TODO: explicit simple importing scope should have highest priority (higher than inner scopes added in process)
-        FirExplicitSimpleImportingScope(file.imports, session, scopeSession)
+        FirExplicitSimpleImportingScope(file.imports, session, scopeSession),
+        scopeSession.getOrBuild(file.packageFqName, PACKAGE_MEMBER_WITHOUT_CLASSIFIER) {
+            FirPackageNotClassifierScope(packageMemberScope)
+        },
     )
 }
 

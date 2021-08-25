@@ -23,9 +23,9 @@ import org.jetbrains.kotlin.utils.SmartList
 class FirPackageMemberScope(
     val fqName: FqName,
     val session: FirSession,
-    private val symbolProvider: FirSymbolProvider = session.symbolProvider
+    internal val symbolProvider: FirSymbolProvider = session.symbolProvider
 ) : FirScope() {
-    private val classifierCache: MutableMap<Name, FirClassifierSymbol<*>?> = mutableMapOf()
+    internal val classifierCache: MutableMap<Name, FirClassifierSymbol<*>?> = mutableMapOf()
     private val functionCache: MutableMap<Name, List<FirNamedFunctionSymbol>> = mutableMapOf()
     private val propertyCache: MutableMap<Name, List<FirPropertySymbol>> = mutableMapOf()
 

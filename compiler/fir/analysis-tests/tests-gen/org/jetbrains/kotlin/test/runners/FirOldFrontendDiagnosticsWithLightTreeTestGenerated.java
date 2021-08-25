@@ -24887,6 +24887,12 @@ public class FirOldFrontendDiagnosticsWithLightTreeTestGenerated extends Abstrac
                 public void testSyntheticPropertiesVsMembers() throws Exception {
                     runTest("compiler/testData/diagnostics/tests/resolve/priority/syntheticPropertiesVsMembers.kt");
                 }
+
+                @Test
+                @TestMetadata("topLevelPropertyVsClassifier.kt")
+                public void testTopLevelPropertyVsClassifier() throws Exception {
+                    runTest("compiler/testData/diagnostics/tests/resolve/priority/topLevelPropertyVsClassifier.kt");
+                }
             }
 
             @Nested
