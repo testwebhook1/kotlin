@@ -3,7 +3,7 @@
  * Use of this source code is governed by the Apache 2.0 license that can be found in the license/LICENSE.txt file.
  */
 
-package org.jetbrains.kotlin.gradle.targets.native.tasks
+package org.jetbrains.kotlin.gradle.targets.native.tasks.artifact
 
 import groovy.lang.Closure
 import org.gradle.api.DefaultTask
@@ -12,13 +12,14 @@ import org.gradle.api.tasks.*
 import org.jetbrains.kotlin.compilerRunner.KotlinNativeCompilerRunner
 import org.jetbrains.kotlin.gradle.dsl.KotlinCommonToolOptions
 import org.jetbrains.kotlin.gradle.internal.ensureParentDirsCreated
+import org.jetbrains.kotlin.gradle.plugin.LanguageSettingsBuilder
 import org.jetbrains.kotlin.gradle.plugin.mpp.BitcodeEmbeddingMode
 import org.jetbrains.kotlin.gradle.plugin.sources.DefaultLanguageSettingsBuilder
+import org.jetbrains.kotlin.gradle.targets.native.tasks.buildKotlinNativeBinaryLinkerArgs
 import org.jetbrains.kotlin.gradle.utils.getValue
 import org.jetbrains.kotlin.konan.target.CompilerOutputKind
 import org.jetbrains.kotlin.konan.target.KonanTarget
 import org.jetbrains.kotlin.konan.util.visibleName
-import org.jetbrains.kotlin.project.model.LanguageSettings
 import java.io.File
 import javax.inject.Inject
 
@@ -70,9 +71,9 @@ open class KotlinNativeLinkArtifactTask @Inject constructor(
     var embedBitcode: BitcodeEmbeddingMode = BitcodeEmbeddingMode.DISABLE
 
     @get:Internal
-    val languageSettings: LanguageSettings = DefaultLanguageSettingsBuilder(project)
+    val languageSettings: LanguageSettingsBuilder = DefaultLanguageSettingsBuilder(project)
 
-    fun languageSettings(fn: LanguageSettings.() -> Unit) {
+    fun languageSettings(fn: LanguageSettingsBuilder.() -> Unit) {
         languageSettings.fn()
     }
 
