@@ -21,6 +21,7 @@ import org.jetbrains.kotlin.platform.js.JsPlatforms
 import org.jetbrains.kotlin.serialization.js.ModuleKind
 import org.jetbrains.kotlin.test.Constructor
 import org.jetbrains.kotlin.test.TargetBackend
+import org.jetbrains.kotlin.test.backend.BlackBoxCodegenSuppressor
 import org.jetbrains.kotlin.test.backend.classic.ClassicBackendFacade
 import org.jetbrains.kotlin.test.backend.classic.ClassicBackendInput
 import org.jetbrains.kotlin.test.backend.handlers.JsBinaryArtifactHandler
@@ -32,13 +33,10 @@ import org.jetbrains.kotlin.test.frontend.classic.ClassicFrontendFacade
 import org.jetbrains.kotlin.test.frontend.classic.ClassicFrontendOutputArtifact
 import org.jetbrains.kotlin.test.model.*
 import org.jetbrains.kotlin.test.runners.AbstractKotlinCompilerWithTargetBackendTest
-import org.jetbrains.kotlin.test.services.AdditionalSourceProvider
-import org.jetbrains.kotlin.test.services.TestServices
-import org.jetbrains.kotlin.test.services.compilerConfigurationProvider
+import org.jetbrains.kotlin.test.services.*
 import org.jetbrains.kotlin.test.services.configuration.CommonEnvironmentConfigurator
 import org.jetbrains.kotlin.test.services.configuration.JsEnvironmentConfigurator
 import org.jetbrains.kotlin.test.services.configuration.JsEnvironmentConfigurator.Companion.outputFilePath
-import org.jetbrains.kotlin.test.services.moduleStructure
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileFilter
@@ -49,6 +47,11 @@ abstract class AbstractJsBlackBoxCodegenTestBase<R : ResultingArtifact.FrontendO
     val targetFrontend: FrontendKind<R>,
     targetBackend: TargetBackend
 ) : AbstractKotlinCompilerWithTargetBackendTest(targetBackend) {
+    companion object {
+        const val TEST_DATA_DIR_PATH = "js/js.translator/testData/"
+        const val DIST_DIR_JS_PATH = "dist/js/"
+    }
+
     abstract val frontendFacade: Constructor<FrontendFacade<R>>
     abstract val frontendToBackendConverter: Constructor<Frontend2BackendConverter<R, I>>
     abstract val backendFacade: Constructor<BackendFacade<I, BinaryArtifacts.Js>>
@@ -60,28 +63,29 @@ abstract class AbstractJsBlackBoxCodegenTestBase<R : ResultingArtifact.FrontendO
             dependencyKind = DependencyKind.Binary
         }
 
+        val pathToRootOutputDir = System.getProperty("kotlin.js.test.root.out.dir") ?: error("'kotlin.js.test.root.out.dir' is not set")
+        defaultDirectives {
+            JsEnvironmentConfigurationDirectives.PATH_TO_ROOT_OUTPUT_DIR with pathToRootOutputDir
+        }
+
+        facadeStep(frontendFacade)
+        facadeStep(frontendToBackendConverter)
+        facadeStep(backendFacade)
+
         useConfigurators(
             ::CommonEnvironmentConfigurator,
             ::JsEnvironmentConfigurator,
         )
 
-//        useAdditionalSourceProviders(
-//            org.jetbrains.kotlin.test.services.sourceProviders::AdditionalDiagnosticsSourceFilesProvider,
-//            org.jetbrains.kotlin.test.services.sourceProviders::CoroutineHelpersSourceFilesProvider,
-//            org.jetbrains.kotlin.test.services.sourceProviders::CodegenHelpersSourceFilesProvider,
-//            org.jetbrains.kotlin.test.services.sourceProviders::MainFunctionForBlackBoxTestsSourceProvider,
-//        )
+        useAdditionalSourceProviders(
+            ::JsAdditionalSourceProvider
+        )
 
-        facadeStep(frontendFacade)
-//        classicFrontendHandlersStep()
-//        firHandlersStep()
-        facadeStep(frontendToBackendConverter)
-        facadeStep(backendFacade)
-
+//        useAfterAnalysisCheckers(::BlackBoxCodegenSuppressor) TODO uncomment later
     }
 }
 
-abstract class AbstractJsBlackBoxCodegenTest : AbstractJsBlackBoxCodegenTestBase<ClassicFrontendOutputArtifact, ClassicBackendInput>(
+open class AbstractJsBlackBoxCodegenTest : AbstractJsBlackBoxCodegenTestBase<ClassicFrontendOutputArtifact, ClassicBackendInput>(
     FrontendKinds.ClassicFrontend,
     TargetBackend.JS
 ) {
@@ -93,6 +97,67 @@ abstract class AbstractJsBlackBoxCodegenTest : AbstractJsBlackBoxCodegenTestBase
 
     override val backendFacade: Constructor<BackendFacade<ClassicBackendInput, BinaryArtifacts.Js>>
         get() = ::ClassicJsBackendFacade
+
+    override fun configure(builder: TestConfigurationBuilder) {
+        super.configure(builder)
+        with(builder) {
+            forTestsMatching(TEST_DATA_DIR_PATH + "box/*") {
+                defaultDirectives {
+                    JsEnvironmentConfigurationDirectives.PATH_TO_TEST_DIR with "${TEST_DATA_DIR_PATH}box/"
+                    JsEnvironmentConfigurationDirectives.TEST_GROUP_OUTPUT_DIR_PREFIX with "box/"
+                }
+            }
+
+            forTestsMatching("compiler/testData/codegen/box/*") {
+                defaultDirectives {
+                    JsEnvironmentConfigurationDirectives.PATH_TO_TEST_DIR with "compiler/testData/codegen/box/"
+                    JsEnvironmentConfigurationDirectives.TEST_GROUP_OUTPUT_DIR_PREFIX with "codegen/box/"
+                }
+            }
+
+            forTestsMatching("compiler/testData/codegen/boxInline/*") {
+                defaultDirectives {
+                    JsEnvironmentConfigurationDirectives.PATH_TO_TEST_DIR with "compiler/testData/codegen/boxInline"
+                    JsEnvironmentConfigurationDirectives.TEST_GROUP_OUTPUT_DIR_PREFIX with "codegen/boxInline"
+                }
+            }
+
+            forTestsMatching("compiler/testData/codegen/box/arrays/*") {
+                defaultDirectives {
+                    JsEnvironmentConfigurationDirectives.PATH_TO_TEST_DIR with "compiler/testData/codegen/box/arrays/"
+                    JsEnvironmentConfigurationDirectives.TEST_GROUP_OUTPUT_DIR_PREFIX with "codegen/box/arrays-legacy-primitivearrays/"
+                }
+            }
+
+            forTestsMatching(TEST_DATA_DIR_PATH + "sourcemap/*") {
+                defaultDirectives {
+                    JsEnvironmentConfigurationDirectives.PATH_TO_TEST_DIR with "${TEST_DATA_DIR_PATH}sourcemap/"
+                    JsEnvironmentConfigurationDirectives.TEST_GROUP_OUTPUT_DIR_PREFIX with "sourcemap/"
+                }
+            }
+
+            forTestsMatching(TEST_DATA_DIR_PATH + "outputPrefixPostfix/*") {
+                defaultDirectives {
+                    JsEnvironmentConfigurationDirectives.PATH_TO_TEST_DIR with "${TEST_DATA_DIR_PATH}outputPrefixPostfix/"
+                    JsEnvironmentConfigurationDirectives.TEST_GROUP_OUTPUT_DIR_PREFIX with "outputPrefixPostfix/"
+                }
+            }
+
+            forTestsMatching(TEST_DATA_DIR_PATH + "multiModuleOrder/*") {
+                defaultDirectives {
+                    JsEnvironmentConfigurationDirectives.PATH_TO_TEST_DIR with "${TEST_DATA_DIR_PATH}multiModuleOrder/"
+                    JsEnvironmentConfigurationDirectives.TEST_GROUP_OUTPUT_DIR_PREFIX with "multiModuleOrder/"
+                }
+            }
+
+            forTestsMatching(TEST_DATA_DIR_PATH + "typescript-export/*") {
+                defaultDirectives {
+                    JsEnvironmentConfigurationDirectives.PATH_TO_TEST_DIR with "${TEST_DATA_DIR_PATH}typescript-export/"
+                    JsEnvironmentConfigurationDirectives.TEST_GROUP_OUTPUT_DIR_PREFIX with "legacy-typescript-export/"
+                }
+            }
+        }
+    }
 }
 
 class ClassicJsBackendFacade(
@@ -130,15 +195,15 @@ class ClassicJsBackendFacade(
     override fun transform(module: TestModule, inputArtifact: ClassicBackendInput): BinaryArtifacts.Js? {
         if (module.name.endsWith(JsEnvironmentConfigurator.OLD_MODULE_SUFFIX)) return null
         val originalFile = module.files.first().originalFile
-        val stopFile = File(module.directives[JsEnvironmentConfigurationDirectives.PATH_TO_TEST_DIR].single())
-        val pathToRootOutputDir = module.directives[JsEnvironmentConfigurationDirectives.PATH_TO_ROOT_OUTPUT_DIR].single()
-        val testGroupOutputDirPrefix = module.directives[JsEnvironmentConfigurationDirectives.TEST_GROUP_OUTPUT_DIR_PREFIX].single()
+//        val stopFile = File(module.directives[JsEnvironmentConfigurationDirectives.PATH_TO_TEST_DIR].single())
+//        val pathToRootOutputDir = module.directives[JsEnvironmentConfigurationDirectives.PATH_TO_ROOT_OUTPUT_DIR].single()
+//        val testGroupOutputDirPrefix = module.directives[JsEnvironmentConfigurationDirectives.TEST_GROUP_OUTPUT_DIR_PREFIX].single()
 
-        val testGroupOutputDirForCompilation = File(pathToRootOutputDir + "out/" + testGroupOutputDirPrefix)
+//        val testGroupOutputDirForCompilation = File(pathToRootOutputDir + "out/" + testGroupOutputDirPrefix)
 //        val testGroupOutputDirForMinification = File(pathToRootOutputDir + "out-min/" + testGroupOutputDirPrefix)
 //        val testGroupOutputDirForPir = File(pathToRootOutputDir + "out-pir/" + testGroupOutputDirPrefix)
 //
-        val outputDir = getOutputDir(originalFile, testGroupOutputDirForCompilation, stopFile)
+//        val outputDir = getOutputDir(originalFile, testGroupOutputDirForCompilation, stopFile)
 //        val dceOutputDir = getOutputDir(originalFile, testGroupOutputDirForMinification, stopFile)
 //        val pirOutputDir = getOutputDir(originalFile, testGroupOutputDirForPir, stopFile)
 //
@@ -173,6 +238,7 @@ class ClassicJsBackendFacade(
             throw AssertionError("The following errors occurred compiling test:\n" + messages)
         }
 
+        val outputDir = testServices.temporaryDirectoryManager.getOrCreateTempDirectory(JsEnvironmentConfigurator.OUTPUT_DIR_NAME)
         val outputFile = File(testServices.moduleStructure.outputFilePath(outputDir, module.name))
         val outputPrefixFile = originalFile.parentFile.resolve(originalFile.name + ".prefix").takeIf { it.exists() }
         val outputPostfixFile = originalFile.parentFile.resolve(originalFile.name + ".postfix").takeIf { it.exists() }
@@ -185,7 +251,7 @@ class ClassicJsBackendFacade(
             FileUtil.writeToFile(outputFile, wrappedContent)
         }
 
-        return BinaryArtifacts.Js()
+        return BinaryArtifacts.Js(outputFile.readText())
     }
 }
 
@@ -199,12 +265,12 @@ class JsBoxRunner(testServices: TestServices) : JsBinaryArtifactHandler(testServ
     }
 }
 
-class JsAdditionalSourceFiles(testServices: TestServices) : AdditionalSourceProvider(testServices) {
+class JsAdditionalSourceProvider(testServices: TestServices) : AdditionalSourceProvider(testServices) {
     override fun produceAdditionalFiles(globalDirectives: RegisteredDirectives, module: TestModule): List<TestFile> {
         val globalCommonFiles = getFilesInDirectoryByExtension(COMMON_FILES_DIR_PATH, KotlinFileType.EXTENSION)
             .map { File(it).toTestFile() }
 
-        val localCommonFilePath = module.files.first().originalFile.absolutePath + "/" + COMMON_FILES_NAME + "." + KotlinFileType.EXTENSION
+        val localCommonFilePath = module.files.first().originalFile.parent + "/" + COMMON_FILES_NAME + "." + KotlinFileType.EXTENSION
         val localCommonFile = File(localCommonFilePath).takeIf { it.exists() }?.toTestFile() ?: return globalCommonFiles
 
         return globalCommonFiles + localCommonFile

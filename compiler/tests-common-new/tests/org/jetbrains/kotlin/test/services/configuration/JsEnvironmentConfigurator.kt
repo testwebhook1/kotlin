@@ -78,7 +78,7 @@ class JsEnvironmentConfigurator(testServices: TestServices) : EnvironmentConfigu
 
     override fun configureCompilerConfiguration(configuration: CompilerConfiguration, module: TestModule) {
         val registeredDirectives = module.directives
-        val moduleKinds = registeredDirectives[MODULE_KIND]
+        val moduleKinds = (registeredDirectives[MODULE_KIND] + module.files.flatMap { it.directives[MODULE_KIND] }).distinct()
         val moduleKind = when (moduleKinds.size) {
             0 -> ModuleKind.PLAIN
             1 -> moduleKinds.single()

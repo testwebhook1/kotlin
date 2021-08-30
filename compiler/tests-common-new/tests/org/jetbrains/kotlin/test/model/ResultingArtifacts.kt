@@ -13,7 +13,7 @@ object BinaryArtifacts {
             get() = ArtifactKinds.Jvm
     }
 
-    class Js : ResultingArtifact.Binary<Js>() {
+    class Js(val jsCode: String) : ResultingArtifact.Binary<Js>() {
         override val kind: BinaryKind<Js>
             get() = ArtifactKinds.Js
     }

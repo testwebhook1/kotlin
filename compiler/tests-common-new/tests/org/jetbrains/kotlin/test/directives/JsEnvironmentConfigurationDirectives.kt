@@ -14,7 +14,10 @@ import org.jetbrains.kotlin.test.directives.model.DirectiveApplicability
 import org.jetbrains.kotlin.test.directives.model.SimpleDirectivesContainer
 
 object JsEnvironmentConfigurationDirectives : SimpleDirectivesContainer() {
-    val MODULE_KIND by enumDirective<ModuleKind>("Specifies kind of js module")
+    val MODULE_KIND by enumDirective<ModuleKind>(
+        description = "Specifies kind of js module",
+        applicability = DirectiveApplicability.Any
+    )
 
     val NO_MODULE_SYSTEM_PATTERN by directive(
         description = "", // TODO
