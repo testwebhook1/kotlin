@@ -19,7 +19,6 @@ import org.jetbrains.kotlin.cli.common.messages.AnalyzerWithCompilerReport
 import org.jetbrains.kotlin.cli.common.messages.MessageRenderer
 import org.jetbrains.kotlin.cli.common.messages.PrintingMessageCollector
 import org.jetbrains.kotlin.cli.common.output.writeAllTo
-import org.jetbrains.kotlin.cli.js.resolve
 import org.jetbrains.kotlin.cli.jvm.compiler.EnvironmentConfigFiles
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
 import org.jetbrains.kotlin.config.*
@@ -80,7 +79,7 @@ abstract class BasicBoxTest(
     private val generateNodeJsRunner: Boolean = true,
     private val targetBackend: TargetBackend = TargetBackend.JS
 ) : KotlinTestWithEnvironment() {
-    val pathToRootOutputDir = System.getProperty("kotlin.js.test.root.out.dir") ?: error("'kotlin.js.test.root.out.dir' is not set")
+    private val pathToRootOutputDir = System.getProperty("kotlin.js.test.root.out.dir") ?: error("'kotlin.js.test.root.out.dir' is not set")
     private val testGroupOutputDirForCompilation = File(pathToRootOutputDir + "out/" + testGroupOutputDirPrefix)
     private val testGroupOutputDirForMinification = File(pathToRootOutputDir + "out-min/" + testGroupOutputDirPrefix)
     private val testGroupOutputDirForPir = File(pathToRootOutputDir + "out-pir/" + testGroupOutputDirPrefix)
@@ -128,7 +127,7 @@ abstract class BasicBoxTest(
         val outputDir = getOutputDir(file)
         val dceOutputDir = getOutputDir(file, testGroupOutputDirForMinification)
         val pirOutputDir = getOutputDir(file, testGroupOutputDirForPir)
-        var fileContent = KtTestUtil.doLoadFile(file)
+        val fileContent = KtTestUtil.doLoadFile(file)
 
         val needsFullIrRuntime = KJS_WITH_FULL_RUNTIME.matcher(fileContent).find() || WITH_RUNTIME.matcher(fileContent).find() || WITH_STDLIB.matcher(fileContent).find()
 
