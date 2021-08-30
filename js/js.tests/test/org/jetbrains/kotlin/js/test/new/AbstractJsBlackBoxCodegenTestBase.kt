@@ -3,7 +3,7 @@
  * Use of this source code is governed by the Apache 2.0 license that can be found in the license/LICENSE.txt file.
  */
 
-package org.jetbrains.kotlin.test.runners.codegen
+package org.jetbrains.kotlin.js.test.new
 
 import com.intellij.openapi.util.io.FileUtil
 import com.intellij.openapi.util.text.StringUtil
@@ -11,7 +11,6 @@ import org.jetbrains.kotlin.cli.common.messages.AnalyzerWithCompilerReport
 import org.jetbrains.kotlin.cli.common.messages.MessageRenderer
 import org.jetbrains.kotlin.cli.common.messages.PrintingMessageCollector
 import org.jetbrains.kotlin.cli.common.output.writeAllTo
-import org.jetbrains.kotlin.idea.KotlinFileType
 import org.jetbrains.kotlin.js.analyzer.JsAnalysisResult
 import org.jetbrains.kotlin.js.facade.K2JSTranslator
 import org.jetbrains.kotlin.js.facade.MainCallParameters
@@ -21,25 +20,25 @@ import org.jetbrains.kotlin.platform.js.JsPlatforms
 import org.jetbrains.kotlin.serialization.js.ModuleKind
 import org.jetbrains.kotlin.test.Constructor
 import org.jetbrains.kotlin.test.TargetBackend
-import org.jetbrains.kotlin.test.backend.BlackBoxCodegenSuppressor
 import org.jetbrains.kotlin.test.backend.classic.ClassicBackendFacade
 import org.jetbrains.kotlin.test.backend.classic.ClassicBackendInput
-import org.jetbrains.kotlin.test.backend.handlers.JsBinaryArtifactHandler
 import org.jetbrains.kotlin.test.builders.TestConfigurationBuilder
+import org.jetbrains.kotlin.test.builders.jsArtifactsHandlersStep
 import org.jetbrains.kotlin.test.directives.JsEnvironmentConfigurationDirectives
-import org.jetbrains.kotlin.test.directives.model.RegisteredDirectives
 import org.jetbrains.kotlin.test.frontend.classic.ClassicFrontend2ClassicBackendConverter
 import org.jetbrains.kotlin.test.frontend.classic.ClassicFrontendFacade
 import org.jetbrains.kotlin.test.frontend.classic.ClassicFrontendOutputArtifact
 import org.jetbrains.kotlin.test.model.*
 import org.jetbrains.kotlin.test.runners.AbstractKotlinCompilerWithTargetBackendTest
-import org.jetbrains.kotlin.test.services.*
+import org.jetbrains.kotlin.test.services.TestServices
+import org.jetbrains.kotlin.test.services.compilerConfigurationProvider
 import org.jetbrains.kotlin.test.services.configuration.CommonEnvironmentConfigurator
 import org.jetbrains.kotlin.test.services.configuration.JsEnvironmentConfigurator
 import org.jetbrains.kotlin.test.services.configuration.JsEnvironmentConfigurator.Companion.outputFilePath
+import org.jetbrains.kotlin.test.services.moduleStructure
+import org.jetbrains.kotlin.test.services.temporaryDirectoryManager
 import java.io.ByteArrayOutputStream
 import java.io.File
-import java.io.FileFilter
 import java.io.PrintStream
 import java.nio.charset.Charset
 
@@ -81,6 +80,11 @@ abstract class AbstractJsBlackBoxCodegenTestBase<R : ResultingArtifact.FrontendO
             ::JsAdditionalSourceProvider
         )
 
+        jsArtifactsHandlersStep {
+            useHandlers(
+                ::JsBoxRunner
+            )
+        }
 //        useAfterAnalysisCheckers(::BlackBoxCodegenSuppressor) TODO uncomment later
     }
 }
@@ -251,44 +255,7 @@ class ClassicJsBackendFacade(
             FileUtil.writeToFile(outputFile, wrappedContent)
         }
 
-        return BinaryArtifacts.Js(outputFile.readText())
+        return BinaryArtifacts.OldJsArtifact(/*outputFile.readText()*/translationResult.program)
     }
 }
 
-class JsBoxRunner(testServices: TestServices) : JsBinaryArtifactHandler(testServices) {
-    override fun processModule(module: TestModule, info: BinaryArtifacts.Js) {
-        TODO("Not yet implemented")
-    }
-
-    override fun processAfterAllModules(someAssertionWasFailed: Boolean) {
-        TODO("Not yet implemented")
-    }
-}
-
-class JsAdditionalSourceProvider(testServices: TestServices) : AdditionalSourceProvider(testServices) {
-    override fun produceAdditionalFiles(globalDirectives: RegisteredDirectives, module: TestModule): List<TestFile> {
-        val globalCommonFiles = getFilesInDirectoryByExtension(COMMON_FILES_DIR_PATH, KotlinFileType.EXTENSION)
-            .map { File(it).toTestFile() }
-
-        val localCommonFilePath = module.files.first().originalFile.parent + "/" + COMMON_FILES_NAME + "." + KotlinFileType.EXTENSION
-        val localCommonFile = File(localCommonFilePath).takeIf { it.exists() }?.toTestFile() ?: return globalCommonFiles
-
-        return globalCommonFiles + localCommonFile
-    }
-
-    companion object {
-        private const val TEST_DATA_DIR_PATH = "js/js.translator/testData/"
-        private const val DIST_DIR_JS_PATH = "dist/js/"
-
-        private const val COMMON_FILES_NAME = "_common"
-        private const val COMMON_FILES_DIR = "_commonFiles/"
-        private const val COMMON_FILES_DIR_PATH = TEST_DATA_DIR_PATH + COMMON_FILES_DIR
-
-        private fun getFilesInDirectoryByExtension(directory: String, extension: String): List<String> {
-            val dir = File(directory)
-            if (!dir.isDirectory) return emptyList()
-
-            return dir.listFiles(FileFilter { it.extension == extension })?.map { it.absolutePath } ?: emptyList()
-        }
-    }
-}

@@ -6,6 +6,8 @@
 package org.jetbrains.kotlin.test.model
 
 import org.jetbrains.kotlin.codegen.ClassFileFactory
+import org.jetbrains.kotlin.ir.backend.js.CompilerResult
+import org.jetbrains.kotlin.js.backend.ast.JsProgram
 
 object BinaryArtifacts {
     class Jvm(val classFileFactory: ClassFileFactory) : ResultingArtifact.Binary<Jvm>() {
@@ -13,9 +15,23 @@ object BinaryArtifacts {
             get() = ArtifactKinds.Jvm
     }
 
-    class Js(val jsCode: String) : ResultingArtifact.Binary<Js>() {
+    sealed class Js : ResultingArtifact.Binary<Js>() {
         override val kind: BinaryKind<Js>
             get() = ArtifactKinds.Js
+
+        abstract fun getJsCode(): String
+    }
+
+    class OldJsArtifact(val jsProgram: JsProgram) : Js() {
+        override fun getJsCode(): String {
+            TODO("Not yet implemented")
+        }
+    }
+
+    class JsIrArtifact(val compilerResult: CompilerResult) : Js() {
+        override fun getJsCode(): String {
+            TODO("Not yet implemented")
+        }
     }
 
     class Native : ResultingArtifact.Binary<Native>() {
