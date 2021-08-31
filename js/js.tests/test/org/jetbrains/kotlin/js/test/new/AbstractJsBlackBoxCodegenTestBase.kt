@@ -82,8 +82,9 @@ abstract class AbstractJsBlackBoxCodegenTestBase<R : ResultingArtifact.FrontendO
 
         jsArtifactsHandlersStep {
             useHandlers(
-                ::JsBoxRunner,
+                ::JsAstHandler,
                 ::JsSourceMapHandler,
+                ::JsBoxRunner,
             )
         }
 //        useAfterAnalysisCheckers(::BlackBoxCodegenSuppressor) TODO uncomment later

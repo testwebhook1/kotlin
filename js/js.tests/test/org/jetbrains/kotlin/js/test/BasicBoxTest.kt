@@ -5,7 +5,6 @@
 
 package org.jetbrains.kotlin.js.test
 
-import com.google.gwt.dev.js.ThrowExceptionOnErrorReporter
 import com.intellij.openapi.util.io.FileUtil
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.openapi.vfs.StandardFileSystems
@@ -28,26 +27,17 @@ import org.jetbrains.kotlin.incremental.js.IncrementalResultsConsumerImpl
 import org.jetbrains.kotlin.incremental.js.TranslationResultValue
 import org.jetbrains.kotlin.ir.backend.js.ic.SerializedIcData
 import org.jetbrains.kotlin.js.JavaScript
-import org.jetbrains.kotlin.js.backend.JsToStringGenerationVisitor
-import org.jetbrains.kotlin.js.backend.ast.*
 import org.jetbrains.kotlin.js.config.*
 import org.jetbrains.kotlin.js.dce.DeadCodeElimination
 import org.jetbrains.kotlin.js.dce.InputFile
 import org.jetbrains.kotlin.js.dce.InputResource
 import org.jetbrains.kotlin.js.engine.loadFiles
 import org.jetbrains.kotlin.js.facade.*
-import org.jetbrains.kotlin.js.parser.parse
-import org.jetbrains.kotlin.js.parser.sourcemaps.SourceMapError
-import org.jetbrains.kotlin.js.parser.sourcemaps.SourceMapLocationRemapper
 import org.jetbrains.kotlin.js.parser.sourcemaps.SourceMapParser
 import org.jetbrains.kotlin.js.parser.sourcemaps.SourceMapSuccess
-import org.jetbrains.kotlin.js.sourceMap.SourceFilePathResolver
-import org.jetbrains.kotlin.js.sourceMap.SourceMap3Builder
-import org.jetbrains.kotlin.js.sourceMap.SourceMapBuilderConsumer
-import org.jetbrains.kotlin.js.test.new.JsBoxRunner
+import org.jetbrains.kotlin.js.test.new.JsAstHandler
 import org.jetbrains.kotlin.js.test.new.JsSourceMapHandler
 import org.jetbrains.kotlin.js.test.utils.*
-import org.jetbrains.kotlin.js.util.TextOutputImpl
 import org.jetbrains.kotlin.library.KotlinAbiVersion
 import org.jetbrains.kotlin.metadata.DebugProtoBuf
 import org.jetbrains.kotlin.psi.KtFile
@@ -756,7 +746,7 @@ abstract class BasicBoxTest(
             incrementalData.header = incrementalService.headerMetadata
         }
 
-        JsBoxRunner.processJsProgram(translationResult.program, units.filterIsInstance<TranslationUnit.SourceFile>().map { it.file.text })
+        JsAstHandler.processJsProgram(translationResult.program, units.filterIsInstance<TranslationUnit.SourceFile>().map { it.file.text })
         JsSourceMapHandler.checkSourceMap(outputFile, translationResult.program, remap) { expected, actual ->
             TestCase.assertEquals(expected, actual)
         }
