@@ -44,6 +44,8 @@ import org.jetbrains.kotlin.js.parser.sourcemaps.SourceMapSuccess
 import org.jetbrains.kotlin.js.sourceMap.SourceFilePathResolver
 import org.jetbrains.kotlin.js.sourceMap.SourceMap3Builder
 import org.jetbrains.kotlin.js.sourceMap.SourceMapBuilderConsumer
+import org.jetbrains.kotlin.js.test.new.JsBoxRunner
+import org.jetbrains.kotlin.js.test.new.JsSourceMapHandler
 import org.jetbrains.kotlin.js.test.utils.*
 import org.jetbrains.kotlin.js.util.TextOutputImpl
 import org.jetbrains.kotlin.library.KotlinAbiVersion
@@ -754,8 +756,10 @@ abstract class BasicBoxTest(
             incrementalData.header = incrementalService.headerMetadata
         }
 
-        processJsProgram(translationResult.program, units.filterIsInstance<TranslationUnit.SourceFile>().map { it.file })
-        checkSourceMap(outputFile, translationResult.program, remap)
+        JsBoxRunner.processJsProgram(translationResult.program, units.filterIsInstance<TranslationUnit.SourceFile>().map { it.file.text })
+        JsSourceMapHandler.checkSourceMap(outputFile, translationResult.program, remap) { expected, actual ->
+            TestCase.assertEquals(expected, actual)
+        }
     }
 
     protected fun wrapWithModuleEmulationMarkers(
@@ -778,71 +782,6 @@ abstract class BasicBoxTest(
 
             ModuleKind.PLAIN -> content
         }
-    }
-
-    private fun processJsProgram(program: JsProgram, psiFiles: List<KtFile>) {
-        psiFiles.asSequence()
-            .map { it.text }
-            .forEach { DirectiveTestUtils.processDirectives(program, it) }
-        program.verifyAst()
-    }
-
-    private fun checkSourceMap(outputFile: File, program: JsProgram, remap: Boolean) {
-        val generatedProgram = JsProgram()
-        generatedProgram.globalBlock.statements += program.globalBlock.statements.map { it.deepCopy() }
-        generatedProgram.accept(object : RecursiveJsVisitor() {
-            override fun visitObjectLiteral(x: JsObjectLiteral) {
-                super.visitObjectLiteral(x)
-                x.isMultiline = false
-            }
-
-            override fun visitVars(x: JsVars) {
-                x.isMultiline = false
-                super.visitVars(x)
-            }
-        })
-        removeLocationFromBlocks(generatedProgram)
-        generatedProgram.accept(AmbiguousAstSourcePropagation())
-
-        val output = TextOutputImpl()
-        val pathResolver = SourceFilePathResolver(mutableListOf(File(".")), null)
-        val sourceMapBuilder = SourceMap3Builder(outputFile, output, "")
-        generatedProgram.accept(
-            JsToStringGenerationVisitor(
-                output, SourceMapBuilderConsumer(File("."), sourceMapBuilder, pathResolver, false, false)
-            )
-        )
-        val code = output.toString()
-        val generatedSourceMap = sourceMapBuilder.build()
-
-        val codeWithLines = generatedProgram.toStringWithLineNumbers()
-
-        val parsedProgram = JsProgram()
-        parsedProgram.globalBlock.statements += parse(code, ThrowExceptionOnErrorReporter, parsedProgram.scope, outputFile.path).orEmpty()
-        removeLocationFromBlocks(parsedProgram)
-        val sourceMapParseResult = SourceMapParser.parse(generatedSourceMap)
-        val sourceMap = when (sourceMapParseResult) {
-            is SourceMapSuccess -> sourceMapParseResult.value
-            is SourceMapError -> error("Could not parse source map: ${sourceMapParseResult.message}")
-        }
-
-        if (remap) {
-            val remapper = SourceMapLocationRemapper(sourceMap)
-            remapper.remap(parsedProgram)
-
-            val codeWithRemappedLines = parsedProgram.toStringWithLineNumbers()
-
-            TestCase.assertEquals(codeWithLines, codeWithRemappedLines)
-        }
-    }
-
-    private fun removeLocationFromBlocks(program: JsProgram) {
-        program.globalBlock.accept(object : RecursiveJsVisitor() {
-            override fun visitBlock(x: JsBlock) {
-                super.visitBlock(x)
-                x.source = null
-            }
-        })
     }
 
     private fun createPsiFile(fileName: String): KtFile {
