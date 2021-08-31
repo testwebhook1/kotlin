@@ -1,44 +1,58 @@
-FILE: accessInSetter.kt
+Module: m1
+FILE: m1.kt
     public final class DrawableGrid : R|javax/swing/JList<kotlin/String>| {
         public constructor(): R|DrawableGrid| {
             super<R|javax/swing/JList<kotlin/String>|>()
         }
 
+        public final override fun setSelectionInterval(anchor: R|kotlin/Int|, lead: R|kotlin/Int|): R|kotlin/Unit| {
+            this@R|/DrawableGrid|.super<R|javax/swing/JList<kotlin/String>|>.R|javax/swing/JList.setSelectionInterval|(R|<local>/anchor|, R|<local>/lead|)
+        }
+
     }
+Module: m2
+FILE: m2.kt
     public final class My : R|kotlin/Any| {
-        public constructor(): R|My| {
+        public constructor(originalValue: R|kotlin/String?|): R|My| {
             super<R|kotlin/Any|>()
         }
 
-        private final val drawableGrid: R|DrawableGrid| = this@R|/My|.R|/My.createDrawableGrid|()
-            private get(): R|DrawableGrid|
+        private final val originalValue: R|kotlin/String?| = R|<local>/originalValue|
+            private get(): R|kotlin/String?|
 
-        private final var useAll: R|kotlin/Boolean| = Boolean(false)
+        private final val drawableGrid: <ERROR TYPE REF: Ambiguity: apply, [kotlin/apply, kotlin/apply]> = this@R|/My|.R|/My.createDrawableGrid|()
+            private get(): <ERROR TYPE REF: Ambiguity: apply, [kotlin/apply, kotlin/apply]>
+
+        private final var useAll: R|kotlin/Boolean| = ==(this@R|/My|.R|/My.originalValue|, Null(null)) || this@R|/My|.R|/My.isSampleValueAll|(this@R|/My|.R|/My.originalValue|)
             private get(): R|kotlin/Boolean|
             private set(value: R|kotlin/Boolean|): R|kotlin/Unit| {
                 this@R|/My|.F|/My.useAll| = R|<local>/value|
-                this@R|/My|.R|/My.drawableGrid|.R|java/awt/Component.isEnabled| = R|<local>/value|.R|kotlin/Boolean.not|()
+                this@R|/My|.R|/My.drawableGrid|.<Unresolved name: isEnabled># = R|<local>/value|.R|kotlin/Boolean.not|()
                 when () {
                     R|<local>/value| ->  {
-                        this@R|/My|.R|/My.drawableGrid|.R|javax/swing/JList.clearSelection|()
+                        this@R|/My|.R|/My.drawableGrid|.<Unresolved name: clearSelection>#()
                     }
                     else ->  {
-                        this@R|/My|.R|/My.drawableGrid|.R|javax/swing/JList.selectedIndex| = Int(0)
+                        this@R|/My|.R|/My.drawableGrid|.<Unresolved name: selectedIndex># = Int(0)
                     }
                 }
 
             }
 
-        private final fun createDrawableGrid(): R|DrawableGrid| {
-            ^createDrawableGrid R|/DrawableGrid.DrawableGrid|().R|kotlin/apply|<R|DrawableGrid|>(<L> = apply@fun R|DrawableGrid|.<anonymous>(): R|kotlin/Unit| <inline=Inline, kind=EXACTLY_ONCE>  {
-                this@R|special/anonymous|.R|javax/swing/JComponent.isOpaque| = Boolean(false)
-                this@R|special/anonymous|.R|javax/swing/JList.visibleRowCount| = Int(3)
-                this@R|special/anonymous|.R|javax/swing/JList.addListSelectionListener|(<L> = addListSelectionListener@fun <anonymous>(<unused var>: R|ft<javax/swing/event/ListSelectionEvent, javax/swing/event/ListSelectionEvent?>|): R|kotlin/Unit| <inline=NoInline>  {
+        private final fun createDrawableGrid(): <ERROR TYPE REF: Ambiguity: apply, [kotlin/apply, kotlin/apply]> {
+            ^createDrawableGrid R|/DrawableGrid.DrawableGrid|().<Ambiguity: apply, [kotlin/apply, kotlin/apply]>#(<L> = apply@fun <anonymous>(): <ERROR TYPE REF: Unresolved name: addListSelectionListener> <inline=Unknown>  {
+                <Unresolved name: isOpaque># = Boolean(false)
+                <Unresolved name: visibleRowCount># = Int(3)
+                ^ <Unresolved name: addListSelectionListener>#(<L> = addListSelectionListener@fun <anonymous>(<unused var>: R|kotlin/Nothing|): R|kotlin/Unit| <inline=Unknown>  {
                     ^@addListSelectionListener Unit
                 }
                 )
             }
             )
+        }
+
+        private final fun isSampleValueAll(value: R|kotlin/String?|): R|kotlin/Boolean| {
+            ^isSampleValueAll R|<local>/value|?.{ $subj$.R|kotlin/text/endsWith|(Char(])) }?.{ $subj$.R|kotlin/Boolean.not|() } ?: Boolean(false)
         }
 
     }
