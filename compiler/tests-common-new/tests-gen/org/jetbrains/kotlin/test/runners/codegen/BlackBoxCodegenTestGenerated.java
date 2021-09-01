@@ -10034,12 +10034,6 @@ public class BlackBoxCodegenTestGenerated extends AbstractBlackBoxCodegenTest {
             }
 
             @Test
-            @TestMetadata("debuggerMetadata_ir.kt")
-            public void testDebuggerMetadata_ir() throws Exception {
-                runTest("compiler/testData/codegen/box/coroutines/debug/debuggerMetadata_ir.kt");
-            }
-
-            @Test
             @TestMetadata("elvisLineNumber.kt")
             public void testElvisLineNumber() throws Exception {
                 runTest("compiler/testData/codegen/box/coroutines/debug/elvisLineNumber.kt");
