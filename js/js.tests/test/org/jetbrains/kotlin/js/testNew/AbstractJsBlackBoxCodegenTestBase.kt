@@ -5,22 +5,10 @@
 
 package org.jetbrains.kotlin.js.testNew
 
-import com.intellij.openapi.util.io.FileUtil
-import com.intellij.openapi.util.text.StringUtil
-import org.jetbrains.kotlin.cli.common.messages.AnalyzerWithCompilerReport
-import org.jetbrains.kotlin.cli.common.messages.MessageRenderer
-import org.jetbrains.kotlin.cli.common.messages.PrintingMessageCollector
-import org.jetbrains.kotlin.cli.common.output.writeAllTo
-import org.jetbrains.kotlin.js.analyzer.JsAnalysisResult
-import org.jetbrains.kotlin.js.facade.K2JSTranslator
-import org.jetbrains.kotlin.js.facade.MainCallParameters
-import org.jetbrains.kotlin.js.facade.TranslationResult
-import org.jetbrains.kotlin.js.facade.TranslationUnit
+import org.jetbrains.kotlin.js.test.BasicBoxTest
 import org.jetbrains.kotlin.platform.js.JsPlatforms
-import org.jetbrains.kotlin.serialization.js.ModuleKind
 import org.jetbrains.kotlin.test.Constructor
 import org.jetbrains.kotlin.test.TargetBackend
-import org.jetbrains.kotlin.test.backend.classic.ClassicBackendFacade
 import org.jetbrains.kotlin.test.backend.classic.ClassicBackendInput
 import org.jetbrains.kotlin.test.builders.TestConfigurationBuilder
 import org.jetbrains.kotlin.test.builders.jsArtifactsHandlersStep
@@ -30,16 +18,9 @@ import org.jetbrains.kotlin.test.frontend.classic.ClassicFrontendFacade
 import org.jetbrains.kotlin.test.frontend.classic.ClassicFrontendOutputArtifact
 import org.jetbrains.kotlin.test.model.*
 import org.jetbrains.kotlin.test.runners.AbstractKotlinCompilerWithTargetBackendTest
-import org.jetbrains.kotlin.test.services.TestServices
-import org.jetbrains.kotlin.test.services.compilerConfigurationProvider
 import org.jetbrains.kotlin.test.services.configuration.CommonEnvironmentConfigurator
 import org.jetbrains.kotlin.test.services.configuration.JsEnvironmentConfigurator
 import org.jetbrains.kotlin.test.services.configuration.JsEnvironmentConfigurator.Companion.TEST_DATA_DIR_PATH
-import org.jetbrains.kotlin.test.services.configuration.JsEnvironmentConfigurator.Companion.getJsModuleArtifactPath
-import java.io.ByteArrayOutputStream
-import java.io.File
-import java.io.PrintStream
-import java.nio.charset.Charset
 
 abstract class AbstractJsBlackBoxCodegenTestBase<R : ResultingArtifact.FrontendOutput<R>, I : ResultingArtifact.BackendInput<I>>(
     val targetFrontend: FrontendKind<R>,
@@ -77,10 +58,13 @@ abstract class AbstractJsBlackBoxCodegenTestBase<R : ResultingArtifact.FrontendO
     }
 }
 
-open class AbstractJsBlackBoxCodegenTest : AbstractJsBlackBoxCodegenTestBase<ClassicFrontendOutputArtifact, ClassicBackendInput>(
-    FrontendKinds.ClassicFrontend,
-    TargetBackend.JS
-) {
+abstract class AbstractJsTest(
+    private val pathToTestDir: String,
+    private val testGroupOutputDirPrefix: String,
+    private val typedArraysEnabled: Boolean = true,
+    private val generateSourceMap: Boolean = false,
+    private val generateNodeJsRunner: Boolean = true,
+) : AbstractJsBlackBoxCodegenTestBase<ClassicFrontendOutputArtifact, ClassicBackendInput>(FrontendKinds.ClassicFrontend, TargetBackend.JS) {
     override val frontendFacade: Constructor<FrontendFacade<ClassicFrontendOutputArtifact>>
         get() = ::ClassicFrontendFacade
 
@@ -93,59 +77,13 @@ open class AbstractJsBlackBoxCodegenTest : AbstractJsBlackBoxCodegenTestBase<Cla
     override fun configure(builder: TestConfigurationBuilder) {
         super.configure(builder)
         with(builder) {
-            forTestsMatching(TEST_DATA_DIR_PATH + "box/*") {
+            with(builder) {
                 defaultDirectives {
-                    JsEnvironmentConfigurationDirectives.PATH_TO_TEST_DIR with "${TEST_DATA_DIR_PATH}box/"
-                    JsEnvironmentConfigurationDirectives.TEST_GROUP_OUTPUT_DIR_PREFIX with "box/"
-                }
-            }
-
-            forTestsMatching("compiler/testData/codegen/box/*") {
-                defaultDirectives {
-                    JsEnvironmentConfigurationDirectives.PATH_TO_TEST_DIR with "compiler/testData/codegen/box/"
-                    JsEnvironmentConfigurationDirectives.TEST_GROUP_OUTPUT_DIR_PREFIX with "codegen/box/"
-                }
-            }
-
-            forTestsMatching("compiler/testData/codegen/boxInline/*") {
-                defaultDirectives {
-                    JsEnvironmentConfigurationDirectives.PATH_TO_TEST_DIR with "compiler/testData/codegen/boxInline"
-                    JsEnvironmentConfigurationDirectives.TEST_GROUP_OUTPUT_DIR_PREFIX with "codegen/boxInline"
-                }
-            }
-
-            forTestsMatching("compiler/testData/codegen/box/arrays/*") {
-                defaultDirectives {
-                    JsEnvironmentConfigurationDirectives.PATH_TO_TEST_DIR with "compiler/testData/codegen/box/arrays/"
-                    JsEnvironmentConfigurationDirectives.TEST_GROUP_OUTPUT_DIR_PREFIX with "codegen/box/arrays-legacy-primitivearrays/"
-                }
-            }
-
-            forTestsMatching(TEST_DATA_DIR_PATH + "sourcemap/*") {
-                defaultDirectives {
-                    JsEnvironmentConfigurationDirectives.PATH_TO_TEST_DIR with "${TEST_DATA_DIR_PATH}sourcemap/"
-                    JsEnvironmentConfigurationDirectives.TEST_GROUP_OUTPUT_DIR_PREFIX with "sourcemap/"
-                }
-            }
-
-            forTestsMatching(TEST_DATA_DIR_PATH + "outputPrefixPostfix/*") {
-                defaultDirectives {
-                    JsEnvironmentConfigurationDirectives.PATH_TO_TEST_DIR with "${TEST_DATA_DIR_PATH}outputPrefixPostfix/"
-                    JsEnvironmentConfigurationDirectives.TEST_GROUP_OUTPUT_DIR_PREFIX with "outputPrefixPostfix/"
-                }
-            }
-
-            forTestsMatching(TEST_DATA_DIR_PATH + "multiModuleOrder/*") {
-                defaultDirectives {
-                    JsEnvironmentConfigurationDirectives.PATH_TO_TEST_DIR with "${TEST_DATA_DIR_PATH}multiModuleOrder/"
-                    JsEnvironmentConfigurationDirectives.TEST_GROUP_OUTPUT_DIR_PREFIX with "multiModuleOrder/"
-                }
-            }
-
-            forTestsMatching(TEST_DATA_DIR_PATH + "typescript-export/*") {
-                defaultDirectives {
-                    JsEnvironmentConfigurationDirectives.PATH_TO_TEST_DIR with "${TEST_DATA_DIR_PATH}typescript-export/"
-                    JsEnvironmentConfigurationDirectives.TEST_GROUP_OUTPUT_DIR_PREFIX with "legacy-typescript-export/"
+                    JsEnvironmentConfigurationDirectives.PATH_TO_TEST_DIR with pathToTestDir
+                    JsEnvironmentConfigurationDirectives.TEST_GROUP_OUTPUT_DIR_PREFIX with testGroupOutputDirPrefix
+                    if (typedArraysEnabled) +JsEnvironmentConfigurationDirectives.TYPED_ARRAYS
+                    if (generateNodeJsRunner) +JsEnvironmentConfigurationDirectives.GENERATE_NODE_JS_RUNNER
+                    if (generateSourceMap) +JsEnvironmentConfigurationDirectives.GENERATE_SOURCE_MAP
                 }
             }
 
@@ -160,97 +98,58 @@ open class AbstractJsBlackBoxCodegenTest : AbstractJsBlackBoxCodegenTestBase<Cla
     }
 }
 
-class ClassicJsBackendFacade(
-    testServices: TestServices
-) : ClassicBackendFacade<BinaryArtifacts.Js>(testServices, ArtifactKinds.Js) {
-    companion object {
-        const val KOTLIN_TEST_INTERNAL = "\$kotlin_test_internal\$"
-    }
+open class AbstractBoxJsTest : AbstractJsTest(
+    pathToTestDir = "${TEST_DATA_DIR_PATH}box/",
+    testGroupOutputDirPrefix = "box/"
+)
 
-    private fun getOutputDir(file: File, testGroupOutputDir: File, stopFile: File): File {
-        return generateSequence(file.parentFile) { it.parentFile }
-            .takeWhile { it != stopFile }
-            .map { it.name }
-            .toList().asReversed()
-            .fold(testGroupOutputDir, ::File)
-    }
+open class AbstractJsCodegenBoxTest : AbstractJsTest(
+    pathToTestDir = "compiler/testData/codegen/box/",
+    testGroupOutputDirPrefix = "codegen/box/"
+)
 
-    private fun wrapWithModuleEmulationMarkers(content: String, moduleKind: ModuleKind, moduleId: String): String {
-        val escapedModuleId = StringUtil.escapeStringCharacters(moduleId)
+open class AbstractJsCodegenInlineTest : AbstractJsTest(
+    pathToTestDir = "compiler/testData/codegen/boxInline",
+    testGroupOutputDirPrefix = "codegen/boxInline"
+)
 
-        return when (moduleKind) {
-            ModuleKind.COMMON_JS -> "$KOTLIN_TEST_INTERNAL.beginModule();\n" +
-                    "$content\n" +
-                    "$KOTLIN_TEST_INTERNAL.endModule(\"$escapedModuleId\");"
+open class AbstractJsLegacyPrimitiveArraysBoxTest : AbstractJsTest(
+    pathToTestDir = "compiler/testData/codegen/box/arrays/",
+    testGroupOutputDirPrefix = "codegen/box/arrays-legacy-primitivearrays/",
+    typedArraysEnabled = false
+)
 
-            ModuleKind.AMD, ModuleKind.UMD ->
-                "if (typeof $KOTLIN_TEST_INTERNAL !== \"undefined\") { " +
-                        "$KOTLIN_TEST_INTERNAL.setModuleId(\"$escapedModuleId\"); }\n" +
-                        "$content\n"
+open class AbstractSourceMapGenerationSmokeTest : AbstractJsTest(
+    pathToTestDir = "${TEST_DATA_DIR_PATH}sourcemap/",
+    testGroupOutputDirPrefix = "sourcemap/",
+    generateSourceMap = true,
+    generateNodeJsRunner = false
+)
 
-            ModuleKind.PLAIN -> content
-        }
-    }
+open class AbstractWebDemoExamples1Test : AbstractJsTest(
+    pathToTestDir = "${TEST_DATA_DIR_PATH}webDemoExamples1/",
+    testGroupOutputDirPrefix = "webDemoExamples1/",
+    generateNodeJsRunner = false
+)
 
-    override fun transform(module: TestModule, inputArtifact: ClassicBackendInput): BinaryArtifacts.Js? {
-        if (module.name.endsWith(JsEnvironmentConfigurator.OLD_MODULE_SUFFIX)) return null
-        val originalFile = module.files.first().originalFile
-//        val stopFile = File(module.directives[JsEnvironmentConfigurationDirectives.PATH_TO_TEST_DIR].single())
-//        val pathToRootOutputDir = module.directives[JsEnvironmentConfigurationDirectives.PATH_TO_ROOT_OUTPUT_DIR].single()
-//        val testGroupOutputDirPrefix = module.directives[JsEnvironmentConfigurationDirectives.TEST_GROUP_OUTPUT_DIR_PREFIX].single()
+open class AbstractWebDemoExamples2Test : AbstractJsTest(
+    pathToTestDir = "${TEST_DATA_DIR_PATH}webDemoExamples2/",
+    testGroupOutputDirPrefix = "webDemoExamples2/",
+    generateNodeJsRunner = false
+)
 
-//        val testGroupOutputDirForCompilation = File(pathToRootOutputDir + "out/" + testGroupOutputDirPrefix)
-//        val testGroupOutputDirForMinification = File(pathToRootOutputDir + "out-min/" + testGroupOutputDirPrefix)
-//        val testGroupOutputDirForPir = File(pathToRootOutputDir + "out-pir/" + testGroupOutputDirPrefix)
-//
-//        val outputDir = getOutputDir(originalFile, testGroupOutputDirForCompilation, stopFile)
-//        val dceOutputDir = getOutputDir(originalFile, testGroupOutputDirForMinification, stopFile)
-//        val pirOutputDir = getOutputDir(originalFile, testGroupOutputDirForPir, stopFile)
-//
-//        val outputFileName = module.outputFileName(outputDir) + ".js"
-//        val dceOutputFileName = module.outputFileName(dceOutputDir) + ".js"
-//        val pirOutputFileName = module.outputFileName(pirOutputDir) + ".js"
-////        val abiVersion = module.abiVersion
-////        val isMainModule = mainModuleName == module.name
+open class AbstractOutputPrefixPostfixTest : AbstractJsTest(
+    pathToTestDir = "${TEST_DATA_DIR_PATH}outputPrefixPostfix/",
+    testGroupOutputDirPrefix = "outputPrefixPostfix/",
+    generateNodeJsRunner = false
+)
 
-        val configuration = testServices.compilerConfigurationProvider.getCompilerConfiguration(module)
-        val (psiFiles, analysisResult, project, _) = inputArtifact
+open class AbstractMultiModuleOrderTest : AbstractJsTest(
+    pathToTestDir = "${TEST_DATA_DIR_PATH}multiModuleOrder/",
+    testGroupOutputDirPrefix = "multiModuleOrder/"
+)
 
-        // TODO how to reuse this config from frontend
-        val jsConfig = JsEnvironmentConfigurator.createJsConfig(project, configuration)
-        val units = psiFiles.map(TranslationUnit::SourceFile)
-        val mainCallParameters = when (JsEnvironmentConfigurationDirectives.CALL_MAIN_PATTERN) {
-            in module.directives -> MainCallParameters.mainWithArguments(listOf("testArg"))
-            else -> MainCallParameters.noCall()
-        }
-
-        val translator = K2JSTranslator(jsConfig, false)
-        val translationResult = translator.translateUnits(
-            JsEnvironmentConfigurator.Companion.ExceptionThrowingReporter, units, mainCallParameters, analysisResult as? JsAnalysisResult
-        )
-
-        // TODO is this correct way to report errors?
-        if (translationResult !is TranslationResult.Success) {
-            val outputStream = ByteArrayOutputStream()
-            val collector = PrintingMessageCollector(PrintStream(outputStream), MessageRenderer.PLAIN_FULL_PATHS, true)
-            AnalyzerWithCompilerReport.reportDiagnostics(translationResult.diagnostics, collector)
-            val messages = outputStream.toByteArray().toString(Charset.forName("UTF-8"))
-            throw AssertionError("The following errors occurred compiling test:\n$messages")
-        }
-
-        val outputFile = File(getJsModuleArtifactPath(testServices, module.name))
-        val outputPrefixFile = originalFile.parentFile.resolve(originalFile.name + ".prefix").takeIf { it.exists() }
-        val outputPostfixFile = originalFile.parentFile.resolve(originalFile.name + ".postfix").takeIf { it.exists() }
-        val outputFiles = translationResult.getOutputFiles(outputFile, outputPrefixFile, outputPostfixFile)
-        outputFiles.writeAllTo(JsEnvironmentConfigurator.getJsArtifactsOutputDir(testServices))
-
-        if (jsConfig.moduleKind != ModuleKind.PLAIN) {
-            val content = FileUtil.loadFile(outputFile, true)
-            val wrappedContent = wrapWithModuleEmulationMarkers(content, moduleId = jsConfig.moduleId, moduleKind = jsConfig.moduleKind)
-            FileUtil.writeToFile(outputFile, wrappedContent)
-        }
-
-        return BinaryArtifacts.OldJsArtifact(outputFile, translationResult.program)
-    }
-}
-
+open class AbstractLegacyJsTypeScriptExportTest : AbstractJsTest(
+    pathToTestDir = "${TEST_DATA_DIR_PATH}typescript-export/",
+    testGroupOutputDirPrefix = "legacy-typescript-export/"
+)
