@@ -35,9 +35,15 @@ class JsEnvironmentConfigurator(testServices: TestServices) : EnvironmentConfigu
         get() = listOf(JsEnvironmentConfigurationDirectives)
 
     companion object {
-        const val OUTPUT_DIR_NAME = "outputDir"
+        const val TEST_DATA_DIR_PATH = "js/js.translator/testData/"
         const val OLD_MODULE_SUFFIX = "-old"
-        private const val TEST_MODULE = "JS_TESTS"
+
+        const val TEST_MODULE_NAME = "JS_TESTS"
+        const val DEFAULT_MODULE_NAME = "main"
+
+        private const val OUTPUT_DIR_NAME = "outputDir"
+        private const val DCE_OUTPUT_DIR_NAME = "dceOutputDir"
+        private const val PIR_OUTPUT_DIR_NAME = "pirOutputDir"
 
         object ExceptionThrowingReporter : JsConfig.Reporter() {
             override fun error(message: String) {
@@ -52,14 +58,26 @@ class JsEnvironmentConfigurator(testServices: TestServices) : EnvironmentConfigu
             }
         }
 
-        private fun TestModuleStructure.outputFileSimpleName(moduleName: String): String {
-            val testName = originalTestDataFiles.first().name.decapitalizeAsciiOnly()
-            val outputFileSuffix = if (moduleName == TEST_MODULE) "" else "-$moduleName"
+        fun getJsArtifactSimpleName(testServices: TestServices, moduleName: String): String {
+            val testName = testServices.testInfo.methodName.removePrefix("test").decapitalizeAsciiOnly()
+            val outputFileSuffix = if (moduleName == TEST_MODULE_NAME) "" else "-$moduleName"
             return testName + outputFileSuffix
         }
 
-        fun TestModuleStructure.outputFilePath(directory: File, moduleName: String): String {
-            return directory.absolutePath + "/" + outputFileSimpleName(moduleName) + "_v5"
+        fun getJsModuleArtifactPath(testServices: TestServices, moduleName: String): String {
+            return getJsArtifactsOutputDir(testServices).absolutePath + "/" + getJsArtifactSimpleName(testServices, moduleName) + "_v5"
+        }
+
+        fun getJsArtifactsOutputDir(testServices: TestServices): File {
+            return testServices.temporaryDirectoryManager.getOrCreateTempDirectory(OUTPUT_DIR_NAME)
+        }
+
+        fun getDceJsArtifactsOutputDir(testServices: TestServices): File {
+            return testServices.temporaryDirectoryManager.getOrCreateTempDirectory(DCE_OUTPUT_DIR_NAME)
+        }
+
+        fun getPirJsArtifactsOutputDir(testServices: TestServices): File {
+            return testServices.temporaryDirectoryManager.getOrCreateTempDirectory(PIR_OUTPUT_DIR_NAME)
         }
 
         fun createJsConfig(project: Project, configuration: CompilerConfiguration): JsConfig {
@@ -89,11 +107,9 @@ class JsEnvironmentConfigurator(testServices: TestServices) : EnvironmentConfigu
         val noInline = registeredDirectives.contains(NO_INLINE)
         configuration.put(CommonConfigurationKeys.DISABLE_INLINE, noInline)
 
-        val moduleStructure = testServices.moduleStructure
-        val outputDir = testServices.temporaryDirectoryManager.getOrCreateTempDirectory(OUTPUT_DIR_NAME)
-        val dependencies = module.regularDependencies.map { moduleStructure.outputFilePath(outputDir, it.moduleName) + ".meta.js" }
-        val allDependencies = module.allTransitiveDependencies().map { moduleStructure.outputFilePath(outputDir, it.moduleName) + ".meta.js" }
-        val friends = module.friendDependencies.map { moduleStructure.outputFilePath(outputDir, it.moduleName) + ".meta.js" }
+        val dependencies = module.regularDependencies.map { getJsModuleArtifactPath(testServices, it.moduleName) + ".meta.js" }
+        val allDependencies = module.allTransitiveDependencies().map { getJsModuleArtifactPath(testServices, it.moduleName) + ".meta.js" }
+        val friends = module.friendDependencies.map { getJsModuleArtifactPath(testServices, it.moduleName) + ".meta.js" }
 
         val libraries = when (module.targetBackend) {
             TargetBackend.JS_IR_ES6 -> dependencies

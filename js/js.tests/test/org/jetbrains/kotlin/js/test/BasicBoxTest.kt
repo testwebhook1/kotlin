@@ -35,8 +35,9 @@ import org.jetbrains.kotlin.js.engine.loadFiles
 import org.jetbrains.kotlin.js.facade.*
 import org.jetbrains.kotlin.js.parser.sourcemaps.SourceMapParser
 import org.jetbrains.kotlin.js.parser.sourcemaps.SourceMapSuccess
-import org.jetbrains.kotlin.js.test.new.JsAstHandler
-import org.jetbrains.kotlin.js.test.new.JsSourceMapHandler
+import org.jetbrains.kotlin.js.testNew.JsAdditionalSourceProvider
+import org.jetbrains.kotlin.js.testNew.JsAstHandler
+import org.jetbrains.kotlin.js.testNew.JsSourceMapHandler
 import org.jetbrains.kotlin.js.test.utils.*
 import org.jetbrains.kotlin.library.KotlinAbiVersion
 import org.jetbrains.kotlin.metadata.DebugProtoBuf
@@ -234,10 +235,7 @@ abstract class BasicBoxTest(
                 }
             }
 
-            val globalCommonFiles = JsTestUtils.getFilesInDirectoryByExtension(COMMON_FILES_DIR_PATH, JavaScript.EXTENSION)
-            val localCommonFile = file.parent + "/" + COMMON_FILES_NAME + JavaScript.DOT_EXTENSION
-            val localCommonFiles = if (File(localCommonFile).exists()) listOf(localCommonFile) else emptyList()
-
+            val commonFiles = JsAdditionalSourceProvider.getAdditionalJsFiles(file.parent).map { it.absolutePath }
             val inputJsFiles = inputFiles
                 .filter { it.fileName.endsWith(".js") }
                 .map { inputJsFile ->
@@ -269,27 +267,23 @@ abstract class BasicBoxTest(
                 additionalMainFiles += additionalMainJsFile
             }
 
-            val allJsFiles = additionalFiles + inputJsFiles + generatedJsFiles.map { it.first } + globalCommonFiles + localCommonFiles +
-                    additionalMainFiles
+            val allJsFiles = additionalFiles + inputJsFiles + generatedJsFiles.map { it.first } + commonFiles + additionalMainFiles
 
             val dceAllJsFiles = additionalFiles + inputJsFiles + generatedJsFiles.map {
                 it.first.replace(
                     outputDir.absolutePath,
                     dceOutputDir.absolutePath
                 )
-            } + globalCommonFiles + localCommonFiles + additionalMainFiles
+            } + commonFiles + additionalMainFiles
 
             val pirAllJsFiles = additionalFiles + inputJsFiles + generatedJsFiles.map {
                 it.first.replace(
                     outputDir.absolutePath,
                     pirOutputDir.absolutePath
                 )
-            } + globalCommonFiles + localCommonFiles + additionalMainFiles
+            } + commonFiles + additionalMainFiles
 
-
-            val dontRunGeneratedCode =
-                InTextDirectivesUtils.dontRunGeneratedCode(targetBackend, file)
-
+            val dontRunGeneratedCode = InTextDirectivesUtils.dontRunGeneratedCode(targetBackend, file)
             if (!dontRunGeneratedCode && generateNodeJsRunner && !SKIP_NODE_JS.matcher(fileContent).find()) {
                 val nodeRunnerName = mainModule.outputFileName(outputDir) + ".node.js"
                 val ignored = InTextDirectivesUtils.isIgnoredTarget(TargetBackend.JS, file)
@@ -480,11 +474,7 @@ abstract class BasicBoxTest(
     ) {
         val kotlinFiles = module.files.filter { it.fileName.endsWith(".kt") }
         val testFiles = kotlinFiles.map { it.fileName }
-        val globalCommonFiles = JsTestUtils.getFilesInDirectoryByExtension(COMMON_FILES_DIR_PATH, KotlinFileType.EXTENSION)
-        val localCommonFile = directory + "/" + COMMON_FILES_NAME + "." + KotlinFileType.EXTENSION
-        val localCommonFiles = if (File(localCommonFile).exists()) listOf(localCommonFile) else emptyList()
-
-        val additionalFiles = globalCommonFiles + localCommonFiles
+        val additionalFiles = JsAdditionalSourceProvider.getAdditionalJsFiles(directory).map { it.absolutePath }
         val allSourceFiles = (testFiles + additionalFiles).map(::File)
         val psiFiles = createPsiFiles(allSourceFiles.sortedBy { it.canonicalPath }.map { it.canonicalPath })
 

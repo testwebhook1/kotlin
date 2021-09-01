@@ -3,7 +3,7 @@
  * Use of this source code is governed by the Apache 2.0 license that can be found in the license/LICENSE.txt file.
  */
 
-package org.jetbrains.kotlin.js.test.new
+package org.jetbrains.kotlin.js.testNew
 
 import com.intellij.openapi.util.io.FileUtil
 import com.intellij.openapi.util.text.StringUtil
@@ -34,9 +34,8 @@ import org.jetbrains.kotlin.test.services.TestServices
 import org.jetbrains.kotlin.test.services.compilerConfigurationProvider
 import org.jetbrains.kotlin.test.services.configuration.CommonEnvironmentConfigurator
 import org.jetbrains.kotlin.test.services.configuration.JsEnvironmentConfigurator
-import org.jetbrains.kotlin.test.services.configuration.JsEnvironmentConfigurator.Companion.outputFilePath
-import org.jetbrains.kotlin.test.services.moduleStructure
-import org.jetbrains.kotlin.test.services.temporaryDirectoryManager
+import org.jetbrains.kotlin.test.services.configuration.JsEnvironmentConfigurator.Companion.TEST_DATA_DIR_PATH
+import org.jetbrains.kotlin.test.services.configuration.JsEnvironmentConfigurator.Companion.getJsModuleArtifactPath
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.PrintStream
@@ -46,11 +45,6 @@ abstract class AbstractJsBlackBoxCodegenTestBase<R : ResultingArtifact.FrontendO
     val targetFrontend: FrontendKind<R>,
     targetBackend: TargetBackend
 ) : AbstractKotlinCompilerWithTargetBackendTest(targetBackend) {
-    companion object {
-        const val TEST_DATA_DIR_PATH = "js/js.translator/testData/"
-        const val DIST_DIR_JS_PATH = "dist/js/"
-    }
-
     abstract val frontendFacade: Constructor<FrontendFacade<R>>
     abstract val frontendToBackendConverter: Constructor<Frontend2BackendConverter<R, I>>
     abstract val backendFacade: Constructor<BackendFacade<I, BinaryArtifacts.Js>>
@@ -79,14 +73,6 @@ abstract class AbstractJsBlackBoxCodegenTestBase<R : ResultingArtifact.FrontendO
         useAdditionalSourceProviders(
             ::JsAdditionalSourceProvider
         )
-
-        jsArtifactsHandlersStep {
-            useHandlers(
-                ::JsAstHandler,
-                ::JsSourceMapHandler,
-                ::JsBoxRunner,
-            )
-        }
 //        useAfterAnalysisCheckers(::BlackBoxCodegenSuppressor) TODO uncomment later
     }
 }
@@ -161,6 +147,14 @@ open class AbstractJsBlackBoxCodegenTest : AbstractJsBlackBoxCodegenTestBase<Cla
                     JsEnvironmentConfigurationDirectives.PATH_TO_TEST_DIR with "${TEST_DATA_DIR_PATH}typescript-export/"
                     JsEnvironmentConfigurationDirectives.TEST_GROUP_OUTPUT_DIR_PREFIX with "legacy-typescript-export/"
                 }
+            }
+
+            jsArtifactsHandlersStep {
+                useHandlers(
+                    ::JsAstHandler,
+                    ::JsSourceMapHandler,
+                    ::JsBoxRunner,
+                )
             }
         }
     }
@@ -241,15 +235,14 @@ class ClassicJsBackendFacade(
             val collector = PrintingMessageCollector(PrintStream(outputStream), MessageRenderer.PLAIN_FULL_PATHS, true)
             AnalyzerWithCompilerReport.reportDiagnostics(translationResult.diagnostics, collector)
             val messages = outputStream.toByteArray().toString(Charset.forName("UTF-8"))
-            throw AssertionError("The following errors occurred compiling test:\n" + messages)
+            throw AssertionError("The following errors occurred compiling test:\n$messages")
         }
 
-        val outputDir = testServices.temporaryDirectoryManager.getOrCreateTempDirectory(JsEnvironmentConfigurator.OUTPUT_DIR_NAME)
-        val outputFile = File(testServices.moduleStructure.outputFilePath(outputDir, module.name))
+        val outputFile = File(getJsModuleArtifactPath(testServices, module.name))
         val outputPrefixFile = originalFile.parentFile.resolve(originalFile.name + ".prefix").takeIf { it.exists() }
         val outputPostfixFile = originalFile.parentFile.resolve(originalFile.name + ".postfix").takeIf { it.exists() }
         val outputFiles = translationResult.getOutputFiles(outputFile, outputPrefixFile, outputPostfixFile)
-        outputFiles.writeAllTo(outputDir)
+        outputFiles.writeAllTo(JsEnvironmentConfigurator.getJsArtifactsOutputDir(testServices))
 
         if (jsConfig.moduleKind != ModuleKind.PLAIN) {
             val content = FileUtil.loadFile(outputFile, true)
@@ -257,7 +250,7 @@ class ClassicJsBackendFacade(
             FileUtil.writeToFile(outputFile, wrappedContent)
         }
 
-        return BinaryArtifacts.OldJsArtifact(/*outputFile.readText()*/translationResult.program)
+        return BinaryArtifacts.OldJsArtifact(outputFile, translationResult.program)
     }
 }
 

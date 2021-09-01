@@ -3,9 +3,10 @@
  * Use of this source code is governed by the Apache 2.0 license that can be found in the license/LICENSE.txt file.
  */
 
-package org.jetbrains.kotlin.js.test.new
+package org.jetbrains.kotlin.js.testNew
 
 import org.jetbrains.kotlin.idea.KotlinFileType
+import org.jetbrains.kotlin.js.JavaScript
 import org.jetbrains.kotlin.test.directives.model.RegisteredDirectives
 import org.jetbrains.kotlin.test.model.TestFile
 import org.jetbrains.kotlin.test.model.TestModule
@@ -16,13 +17,7 @@ import java.io.FileFilter
 
 class JsAdditionalSourceProvider(testServices: TestServices) : AdditionalSourceProvider(testServices) {
     override fun produceAdditionalFiles(globalDirectives: RegisteredDirectives, module: TestModule): List<TestFile> {
-        val globalCommonFiles = getFilesInDirectoryByExtension(COMMON_FILES_DIR_PATH, KotlinFileType.EXTENSION)
-            .map { File(it).toTestFile() }
-
-        val localCommonFilePath = module.files.first().originalFile.parent + "/" + COMMON_FILES_NAME + "." + KotlinFileType.EXTENSION
-        val localCommonFile = File(localCommonFilePath).takeIf { it.exists() }?.toTestFile() ?: return globalCommonFiles
-
-        return globalCommonFiles + localCommonFile
+        return getAdditionalKotlinFiles(module.files.first().originalFile.parent).map { it.toTestFile() }
     }
 
     companion object {
@@ -38,6 +33,21 @@ class JsAdditionalSourceProvider(testServices: TestServices) : AdditionalSourceP
             if (!dir.isDirectory) return emptyList()
 
             return dir.listFiles(FileFilter { it.extension == extension })?.map { it.absolutePath } ?: emptyList()
+        }
+
+        private fun getAdditionalFiles(directory: String, extension: String): List<File> {
+            val globalCommonFiles = getFilesInDirectoryByExtension(COMMON_FILES_DIR_PATH, extension).map { File(it) }
+            val localCommonFilePath = "$directory/$COMMON_FILES_NAME.$extension"
+            val localCommonFile = File(localCommonFilePath).takeIf { it.exists() } ?: return globalCommonFiles
+            return globalCommonFiles + localCommonFile
+        }
+
+        fun getAdditionalKotlinFiles(directory: String): List<File> {
+            return getAdditionalFiles(directory, KotlinFileType.EXTENSION)
+        }
+
+        fun getAdditionalJsFiles(directory: String): List<File> {
+            return getAdditionalFiles(directory, JavaScript.EXTENSION)
         }
     }
 }
