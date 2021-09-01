@@ -99,7 +99,7 @@ abstract class AbstractJsTest(
 }
 
 open class AbstractBoxJsTest : AbstractJsTest(
-    pathToTestDir = "${TEST_DATA_DIR_PATH}box/",
+    pathToTestDir = "${TEST_DATA_DIR_PATH}/box/",
     testGroupOutputDirPrefix = "box/"
 )
 
@@ -120,36 +120,36 @@ open class AbstractJsLegacyPrimitiveArraysBoxTest : AbstractJsTest(
 )
 
 open class AbstractSourceMapGenerationSmokeTest : AbstractJsTest(
-    pathToTestDir = "${TEST_DATA_DIR_PATH}sourcemap/",
+    pathToTestDir = "${TEST_DATA_DIR_PATH}/sourcemap/",
     testGroupOutputDirPrefix = "sourcemap/",
     generateSourceMap = true,
     generateNodeJsRunner = false
 )
 
 open class AbstractWebDemoExamples1Test : AbstractJsTest(
-    pathToTestDir = "${TEST_DATA_DIR_PATH}webDemoExamples1/",
+    pathToTestDir = "${TEST_DATA_DIR_PATH}/webDemoExamples1/",
     testGroupOutputDirPrefix = "webDemoExamples1/",
     generateNodeJsRunner = false
 )
 
 open class AbstractWebDemoExamples2Test : AbstractJsTest(
-    pathToTestDir = "${TEST_DATA_DIR_PATH}webDemoExamples2/",
+    pathToTestDir = "${TEST_DATA_DIR_PATH}/webDemoExamples2/",
     testGroupOutputDirPrefix = "webDemoExamples2/",
     generateNodeJsRunner = false
 )
 
 open class AbstractOutputPrefixPostfixTest : AbstractJsTest(
-    pathToTestDir = "${TEST_DATA_DIR_PATH}outputPrefixPostfix/",
+    pathToTestDir = "${TEST_DATA_DIR_PATH}/outputPrefixPostfix/",
     testGroupOutputDirPrefix = "outputPrefixPostfix/",
     generateNodeJsRunner = false
 )
 
 open class AbstractMultiModuleOrderTest : AbstractJsTest(
-    pathToTestDir = "${TEST_DATA_DIR_PATH}multiModuleOrder/",
+    pathToTestDir = "${TEST_DATA_DIR_PATH}/multiModuleOrder/",
     testGroupOutputDirPrefix = "multiModuleOrder/"
 )
 
 open class AbstractLegacyJsTypeScriptExportTest : AbstractJsTest(
-    pathToTestDir = "${TEST_DATA_DIR_PATH}typescript-export/",
+    pathToTestDir = "${TEST_DATA_DIR_PATH}/typescript-export/",
     testGroupOutputDirPrefix = "legacy-typescript-export/"
 )

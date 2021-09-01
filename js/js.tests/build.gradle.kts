@@ -27,10 +27,16 @@ val testJsRuntime by configurations.creating {
 }
 
 dependencies {
+    testApiJUnit5(vintageEngine = true)
     testRuntime(intellijDep())
 
     testCompile(protobufFull())
     testCompile(projectTests(":compiler:tests-common"))
+    testApi(projectTests(":compiler:test-infrastructure"))
+    testApi(projectTests(":compiler:test-infrastructure-utils"))
+    testApi(projectTests(":compiler:tests-compiler-utils"))
+    testApi(projectTests(":compiler:tests-common-new"))
+
     testCompileOnly(project(":compiler:frontend"))
     testCompileOnly(project(":compiler:cli"))
     testCompileOnly(project(":compiler:cli-js"))
@@ -255,8 +261,9 @@ projectTest(parallel = true) {
     configureTestDistribution()
 }
 
-projectTest("jsTest", true) {
+projectTest("jsTest", parallel = true, jUnit5Enabled = true) {
     setUpJsBoxTests(jsEnabled = true, jsIrEnabled = false)
+    useJUnitPlatform()
 }
 
 projectTest("jsIrTest", true) {
@@ -291,9 +298,10 @@ projectTest("jsPirTest", true) {
     setUpJsBoxTests(jsEnabled = false, jsIrEnabled = true)
 }
 
-projectTest("quickTest", true) {
+projectTest("quickTest", parallel = true, jUnit5Enabled = true) {
     setUpJsBoxTests(jsEnabled = true, jsIrEnabled = false)
     systemProperty("kotlin.js.skipMinificationTest", "true")
+    useJUnitPlatform()
 }
 
 testsJar {}

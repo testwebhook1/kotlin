@@ -35,7 +35,7 @@ class JsEnvironmentConfigurator(testServices: TestServices) : EnvironmentConfigu
         get() = listOf(JsEnvironmentConfigurationDirectives)
 
     companion object {
-        const val TEST_DATA_DIR_PATH = "js/js.translator/testData/"
+        const val TEST_DATA_DIR_PATH = "js/js.translator/testData"
         const val OLD_MODULE_SUFFIX = "-old"
 
         const val TEST_MODULE_NAME = "JS_TESTS"
