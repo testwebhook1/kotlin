@@ -112,6 +112,7 @@ class StringConcatGenerator(val mode: JvmStringConcat, val mv: InstructionAdapte
         } else {
             //if state was flushed in `invokeAppend` do nothing
             if (justFlushed) return
+            var itemForGeneration = items
             if (mode == JvmStringConcat.INDY_WITH_CONSTANTS) {
                 val bootstrap = Handle(
                     Opcodes.H_INVOKESTATIC,
@@ -121,25 +122,16 @@ class StringConcatGenerator(val mode: JvmStringConcat, val mv: InstructionAdapte
                     false
                 )
 
-                val templateBuilder = StringBuilder()
-                items.forEach {
-                    when (it.itemType) {
-                        ItemType.PARAMETER ->
-                            templateBuilder.append("\u0001")
-                        ItemType.CONSTANT ->
-                            templateBuilder.append("\u0002")
-                        ItemType.INLINED_CONSTANT ->
-                            templateBuilder.append(it.value)
-                    }
-                }
+                itemForGeneration = fitRestrictions(items)
+                val templateBuilder = buildrecipe(itemForGeneration)
 
-                val specialSymbolsInTemplate = items.filter { it.itemType == ItemType.CONSTANT }.map { it.value }
+                val specialSymbolsInTemplate = itemForGeneration.filter { it.itemType == ItemType.CONSTANT }.map { it.value }
 
                 mv.invokedynamic(
                     "makeConcatWithConstants",
                     Type.getMethodDescriptor(
                         JAVA_STRING_TYPE,
-                        *items.filter { it.itemType == ItemType.PARAMETER }.map { it.type }.toTypedArray()
+                        *itemForGeneration.filter { it.itemType == ItemType.PARAMETER }.map { it.type }.toTypedArray()
                     ),
                     bootstrap,
                     arrayOf(templateBuilder.toString()) + specialSymbolsInTemplate
@@ -152,26 +144,71 @@ class StringConcatGenerator(val mode: JvmStringConcat, val mv: InstructionAdapte
                     "(Ljava/lang/invoke/MethodHandles\$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;",
                     false
                 )
-                assert(items.all { it.itemType == ItemType.PARAMETER }) {
+                assert(itemForGeneration.all { it.itemType == ItemType.PARAMETER }) {
                     "All arguments in `indy` concatenation should be processed as parameters, but: ${
-                        items.filterNot { it.itemType == ItemType.PARAMETER }.joinToString()
+                        itemForGeneration.filterNot { it.itemType == ItemType.PARAMETER }.joinToString()
                     }"
                 }
 
                 mv.invokedynamic(
                     "makeConcat",
-                    Type.getMethodDescriptor(JAVA_STRING_TYPE, *items.map { it.type }.toTypedArray()),
+                    Type.getMethodDescriptor(JAVA_STRING_TYPE, *itemForGeneration.map { it.type }.toTypedArray()),
                     bootstrap,
                     arrayOf()
                 )
             }
             //clear old template
-            items.clear()
+            itemForGeneration.clear()
 
             //add just flushed string
-            items.add(Item.parameter(JAVA_STRING_TYPE))
+            itemForGeneration.add(Item.parameter(JAVA_STRING_TYPE))
             paramSlots = JAVA_STRING_TYPE.size
         }
+
+    }
+
+    private fun buildrecipe(itemForGeneration: ArrayList<Item>): StringBuilder {
+        val templateBuilder = StringBuilder()
+        itemForGeneration.forEach {
+            when (it.itemType) {
+                ItemType.PARAMETER ->
+                    templateBuilder.append("\u0001")
+                ItemType.CONSTANT ->
+                    templateBuilder.append("\u0002")
+                ItemType.INLINED_CONSTANT ->
+                    templateBuilder.append(it.value)
+            }
+        }
+        return templateBuilder
+    }
+
+    private fun fitRestrictions(items: List<Item>): ArrayList<Item> {
+        val result = arrayListOf<Item>()
+        items.forEach { item ->
+            when (item.itemType) {
+                //split INLINED_CONSTANT becomes split CONSTANT one
+                ItemType.CONSTANT, ItemType.INLINED_CONSTANT -> splitStringConstant(item.value).forEach { part ->
+                    result.add(
+                        Item(
+                            item.type,
+                            ItemType.CONSTANT,
+                            part
+                        )
+                    )
+                }
+                else -> result.add(item)
+            }
+        }
+
+        var recipe = buildrecipe(result)
+        while (recipe.length >= MAX_CONST_STRING_PART_LIMIT) {
+            val item = items.filter { it.itemType == ItemType.INLINED_CONSTANT }.maxByOrNull { it.value.length } ?: break
+            //move longest INLINED_CONSTANT to CONSTANT
+            item.itemType = ItemType.CONSTANT
+            recipe = buildrecipe(result)
+        }
+
+        return result
     }
 
     companion object {

@@ -115,6 +115,18 @@ public class IrBlackBoxModernJdkCodegenTestGenerated extends AbstractIrBlackBoxC
         }
 
         @Test
+        @TestMetadata("kt47917.kt")
+        public void testKt47917() throws Exception {
+            runTest("compiler/testData/codegen/boxModernJdk/testsWithJava11/kt47917.kt");
+        }
+
+        @Test
+        @TestMetadata("kt47917_oldBackend.kt")
+        public void testKt47917_oldBackend() throws Exception {
+            runTest("compiler/testData/codegen/boxModernJdk/testsWithJava11/kt47917_oldBackend.kt");
+        }
+
+        @Test
         @TestMetadata("varHandle.kt")
         public void testVarHandle() throws Exception {
             runTest("compiler/testData/codegen/boxModernJdk/testsWithJava11/varHandle.kt");
