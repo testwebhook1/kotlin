@@ -7,8 +7,8 @@ package api
 import kotlin.annotation.AnnotationTarget.*
 
 @RequiresOptIn(level = RequiresOptIn.Level.WARNING)
-@Target(CLASS, ANNOTATION_CLASS, PROPERTY, FIELD, LOCAL_VARIABLE, VALUE_PARAMETER, CONSTRUCTOR, FUNCTION,
-        PROPERTY_SETTER, TYPEALIAS)
+<!EXPERIMENTAL_ANNOTATION_WITH_WRONG_TARGET!>@Target(CLASS, ANNOTATION_CLASS, PROPERTY, FIELD, LOCAL_VARIABLE, VALUE_PARAMETER, CONSTRUCTOR, FUNCTION,
+        PROPERTY_SETTER, TYPEALIAS)<!>
 @Retention(AnnotationRetention.BINARY)
 annotation class E1
 
@@ -32,7 +32,7 @@ annotation class E3A
 annotation class E3B
 
 @RequiresOptIn(level = RequiresOptIn.Level.WARNING)
-@Target(PROPERTY_GETTER)
+<!EXPERIMENTAL_ANNOTATION_WITH_WRONG_TARGET!>@Target(PROPERTY_GETTER)<!>
 @Retention(AnnotationRetention.BINARY)
 annotation class E4
 
@@ -42,7 +42,7 @@ annotation class E4
 annotation class E5
 
 @RequiresOptIn(level = RequiresOptIn.Level.WARNING)
-@Target(PROPERTY, FUNCTION, PROPERTY_SETTER, VALUE_PARAMETER, FIELD, LOCAL_VARIABLE)
+<!EXPERIMENTAL_ANNOTATION_WITH_WRONG_TARGET!>@Target(PROPERTY, FUNCTION, PROPERTY_SETTER, VALUE_PARAMETER, FIELD, LOCAL_VARIABLE)<!>
 @Retention(AnnotationRetention.BINARY)
 annotation class E6
 
