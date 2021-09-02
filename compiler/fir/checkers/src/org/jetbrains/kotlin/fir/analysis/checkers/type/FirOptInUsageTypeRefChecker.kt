@@ -59,7 +59,8 @@ object FirOptInUsageTypeRefChecker : FirTypeRefChecker() {
         }
 
         with(FirOptInUsageBaseChecker) {
-            val experimentalities = symbol.loadExperimentalities(context, fromSetter = false) +
+            // Note: explicit type reference is considered as qualifier here                                  V
+            val experimentalities = symbol.loadExperimentalities(context, fromSetter = false, fromQualifier = true) +
                     loadExperimentalitiesFromConeArguments(context, coneType.typeArguments.toList())
             reportNotAcceptedExperimentalities(experimentalities, typeRef, context, reporter)
         }

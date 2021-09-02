@@ -23,12 +23,12 @@ object FirOptInUsageAccessChecker : FirQualifiedAccessChecker() {
         val resolvedSymbol = reference.resolvedSymbol
         with(FirOptInUsageBaseChecker) {
             if (expression is FirVariableAssignment && resolvedSymbol is FirPropertySymbol) {
-                val experimentalities = resolvedSymbol.loadExperimentalities(context, fromSetter = true) +
+                val experimentalities = resolvedSymbol.loadExperimentalities(context, fromSetter = true, fromQualifier = false) +
                         loadExperimentalitiesFromTypeArguments(context, expression.typeArguments)
                 reportNotAcceptedExperimentalities(experimentalities, expression.lValue, context, reporter)
                 return
             }
-            val experimentalities = resolvedSymbol.loadExperimentalities(context, fromSetter = false) +
+            val experimentalities = resolvedSymbol.loadExperimentalities(context, fromSetter = false, fromQualifier = false) +
                     loadExperimentalitiesFromTypeArguments(context, expression.typeArguments)
             reportNotAcceptedExperimentalities(experimentalities, expression, context, reporter)
         }
