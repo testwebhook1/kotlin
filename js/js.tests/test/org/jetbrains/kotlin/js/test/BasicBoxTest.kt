@@ -28,17 +28,14 @@ import org.jetbrains.kotlin.incremental.js.TranslationResultValue
 import org.jetbrains.kotlin.ir.backend.js.ic.SerializedIcData
 import org.jetbrains.kotlin.js.JavaScript
 import org.jetbrains.kotlin.js.config.*
-import org.jetbrains.kotlin.js.dce.DeadCodeElimination
-import org.jetbrains.kotlin.js.dce.InputFile
-import org.jetbrains.kotlin.js.dce.InputResource
-import org.jetbrains.kotlin.js.engine.loadFiles
-import org.jetbrains.kotlin.js.facade.*
+import org.jetbrains.kotlin.js.facade.K2JSTranslator
+import org.jetbrains.kotlin.js.facade.MainCallParameters
+import org.jetbrains.kotlin.js.facade.TranslationResult
+import org.jetbrains.kotlin.js.facade.TranslationUnit
 import org.jetbrains.kotlin.js.parser.sourcemaps.SourceMapParser
 import org.jetbrains.kotlin.js.parser.sourcemaps.SourceMapSuccess
-import org.jetbrains.kotlin.js.testNew.JsAdditionalSourceProvider
-import org.jetbrains.kotlin.js.testNew.JsAstHandler
-import org.jetbrains.kotlin.js.testNew.JsSourceMapHandler
-import org.jetbrains.kotlin.js.test.utils.*
+import org.jetbrains.kotlin.js.test.utils.ExceptionThrowingReporter
+import org.jetbrains.kotlin.js.testNew.*
 import org.jetbrains.kotlin.library.KotlinAbiVersion
 import org.jetbrains.kotlin.metadata.DebugProtoBuf
 import org.jetbrains.kotlin.psi.KtFile
@@ -61,7 +58,6 @@ import java.io.File
 import java.io.PrintStream
 import java.lang.Boolean.getBoolean
 import java.nio.charset.Charset
-import java.util.regex.Matcher
 import java.util.regex.Pattern
 
 abstract class BasicBoxTest(
@@ -82,7 +78,6 @@ abstract class BasicBoxTest(
 
     protected open val runMinifierByDefault: Boolean = false
     protected open val skipMinification = getBoolean("kotlin.js.skipMinificationTest")
-    protected open val overwriteReachableNodes = getBoolean(overwriteReachableNodesProperty)
 
     protected open val skipRegularMode: Boolean = false
     protected open val runIrDce: Boolean = false
@@ -287,7 +282,7 @@ abstract class BasicBoxTest(
             if (!dontRunGeneratedCode && generateNodeJsRunner && !SKIP_NODE_JS.matcher(fileContent).find()) {
                 val nodeRunnerName = mainModule.outputFileName(outputDir) + ".node.js"
                 val ignored = InTextDirectivesUtils.isIgnoredTarget(TargetBackend.JS, file)
-                val nodeRunnerText = generateNodeRunner(allJsFiles, outputDir, mainModuleName, ignored, testPackage)
+                val nodeRunnerText = NodeJsGeneratorHandler.generateNodeRunner(allJsFiles, outputDir, mainModuleName, ignored, testPackage)
                 FileUtil.writeToFile(File(nodeRunnerName), nodeRunnerText)
             }
 
@@ -310,74 +305,24 @@ abstract class BasicBoxTest(
             val expectedReachableNodesMatcher = EXPECTED_REACHABLE_NODES.matcher(fileContent)
             val expectedReachableNodesFound = expectedReachableNodesMatcher.find()
 
-            if (!skipMinification &&
+            if (!dontRunGeneratedCode && !skipMinification &&
                 (runMinifierByDefault || expectedReachableNodesFound) &&
                 !SKIP_MINIFICATION.matcher(fileContent).find()
             ) {
-                val thresholdChecker: (Int) -> Unit = reachableNodesThresholdChecker(
-                    expectedReachableNodesFound,
-                    expectedReachableNodesMatcher,
-                    fileContent,
-                    file
-                )
-
                 val outputDirForMinification = getOutputDir(file, testGroupOutputDirForMinification)
 
-                if (!dontRunGeneratedCode) {
-                    minifyAndRun(
-                        workDir = File(outputDirForMinification, file.nameWithoutExtension),
-                        allJsFiles = allJsFiles,
-                        generatedJsFiles = generatedJsFiles,
-                        expectedResult = expectedResult,
-                        testModuleName = testModuleName,
-                        testPackage = testPackage,
-                        testFunction = testFunction,
-                        withModuleSystem = withModuleSystem,
-                        minificationThresholdChecker = thresholdChecker
-                    )
-                }
-            }
-        }
-    }
-
-    private fun reachableNodesThresholdChecker(
-        expectedReachableNodesFound: Boolean,
-        expectedReachableNodesMatcher: Matcher,
-        fileContent: String,
-        file: File
-    ) = { reachableNodesCount: Int ->
-        val replacement = "// $EXPECTED_REACHABLE_NODES_DIRECTIVE: $reachableNodesCount"
-        val enablingMessage = "To set expected reachable nodes use '$replacement'\n" +
-                "To enable automatic overwriting reachable nodes use property '-Pfd.$overwriteReachableNodesProperty=true'"
-        if (expectedReachableNodesFound) {
-            val expectedReachableNodes = expectedReachableNodesMatcher.group(1).toInt()
-            val minThreshold = expectedReachableNodes * 9 / 10
-            val maxThreshold = expectedReachableNodes * 11 / 10
-            if (reachableNodesCount < minThreshold || reachableNodesCount > maxThreshold) {
-
-                val message = "Number of reachable nodes ($reachableNodesCount) does not fit into expected range " +
-                        "[$minThreshold; $maxThreshold]"
-                val additionalMessage: String =
-                    if (overwriteReachableNodes) {
-                        val newText = fileContent.substring(0, expectedReachableNodesMatcher.start()) +
-                                replacement +
-                                fileContent.substring(expectedReachableNodesMatcher.end())
-                        file.writeText(newText)
-                        ""
-                    } else {
-                        "\n$enablingMessage"
-                    }
-
-                fail("$message$additionalMessage")
-            }
-        } else {
-            val baseMessage = "The number of expected reachable nodes was not set. Actual reachable nodes: $reachableNodesCount."
-
-            if (overwriteReachableNodes) {
-                file.writeText("$replacement\n$fileContent")
-                fail(baseMessage)
-            } else {
-                println("$baseMessage\n$enablingMessage")
+                JsMinifierRunner.minifyAndRun(
+                    file = file,
+                    expectedReachableNodes = expectedReachableNodesMatcher.group(1).toInt(),
+                    workDir = File(outputDirForMinification, file.nameWithoutExtension),
+                    allJsFiles = allJsFiles,
+                    generatedJsFiles = generatedJsFiles.map { it.first to it.second.name },
+                    expectedResult = expectedResult,
+                    testModuleName = testModuleName,
+                    testPackage = testPackage,
+                    testFunction = testFunction,
+                    withModuleSystem = withModuleSystem,
+                ) { expect, actual -> TestCase.assertEquals(expect, actual) }
             }
         }
     }
@@ -395,36 +340,6 @@ abstract class BasicBoxTest(
 
     protected open fun performAdditionalChecks(generatedJsFiles: List<String>, outputPrefixFile: File?, outputPostfixFile: File?) {}
     protected open fun performAdditionalChecks(inputFile: File, outputFile: File) {}
-
-    private fun generateNodeRunner(
-        files: Collection<String>,
-        dir: File,
-        moduleName: String,
-        ignored: Boolean,
-        testPackage: String?
-    ): String {
-        val filesToLoad = files.map { FileUtil.getRelativePath(dir, File(it))!!.replace(File.separatorChar, '/') }.map { "\"$it\"" }
-        val fqn = testPackage?.let { ".$it" } ?: ""
-        val loadAndRun = "load([${filesToLoad.joinToString(",")}], '$moduleName')$fqn.box()"
-
-        val sb = StringBuilder()
-        sb.append("module.exports = function(load) {\n")
-        if (ignored) {
-            sb.append("  try {\n")
-            sb.append("    var result = $loadAndRun;\n")
-            sb.append("    if (result != 'OK') return 'OK';")
-            sb.append("    return 'fail: expected test failure';\n")
-            sb.append("  }\n")
-            sb.append("  catch (e) {\n")
-            sb.append("    return 'OK';\n")
-            sb.append("}\n")
-        } else {
-            sb.append("  return $loadAndRun;\n")
-        }
-        sb.append("};\n")
-
-        return sb.toString()
-    }
 
     protected fun getOutputDir(file: File, testGroupOutputDir: File = testGroupOutputDirForCompilation): File {
         val stopFile = File(pathToTestDir)
@@ -854,51 +769,6 @@ abstract class BasicBoxTest(
         return JsConfig(project, configuration, CompilerEnvironment, METADATA_CACHE, (JsConfig.JS_STDLIB + JsConfig.JS_KOTLIN_TEST).toSet())
     }
 
-    private fun minifyAndRun(
-        workDir: File, allJsFiles: List<String>, generatedJsFiles: List<Pair<String, TestModule>>,
-        expectedResult: String, testModuleName: String?, testPackage: String?, testFunction: String, withModuleSystem: Boolean,
-        minificationThresholdChecker: (Int) -> Unit
-    ) {
-        val kotlinJsLib = DIST_DIR_JS_PATH + "kotlin.js"
-        val kotlinTestJsLib = DIST_DIR_JS_PATH + "kotlin-test.js"
-        val kotlinJsLibOutput = File(workDir, "kotlin.min.js").path
-        val kotlinTestJsLibOutput = File(workDir, "kotlin-test.min.js").path
-
-        val kotlinJsInputFile = InputFile(InputResource.file(kotlinJsLib), null, kotlinJsLibOutput, "kotlin")
-        val kotlinTestJsInputFile = InputFile(InputResource.file(kotlinTestJsLib), null, kotlinTestJsLibOutput, "kotlin-test")
-
-        val filesToMinify = generatedJsFiles.associate { (fileName, module) ->
-            val inputFileName = File(fileName).nameWithoutExtension
-            fileName to InputFile(InputResource.file(fileName), null, File(workDir, inputFileName + ".min.js").absolutePath, module.name)
-        }
-
-        val testFunctionFqn = testModuleName + (if (testPackage.isNullOrEmpty()) "" else ".$testPackage") + ".$testFunction"
-        val additionalReachableNodes = setOf(
-            testFunctionFqn, "kotlin.kotlin.io.BufferedOutput", "kotlin.kotlin.io.output.flush",
-            "kotlin.kotlin.io.output.buffer", "kotlin-test.kotlin.test.overrideAsserter_wbnzx$",
-            "kotlin-test.kotlin.test.DefaultAsserter"
-        )
-        val allFilesToMinify = filesToMinify.values + kotlinJsInputFile + kotlinTestJsInputFile
-        val dceResult = DeadCodeElimination.run(allFilesToMinify, additionalReachableNodes, true) { _, _ -> }
-
-        val reachableNodes = dceResult.reachableNodes
-        minificationThresholdChecker(reachableNodes.count { it.reachable })
-
-        val runList = mutableListOf<String>()
-        runList += kotlinJsLibOutput
-        runList += kotlinTestJsLibOutput
-        runList += TEST_DATA_DIR_PATH + "nashorn-polyfills.js"
-        runList += allJsFiles.map { filesToMinify[it]?.outputPath ?: it }
-
-        val result = engineForMinifier.runAndRestoreContext {
-            loadFiles(runList)
-            overrideAsserter()
-            eval(SETUP_KOTLIN_OUTPUT)
-            runTestFunction(testModuleName, testPackage, testFunction, withModuleSystem)
-        }
-        TestCase.assertEquals(expectedResult, result)
-    }
-
     private inner class TestFileFactoryImpl() : TestFiles.TestFileFactory<TestModule, TestFile>, Closeable {
         var testPackage: String? = null
         val tmpDir = KtTestUtil.tmpDir("js-tests")
@@ -1013,10 +883,6 @@ abstract class BasicBoxTest(
         const val TEST_DATA_DIR_PATH = "js/js.translator/testData/"
         const val DIST_DIR_JS_PATH = "dist/js/"
 
-        private const val COMMON_FILES_NAME = "_common"
-        private const val COMMON_FILES_DIR = "_commonFiles/"
-        const val COMMON_FILES_DIR_PATH = TEST_DATA_DIR_PATH + COMMON_FILES_DIR
-
         private const val MODULE_EMULATION_FILE = TEST_DATA_DIR_PATH + "/moduleEmulation.js"
 
         private val MODULE_KIND_PATTERN = Pattern.compile("^// *MODULE_KIND: *(.+)$", Pattern.MULTILINE)
@@ -1061,9 +927,6 @@ abstract class BasicBoxTest(
         private const val OLD_MODULE_SUFFIX = "_old"
 
         const val KOTLIN_TEST_INTERNAL = "\$kotlin_test_internal\$"
-        private val engineForMinifier = createScriptEngine()
-
-        const val overwriteReachableNodesProperty = "kotlin.js.overwriteReachableNodes"
     }
 }
 

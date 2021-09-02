@@ -24,7 +24,7 @@ class JsAdditionalSourceProvider(testServices: TestServices) : AdditionalSourceP
     companion object {
         private const val COMMON_FILES_NAME = "_common"
         private const val COMMON_FILES_DIR = "_commonFiles/"
-        private const val COMMON_FILES_DIR_PATH = JsEnvironmentConfigurator.TEST_DATA_DIR_PATH + COMMON_FILES_DIR
+        private const val COMMON_FILES_DIR_PATH = JsEnvironmentConfigurator.TEST_DATA_DIR_PATH + "/" + COMMON_FILES_DIR
 
         private fun getFilesInDirectoryByExtension(directory: String, extension: String): List<String> {
             val dir = File(directory)
