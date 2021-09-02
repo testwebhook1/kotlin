@@ -5,7 +5,6 @@
 
 package org.jetbrains.kotlin.js.testNew
 
-import org.jetbrains.kotlin.js.test.BasicBoxTest
 import org.jetbrains.kotlin.platform.js.JsPlatforms
 import org.jetbrains.kotlin.test.Constructor
 import org.jetbrains.kotlin.test.TargetBackend
@@ -21,14 +20,20 @@ import org.jetbrains.kotlin.test.runners.AbstractKotlinCompilerWithTargetBackend
 import org.jetbrains.kotlin.test.services.configuration.CommonEnvironmentConfigurator
 import org.jetbrains.kotlin.test.services.configuration.JsEnvironmentConfigurator
 import org.jetbrains.kotlin.test.services.configuration.JsEnvironmentConfigurator.Companion.TEST_DATA_DIR_PATH
+import java.lang.Boolean.getBoolean
 
 abstract class AbstractJsBlackBoxCodegenTestBase<R : ResultingArtifact.FrontendOutput<R>, I : ResultingArtifact.BackendInput<I>>(
     val targetFrontend: FrontendKind<R>,
-    targetBackend: TargetBackend
+    targetBackend: TargetBackend,
+    private val pathToTestDir: String,
+    private val testGroupOutputDirPrefix: String,
+    private val skipMinification: Boolean = getBoolean("kotlin.js.skipMinificationTest"),
 ) : AbstractKotlinCompilerWithTargetBackendTest(targetBackend) {
     abstract val frontendFacade: Constructor<FrontendFacade<R>>
     abstract val frontendToBackendConverter: Constructor<Frontend2BackendConverter<R, I>>
     abstract val backendFacade: Constructor<BackendFacade<I, BinaryArtifacts.Js>>
+
+    private val runTestInNashorn: Boolean = getBoolean("kotlin.js.useNashorn")
 
     override fun TestConfigurationBuilder.configuration() {
         globalDefaults {
@@ -40,6 +45,11 @@ abstract class AbstractJsBlackBoxCodegenTestBase<R : ResultingArtifact.FrontendO
         val pathToRootOutputDir = System.getProperty("kotlin.js.test.root.out.dir") ?: error("'kotlin.js.test.root.out.dir' is not set")
         defaultDirectives {
             JsEnvironmentConfigurationDirectives.PATH_TO_ROOT_OUTPUT_DIR with pathToRootOutputDir
+            JsEnvironmentConfigurationDirectives.PATH_TO_TEST_DIR with pathToTestDir
+            JsEnvironmentConfigurationDirectives.TEST_GROUP_OUTPUT_DIR_PREFIX with testGroupOutputDirPrefix
+            +JsEnvironmentConfigurationDirectives.TYPED_ARRAYS
+            +JsEnvironmentConfigurationDirectives.GENERATE_NODE_JS_RUNNER
+            if (skipMinification) +JsEnvironmentConfigurationDirectives.SKIP_MINIFICATION
         }
 
         facadeStep(frontendFacade)
@@ -59,12 +69,11 @@ abstract class AbstractJsBlackBoxCodegenTestBase<R : ResultingArtifact.FrontendO
 }
 
 abstract class AbstractJsTest(
-    private val pathToTestDir: String,
-    private val testGroupOutputDirPrefix: String,
-    private val typedArraysEnabled: Boolean = true,
-    private val generateSourceMap: Boolean = false,
-    private val generateNodeJsRunner: Boolean = true,
-) : AbstractJsBlackBoxCodegenTestBase<ClassicFrontendOutputArtifact, ClassicBackendInput>(FrontendKinds.ClassicFrontend, TargetBackend.JS) {
+    pathToTestDir: String,
+    testGroupOutputDirPrefix: String,
+) : AbstractJsBlackBoxCodegenTestBase<ClassicFrontendOutputArtifact, ClassicBackendInput>(
+    FrontendKinds.ClassicFrontend, TargetBackend.JS, pathToTestDir, testGroupOutputDirPrefix
+) {
     override val frontendFacade: Constructor<FrontendFacade<ClassicFrontendOutputArtifact>>
         get() = ::ClassicFrontendFacade
 
@@ -77,31 +86,27 @@ abstract class AbstractJsTest(
     override fun configure(builder: TestConfigurationBuilder) {
         super.configure(builder)
         with(builder) {
-            with(builder) {
-                defaultDirectives {
-                    JsEnvironmentConfigurationDirectives.PATH_TO_TEST_DIR with pathToTestDir
-                    JsEnvironmentConfigurationDirectives.TEST_GROUP_OUTPUT_DIR_PREFIX with testGroupOutputDirPrefix
-                    if (typedArraysEnabled) +JsEnvironmentConfigurationDirectives.TYPED_ARRAYS
-                    if (generateNodeJsRunner) +JsEnvironmentConfigurationDirectives.GENERATE_NODE_JS_RUNNER
-                    if (generateSourceMap) +JsEnvironmentConfigurationDirectives.GENERATE_SOURCE_MAP
-                }
-            }
-
             jsArtifactsHandlersStep {
                 useHandlers(
                     ::JsAstHandler,
                     ::JsSourceMapHandler,
                     ::JsBoxRunner,
+                    ::NodeJsGeneratorHandler,
+                    ::JsMinifierRunner,
                 )
             }
         }
     }
 }
 
-open class AbstractBoxJsTest : AbstractJsTest(
-    pathToTestDir = "${TEST_DATA_DIR_PATH}/box/",
-    testGroupOutputDirPrefix = "box/"
-)
+open class AbstractBoxJsTest : AbstractJsTest(pathToTestDir = "${TEST_DATA_DIR_PATH}/box/", testGroupOutputDirPrefix = "box/") {
+    override fun configure(builder: TestConfigurationBuilder) {
+        super.configure(builder)
+        builder.defaultDirectives {
+            +JsEnvironmentConfigurationDirectives.RUN_MINIFIER_BY_DEFAULT
+        }
+    }
+}
 
 open class AbstractJsCodegenBoxTest : AbstractJsTest(
     pathToTestDir = "compiler/testData/codegen/box/",
@@ -115,34 +120,64 @@ open class AbstractJsCodegenInlineTest : AbstractJsTest(
 
 open class AbstractJsLegacyPrimitiveArraysBoxTest : AbstractJsTest(
     pathToTestDir = "compiler/testData/codegen/box/arrays/",
-    testGroupOutputDirPrefix = "codegen/box/arrays-legacy-primitivearrays/",
-    typedArraysEnabled = false
-)
+    testGroupOutputDirPrefix = "codegen/box/arrays-legacy-primitivearrays/"
+) {
+    override fun configure(builder: TestConfigurationBuilder) {
+        super.configure(builder)
+        builder.defaultDirectives {
+            -JsEnvironmentConfigurationDirectives.TYPED_ARRAYS
+        }
+    }
+}
 
 open class AbstractSourceMapGenerationSmokeTest : AbstractJsTest(
     pathToTestDir = "${TEST_DATA_DIR_PATH}/sourcemap/",
-    testGroupOutputDirPrefix = "sourcemap/",
-    generateSourceMap = true,
-    generateNodeJsRunner = false
-)
+    testGroupOutputDirPrefix = "sourcemap/"
+) {
+    override fun configure(builder: TestConfigurationBuilder) {
+        super.configure(builder)
+        builder.defaultDirectives {
+            +JsEnvironmentConfigurationDirectives.GENERATE_SOURCE_MAP
+            -JsEnvironmentConfigurationDirectives.GENERATE_NODE_JS_RUNNER
+        }
+    }
+}
 
 open class AbstractWebDemoExamples1Test : AbstractJsTest(
     pathToTestDir = "${TEST_DATA_DIR_PATH}/webDemoExamples1/",
-    testGroupOutputDirPrefix = "webDemoExamples1/",
-    generateNodeJsRunner = false
-)
+    testGroupOutputDirPrefix = "webDemoExamples1/"
+) {
+    override fun configure(builder: TestConfigurationBuilder) {
+        super.configure(builder)
+        builder.defaultDirectives {
+            -JsEnvironmentConfigurationDirectives.GENERATE_NODE_JS_RUNNER
+        }
+    }
+}
 
 open class AbstractWebDemoExamples2Test : AbstractJsTest(
     pathToTestDir = "${TEST_DATA_DIR_PATH}/webDemoExamples2/",
-    testGroupOutputDirPrefix = "webDemoExamples2/",
-    generateNodeJsRunner = false
-)
+    testGroupOutputDirPrefix = "webDemoExamples2/"
+) {
+    override fun configure(builder: TestConfigurationBuilder) {
+        super.configure(builder)
+        builder.defaultDirectives {
+            -JsEnvironmentConfigurationDirectives.GENERATE_NODE_JS_RUNNER
+        }
+    }
+}
 
 open class AbstractOutputPrefixPostfixTest : AbstractJsTest(
     pathToTestDir = "${TEST_DATA_DIR_PATH}/outputPrefixPostfix/",
-    testGroupOutputDirPrefix = "outputPrefixPostfix/",
-    generateNodeJsRunner = false
-)
+    testGroupOutputDirPrefix = "outputPrefixPostfix/"
+) {
+    override fun configure(builder: TestConfigurationBuilder) {
+        super.configure(builder)
+        builder.defaultDirectives {
+            -JsEnvironmentConfigurationDirectives.GENERATE_NODE_JS_RUNNER
+        }
+    }
+}
 
 open class AbstractMultiModuleOrderTest : AbstractJsTest(
     pathToTestDir = "${TEST_DATA_DIR_PATH}/multiModuleOrder/",

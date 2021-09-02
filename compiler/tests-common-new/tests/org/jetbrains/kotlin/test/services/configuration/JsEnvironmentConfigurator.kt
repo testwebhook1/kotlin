@@ -39,11 +39,13 @@ class JsEnvironmentConfigurator(testServices: TestServices) : EnvironmentConfigu
         const val OLD_MODULE_SUFFIX = "-old"
 
         const val TEST_MODULE_NAME = "JS_TESTS"
+        const val TEST_FUNCTION = "box"
         const val DEFAULT_MODULE_NAME = "main"
 
         private const val OUTPUT_DIR_NAME = "outputDir"
         private const val DCE_OUTPUT_DIR_NAME = "dceOutputDir"
         private const val PIR_OUTPUT_DIR_NAME = "pirOutputDir"
+        private const val MINIFICATION_OUTPUT_DIR_NAME = "minOutputDir"
 
         object ExceptionThrowingReporter : JsConfig.Reporter() {
             override fun error(message: String) {
@@ -78,6 +80,10 @@ class JsEnvironmentConfigurator(testServices: TestServices) : EnvironmentConfigu
 
         fun getPirJsArtifactsOutputDir(testServices: TestServices): File {
             return testServices.temporaryDirectoryManager.getOrCreateTempDirectory(PIR_OUTPUT_DIR_NAME)
+        }
+
+        fun getMinificationJsArtifactsOutputDir(testServices: TestServices): File {
+            return testServices.temporaryDirectoryManager.getOrCreateTempDirectory(MINIFICATION_OUTPUT_DIR_NAME)
         }
 
         fun createJsConfig(project: Project, configuration: CompilerConfiguration): JsConfig {

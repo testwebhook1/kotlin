@@ -5,86 +5,66 @@
 
 package org.jetbrains.kotlin.js.testNew
 
-import com.intellij.openapi.util.io.FileUtil
-import org.jetbrains.kotlin.js.JavaScript
-import org.jetbrains.kotlin.serialization.js.ModuleKind
+import org.jetbrains.kotlin.js.testNew.utils.*
 import org.jetbrains.kotlin.test.backend.handlers.JsBinaryArtifactHandler
 import org.jetbrains.kotlin.test.directives.JsEnvironmentConfigurationDirectives
 import org.jetbrains.kotlin.test.model.BinaryArtifacts
 import org.jetbrains.kotlin.test.model.TestModule
 import org.jetbrains.kotlin.test.services.TestServices
-import org.jetbrains.kotlin.test.services.configuration.JsEnvironmentConfigurator
-import org.jetbrains.kotlin.test.services.configuration.JsEnvironmentConfigurator.Companion.TEST_DATA_DIR_PATH
-import org.jetbrains.kotlin.test.services.isJsFile
+import org.jetbrains.kotlin.test.services.defaultsProvider
 import org.jetbrains.kotlin.test.services.moduleStructure
-import java.io.File
 
 class JsBoxRunner(testServices: TestServices) : JsBinaryArtifactHandler(testServices) {
-    val moduleToArtifact = mutableMapOf<TestModule, BinaryArtifacts.Js>()
-
-    companion object {
-        private const val MODULE_EMULATION_FILE = "$TEST_DATA_DIR_PATH/moduleEmulation.js"
-    }
+    val modulesToArtifact = mutableMapOf<TestModule, BinaryArtifacts.Js>()
 
     override fun processAfterAllModules(someAssertionWasFailed: Boolean) {
         if (someAssertionWasFailed) return
-        val originalFile = testServices.moduleStructure.originalTestDataFiles.first()
-        val outputDir = JsEnvironmentConfigurator.getJsArtifactsOutputDir(testServices)
-        val dceOutputDir = JsEnvironmentConfigurator.getDceJsArtifactsOutputDir(testServices)
-        val pirOutputDir = JsEnvironmentConfigurator.getPirJsArtifactsOutputDir(testServices)
-
-        val commonFiles = JsAdditionalSourceProvider.getAdditionalJsFiles(originalFile.parent).map { it.absolutePath }
-        val inputJsFiles = moduleToArtifact
-            .flatMap { moduleToArtifact -> moduleToArtifact.key.files.map { moduleToArtifact.key to it } }
-            .filter { it.second.isJsFile }
-            .map { (module, inputJsFile) ->
-                val sourceFile = File(inputJsFile.name)
-                val newName = JsEnvironmentConfigurator.getJsArtifactSimpleName(testServices, module.name) + "-js-" + sourceFile.name
-                val targetFile = File(outputDir, newName)
-                FileUtil.copy(File(inputJsFile.name), targetFile)
-                targetFile.absolutePath
-            }
 
         val globalDirectives = testServices.moduleStructure.allDirectives
-        val globalModuleKind = globalDirectives[JsEnvironmentConfigurationDirectives.MODULE_KIND].singleOrNull() ?: ModuleKind.PLAIN
-        val withModuleSystem = globalModuleKind != ModuleKind.PLAIN && JsEnvironmentConfigurationDirectives.NO_MODULE_SYSTEM_PATTERN !in globalDirectives
+        val dontRunGeneratedCode = globalDirectives[JsEnvironmentConfigurationDirectives.DONT_RUN_GENERATED_CODE]
+            .contains(testServices.defaultsProvider.defaultTargetBackend?.name)
 
-        val additionalFiles = mutableListOf<String>()
-        if (withModuleSystem) additionalFiles += MODULE_EMULATION_FILE
+        if (!dontRunGeneratedCode) return
 
-        originalFile.parentFile.resolve(originalFile.nameWithoutExtension + JavaScript.DOT_EXTENSION)
-            .takeIf { it.exists() }
-            ?.let { additionalFiles += it.absolutePath }
+        val (allJsFiles, dceAllJsFiles, pirAllJsFiles) = getAllFilesForRunner(testServices, modulesToArtifact)
 
-        originalFile.parentFile.resolve(originalFile.nameWithoutExtension + "__main.js")
-            .takeIf { it.exists() }
-            ?.let { additionalFiles += it.absolutePath }
+        val withModuleSystem = testWithModuleSystem(testServices)
+        val testModuleName = getTestModuleName(testServices)
+        val testPackage = extractTestPackage(testServices)
 
-        val artifactsPaths = moduleToArtifact.values.map { it.outputFile.absolutePath }
-        val allCommonFiles = additionalFiles + inputJsFiles + commonFiles
-        val allJsFiles = allCommonFiles + artifactsPaths
-        val dceAllJsFiles = allCommonFiles + artifactsPaths.map { it.replace(outputDir.absolutePath, dceOutputDir.absolutePath) }
-        val pirAllJsFiles = allCommonFiles + artifactsPaths.map { it.replace(outputDir.absolutePath, pirOutputDir.absolutePath) }
+        val dontSkipRegularMode = JsEnvironmentConfigurationDirectives.SKIP_REGULAR_MODE !in globalDirectives
+        val dontSkipDceDriven = JsEnvironmentConfigurationDirectives.SKIP_DCE_DRIVEN !in globalDirectives
+        val runIrDce = JsEnvironmentConfigurationDirectives.RUN_IR_DCE in globalDirectives
+        val runIrPir = JsEnvironmentConfigurationDirectives.RUN_IR_PIR in globalDirectives
+        if (dontSkipRegularMode) {
+            runGeneratedCode(allJsFiles, testModuleName, testPackage, DEFAULT_EXPECTED_RESULT, withModuleSystem)
 
+            if (runIrDce) {
+                runGeneratedCode(dceAllJsFiles, testModuleName, testPackage, DEFAULT_EXPECTED_RESULT, withModuleSystem)
+            }
+        }
 
-        // TODO
-    }
-
-    override fun processModule(module: TestModule, info: BinaryArtifacts.Js) {
-        moduleToArtifact[module] = info
-    }
-
-    private fun getMainModule(): TestModule {
-        val modules = testServices.moduleStructure.modules
-        val inferMainModule = JsEnvironmentConfigurationDirectives.INFER_MAIN_MODULE in testServices.moduleStructure.allDirectives
-        return when {
-            inferMainModule -> modules.last()
-            else -> modules.singleOrNull { it.name == JsEnvironmentConfigurator.TEST_MODULE_NAME }
-                ?: modules.single { it.name == JsEnvironmentConfigurator.DEFAULT_MODULE_NAME }
+        if (runIrPir && dontSkipDceDriven) {
+            runGeneratedCode(pirAllJsFiles, testModuleName, testPackage, DEFAULT_EXPECTED_RESULT, withModuleSystem)
         }
     }
 
-    private fun createNodeJsRunner() {
+    override fun processModule(module: TestModule, info: BinaryArtifacts.Js) {
+        modulesToArtifact[module] = info
+    }
 
+    private fun runGeneratedCode(
+        jsFiles: List<String>,
+        testModuleName: String?,
+        testPackage: String?,
+        expectedResult: String,
+        withModuleSystem: Boolean
+    ) {
+        TODO()
+        //testChecker.check(jsFiles, testModuleName, testPackage, JsEnvironmentConfigurator.TEST_FUNCTION, expectedResult, withModuleSystem)
+    }
+
+    companion object {
+        private const val DEFAULT_EXPECTED_RESULT = "OK"
     }
 }

@@ -109,7 +109,7 @@ class ClassicJsBackendFacade(
             throw AssertionError("The following errors occurred compiling test:\n$messages")
         }
 
-        val outputFile = File(JsEnvironmentConfigurator.getJsModuleArtifactPath(testServices, module.name))
+        val outputFile = File(JsEnvironmentConfigurator.getJsModuleArtifactPath(testServices, module.name) + ".js")
         val outputPrefixFile = originalFile.parentFile.resolve(originalFile.name + ".prefix").takeIf { it.exists() }
         val outputPostfixFile = originalFile.parentFile.resolve(originalFile.name + ".postfix").takeIf { it.exists() }
         val outputFiles = translationResult.getOutputFiles(outputFile, outputPrefixFile, outputPostfixFile)

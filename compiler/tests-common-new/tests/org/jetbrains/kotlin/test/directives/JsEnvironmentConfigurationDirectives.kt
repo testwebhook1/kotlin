@@ -127,6 +127,11 @@ object JsEnvironmentConfigurationDirectives : SimpleDirectivesContainer() {
         }
     )
 
+    val DONT_RUN_GENERATED_CODE by stringDirective(
+        description = "", // TODO
+        applicability = DirectiveApplicability.Global,
+    )
+
     // -----
 
     val PATH_TO_TEST_DIR by stringDirective(
@@ -161,6 +166,26 @@ object JsEnvironmentConfigurationDirectives : SimpleDirectivesContainer() {
     )
 
     val GENERATE_NODE_JS_RUNNER by directive(
+        description = "", // TODO
+        applicability = DirectiveApplicability.Global
+    )
+
+    val RUN_MINIFIER_BY_DEFAULT by directive(
+        description = "", // TODO
+        applicability = DirectiveApplicability.Global
+    )
+
+    val SKIP_REGULAR_MODE by directive(
+        description = "", // TODO
+        applicability = DirectiveApplicability.Global
+    )
+
+    val RUN_IR_DCE by directive(
+        description = "", // TODO
+        applicability = DirectiveApplicability.Global
+    )
+
+    val RUN_IR_PIR by directive(
         description = "", // TODO
         applicability = DirectiveApplicability.Global
     )

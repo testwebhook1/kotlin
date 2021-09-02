@@ -12,6 +12,7 @@ import org.jetbrains.kotlin.test.model.TestFile
 import org.jetbrains.kotlin.test.model.TestModule
 import org.jetbrains.kotlin.test.services.AdditionalSourceProvider
 import org.jetbrains.kotlin.test.services.TestServices
+import org.jetbrains.kotlin.test.services.configuration.JsEnvironmentConfigurator
 import java.io.File
 import java.io.FileFilter
 
@@ -21,12 +22,9 @@ class JsAdditionalSourceProvider(testServices: TestServices) : AdditionalSourceP
     }
 
     companion object {
-        private const val TEST_DATA_DIR_PATH = "js/js.translator/testData/"
-        private const val DIST_DIR_JS_PATH = "dist/js/"
-
         private const val COMMON_FILES_NAME = "_common"
         private const val COMMON_FILES_DIR = "_commonFiles/"
-        private const val COMMON_FILES_DIR_PATH = TEST_DATA_DIR_PATH + COMMON_FILES_DIR
+        private const val COMMON_FILES_DIR_PATH = JsEnvironmentConfigurator.TEST_DATA_DIR_PATH + COMMON_FILES_DIR
 
         private fun getFilesInDirectoryByExtension(directory: String, extension: String): List<String> {
             val dir = File(directory)
