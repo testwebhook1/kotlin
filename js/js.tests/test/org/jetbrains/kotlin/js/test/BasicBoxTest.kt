@@ -474,7 +474,7 @@ abstract class BasicBoxTest(
     ) {
         val kotlinFiles = module.files.filter { it.fileName.endsWith(".kt") }
         val testFiles = kotlinFiles.map { it.fileName }
-        val additionalFiles = JsAdditionalSourceProvider.getAdditionalJsFiles(directory).map { it.absolutePath }
+        val additionalFiles = JsAdditionalSourceProvider.getAdditionalKotlinFiles(directory).map { it.absolutePath }
         val allSourceFiles = (testFiles + additionalFiles).map(::File)
         val psiFiles = createPsiFiles(allSourceFiles.sortedBy { it.canonicalPath }.map { it.canonicalPath })
 
