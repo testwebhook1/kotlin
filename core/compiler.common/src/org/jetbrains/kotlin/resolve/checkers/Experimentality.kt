@@ -22,6 +22,7 @@ data class Experimentality(val annotationFqName: FqName, val severity: Severity,
             KotlinTarget.VALUE_PARAMETER,
             KotlinTarget.LOCAL_VARIABLE,
             KotlinTarget.PROPERTY_GETTER,
+            KotlinTarget.FIELD,
         )
     }
 }
