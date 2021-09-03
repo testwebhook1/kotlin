@@ -19,7 +19,7 @@ object JsEnvironmentConfigurationDirectives : SimpleDirectivesContainer() {
         applicability = DirectiveApplicability.Any
     )
 
-    val NO_MODULE_SYSTEM_PATTERN by directive(
+    val NO_JS_MODULE_SYSTEM by directive(
         description = "", // TODO
         applicability = DirectiveApplicability.Global
     )
@@ -65,12 +65,12 @@ object JsEnvironmentConfigurationDirectives : SimpleDirectivesContainer() {
         applicability = DirectiveApplicability.File
     )
 
-    val SOURCE_MAP_SOURCE_EMBEDDING by enumDirective<SourceMapSourceEmbedding>(
+    val SOURCE_MAP_EMBED_SOURCES by enumDirective<SourceMapSourceEmbedding>(
         description = "", // TODO
         applicability = DirectiveApplicability.Module
     )
 
-    val CALL_MAIN_PATTERN by directive(
+    val CALL_MAIN by directive(
         description = "", // TODO
         applicability = DirectiveApplicability.Global
     )

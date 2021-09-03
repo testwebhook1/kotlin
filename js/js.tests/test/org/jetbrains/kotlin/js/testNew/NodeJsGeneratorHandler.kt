@@ -12,7 +12,9 @@ import org.jetbrains.kotlin.js.testNew.utils.getOnlyJsFilesForRunner
 import org.jetbrains.kotlin.test.TargetBackend
 import org.jetbrains.kotlin.test.backend.handlers.JsBinaryArtifactHandler
 import org.jetbrains.kotlin.test.directives.CodegenTestDirectives.IGNORE_BACKEND
-import org.jetbrains.kotlin.test.directives.JsEnvironmentConfigurationDirectives
+import org.jetbrains.kotlin.test.directives.JsEnvironmentConfigurationDirectives.DONT_RUN_GENERATED_CODE
+import org.jetbrains.kotlin.test.directives.JsEnvironmentConfigurationDirectives.GENERATE_NODE_JS_RUNNER
+import org.jetbrains.kotlin.test.directives.JsEnvironmentConfigurationDirectives.SKIP_NODE_JS
 import org.jetbrains.kotlin.test.model.BinaryArtifacts
 import org.jetbrains.kotlin.test.model.TestModule
 import org.jetbrains.kotlin.test.services.TestServices
@@ -31,10 +33,10 @@ class NodeJsGeneratorHandler(testServices: TestServices) : JsBinaryArtifactHandl
 
         val globalDirectives = testServices.moduleStructure.allDirectives
 
-        val dontRunGeneratedCode = globalDirectives[JsEnvironmentConfigurationDirectives.DONT_RUN_GENERATED_CODE]
+        val dontRunGeneratedCode = globalDirectives[DONT_RUN_GENERATED_CODE]
             .contains(testServices.defaultsProvider.defaultTargetBackend?.name)
-        val generateNodeJsRunner = JsEnvironmentConfigurationDirectives.GENERATE_NODE_JS_RUNNER in globalDirectives
-        val skipNodeJs = JsEnvironmentConfigurationDirectives.SKIP_NODE_JS in globalDirectives
+        val generateNodeJsRunner = GENERATE_NODE_JS_RUNNER in globalDirectives
+        val skipNodeJs = SKIP_NODE_JS in globalDirectives
 
         if (dontRunGeneratedCode || !generateNodeJsRunner || skipNodeJs) return
 

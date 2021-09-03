@@ -6,11 +6,13 @@
 package org.jetbrains.kotlin.js.testNew.utils
 
 import org.jetbrains.kotlin.js.JavaScript
-import org.jetbrains.kotlin.js.test.BasicBoxTest
+import org.jetbrains.kotlin.js.config.JSConfigurationKeys
 import org.jetbrains.kotlin.js.testNew.JsAdditionalSourceProvider
 import org.jetbrains.kotlin.psi.KtNamedFunction
 import org.jetbrains.kotlin.serialization.js.ModuleKind
-import org.jetbrains.kotlin.test.directives.JsEnvironmentConfigurationDirectives
+import org.jetbrains.kotlin.test.directives.JsEnvironmentConfigurationDirectives.INFER_MAIN_MODULE
+import org.jetbrains.kotlin.test.directives.JsEnvironmentConfigurationDirectives.NO_JS_MODULE_SYSTEM
+import org.jetbrains.kotlin.test.directives.JsEnvironmentConfigurationDirectives.RUN_PLAIN_BOX_FUNCTION
 import org.jetbrains.kotlin.test.model.BinaryArtifacts
 import org.jetbrains.kotlin.test.model.TestModule
 import org.jetbrains.kotlin.test.services.*
@@ -54,8 +56,9 @@ private fun getAdditionalFiles(testServices: TestServices): List<String> {
 
 fun testWithModuleSystem(testServices: TestServices): Boolean {
     val globalDirectives = testServices.moduleStructure.allDirectives
-    val globalModuleKind = globalDirectives[JsEnvironmentConfigurationDirectives.MODULE_KIND].singleOrNull() ?: ModuleKind.PLAIN
-    return globalModuleKind != ModuleKind.PLAIN && JsEnvironmentConfigurationDirectives.NO_MODULE_SYSTEM_PATTERN !in globalDirectives
+    val configuration = testServices.compilerConfigurationProvider.getCompilerConfiguration(getMainModule(testServices))
+    val mainModuleKind = configuration[JSConfigurationKeys.MODULE_KIND]
+    return mainModuleKind != ModuleKind.PLAIN && NO_JS_MODULE_SYSTEM !in globalDirectives
 }
 
 fun getAllFilesForRunner(
@@ -86,11 +89,10 @@ fun getOnlyJsFilesForRunner(testServices: TestServices, modulesToArtifact: Map<T
 
 private fun getMainModule(testServices: TestServices): TestModule {
     val modules = testServices.moduleStructure.modules
-    val inferMainModule = JsEnvironmentConfigurationDirectives.INFER_MAIN_MODULE in testServices.moduleStructure.allDirectives
+    val inferMainModule = INFER_MAIN_MODULE in testServices.moduleStructure.allDirectives
     return when {
         inferMainModule -> modules.last()
-        else -> modules.singleOrNull { it.name == JsEnvironmentConfigurator.TEST_MODULE_NAME }
-            ?: modules.single { it.name == JsEnvironmentConfigurator.DEFAULT_MODULE_NAME }
+        else -> modules.singleOrNull { it.name == ModuleStructureExtractor.DEFAULT_MODULE_NAME } ?: modules.single()
     }
 }
 
@@ -99,13 +101,13 @@ fun getMainModuleName(testServices: TestServices): String {
 }
 
 fun getTestModuleName(testServices: TestServices): String? {
-    val runPlainBoxFunction = JsEnvironmentConfigurationDirectives.RUN_PLAIN_BOX_FUNCTION in testServices.moduleStructure.allDirectives
+    val runPlainBoxFunction = RUN_PLAIN_BOX_FUNCTION in testServices.moduleStructure.allDirectives
     if (runPlainBoxFunction) return null
     return getMainModule(testServices).name
 }
 
 fun extractTestPackage(testServices: TestServices): String? {
-    val runPlainBoxFunction = JsEnvironmentConfigurationDirectives.RUN_PLAIN_BOX_FUNCTION in testServices.moduleStructure.allDirectives
+    val runPlainBoxFunction = RUN_PLAIN_BOX_FUNCTION in testServices.moduleStructure.allDirectives
     if (runPlainBoxFunction) return null
     val ktFiles = testServices.moduleStructure.modules.flatMap { module ->
         module.files

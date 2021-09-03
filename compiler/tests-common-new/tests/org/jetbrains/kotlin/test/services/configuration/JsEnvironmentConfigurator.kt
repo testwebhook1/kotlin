@@ -18,7 +18,7 @@ import org.jetbrains.kotlin.test.directives.JsEnvironmentConfigurationDirectives
 import org.jetbrains.kotlin.test.directives.JsEnvironmentConfigurationDirectives.MODULE_KIND
 import org.jetbrains.kotlin.test.directives.JsEnvironmentConfigurationDirectives.NO_INLINE
 import org.jetbrains.kotlin.test.directives.JsEnvironmentConfigurationDirectives.ERROR_POLICY
-import org.jetbrains.kotlin.test.directives.JsEnvironmentConfigurationDirectives.SOURCE_MAP_SOURCE_EMBEDDING
+import org.jetbrains.kotlin.test.directives.JsEnvironmentConfigurationDirectives.SOURCE_MAP_EMBED_SOURCES
 import org.jetbrains.kotlin.test.directives.JsEnvironmentConfigurationDirectives.EXPECT_ACTUAL_LINKER
 import org.jetbrains.kotlin.test.directives.JsEnvironmentConfigurationDirectives.TYPED_ARRAYS
 import org.jetbrains.kotlin.test.directives.model.DirectivesContainer
@@ -38,9 +38,7 @@ class JsEnvironmentConfigurator(testServices: TestServices) : EnvironmentConfigu
         const val TEST_DATA_DIR_PATH = "js/js.translator/testData"
         const val OLD_MODULE_SUFFIX = "-old"
 
-        const val TEST_MODULE_NAME = "JS_TESTS"
         const val TEST_FUNCTION = "box"
-        const val DEFAULT_MODULE_NAME = "main"
 
         private const val OUTPUT_DIR_NAME = "outputDir"
         private const val DCE_OUTPUT_DIR_NAME = "dceOutputDir"
@@ -62,7 +60,7 @@ class JsEnvironmentConfigurator(testServices: TestServices) : EnvironmentConfigu
 
         fun getJsArtifactSimpleName(testServices: TestServices, moduleName: String): String {
             val testName = testServices.testInfo.methodName.removePrefix("test").decapitalizeAsciiOnly()
-            val outputFileSuffix = if (moduleName == TEST_MODULE_NAME) "" else "-$moduleName"
+            val outputFileSuffix = if (moduleName == ModuleStructureExtractor.DEFAULT_MODULE_NAME) "" else "-$moduleName"
             return testName + outputFileSuffix
         }
 
@@ -102,9 +100,9 @@ class JsEnvironmentConfigurator(testServices: TestServices) : EnvironmentConfigu
 
     override fun configureCompilerConfiguration(configuration: CompilerConfiguration, module: TestModule) {
         val registeredDirectives = module.directives
-        val moduleKinds = (registeredDirectives[MODULE_KIND] + module.files.flatMap { it.directives[MODULE_KIND] }).distinct()
+        val moduleKinds = registeredDirectives[MODULE_KIND]
         val moduleKind = when (moduleKinds.size) {
-            0 -> ModuleKind.PLAIN
+            0 -> testServices.moduleStructure.allDirectives[MODULE_KIND].singleOrNull() ?: ModuleKind.PLAIN
             1 -> moduleKinds.single()
             else -> error("Too many module kinds passed ${moduleKinds.joinToArrayString()}")
         }
@@ -143,7 +141,7 @@ class JsEnvironmentConfigurator(testServices: TestServices) : EnvironmentConfigu
         configuration.put(JSConfigurationKeys.SOURCE_MAP_SOURCE_ROOTS, sourceDirs)
         configuration.put(JSConfigurationKeys.SOURCE_MAP, true)
 
-        val sourceMapSourceEmbedding = registeredDirectives[SOURCE_MAP_SOURCE_EMBEDDING].singleOrNull() ?: SourceMapSourceEmbedding.NEVER
+        val sourceMapSourceEmbedding = registeredDirectives[SOURCE_MAP_EMBED_SOURCES].singleOrNull() ?: SourceMapSourceEmbedding.NEVER
         configuration.put(JSConfigurationKeys.SOURCE_MAP_EMBED_SOURCES, sourceMapSourceEmbedding)
 
         configuration.put(JSConfigurationKeys.TYPED_ARRAYS_ENABLED, TYPED_ARRAYS in registeredDirectives)

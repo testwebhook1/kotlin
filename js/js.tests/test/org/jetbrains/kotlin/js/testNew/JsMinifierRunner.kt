@@ -12,8 +12,10 @@ import org.jetbrains.kotlin.js.engine.loadFiles
 import org.jetbrains.kotlin.js.test.*
 import org.jetbrains.kotlin.js.testNew.utils.*
 import org.jetbrains.kotlin.test.backend.handlers.JsBinaryArtifactHandler
-import org.jetbrains.kotlin.test.directives.JsEnvironmentConfigurationDirectives
+import org.jetbrains.kotlin.test.directives.JsEnvironmentConfigurationDirectives.DONT_RUN_GENERATED_CODE
 import org.jetbrains.kotlin.test.directives.JsEnvironmentConfigurationDirectives.EXPECTED_REACHABLE_NODES
+import org.jetbrains.kotlin.test.directives.JsEnvironmentConfigurationDirectives.RUN_MINIFIER_BY_DEFAULT
+import org.jetbrains.kotlin.test.directives.JsEnvironmentConfigurationDirectives.SKIP_MINIFICATION
 import org.jetbrains.kotlin.test.model.BinaryArtifacts
 import org.jetbrains.kotlin.test.model.TestModule
 import org.jetbrains.kotlin.test.services.TestServices
@@ -31,10 +33,10 @@ class JsMinifierRunner(testServices: TestServices) : JsBinaryArtifactHandler(tes
         if (someAssertionWasFailed) return
 
         val globalDirectives = testServices.moduleStructure.allDirectives
-        val dontRunGeneratedCode = globalDirectives[JsEnvironmentConfigurationDirectives.DONT_RUN_GENERATED_CODE]
+        val dontRunGeneratedCode = globalDirectives[DONT_RUN_GENERATED_CODE]
             .contains(testServices.defaultsProvider.defaultTargetBackend?.name)
 
-        if (!dontRunGeneratedCode) return
+        if (dontRunGeneratedCode) return
 
         val allJsFiles = getOnlyJsFilesForRunner(testServices, modulesToArtifact)
 
@@ -43,8 +45,8 @@ class JsMinifierRunner(testServices: TestServices) : JsBinaryArtifactHandler(tes
         val testPackage = extractTestPackage(testServices)
         val testFunction = JsEnvironmentConfigurator.TEST_FUNCTION
 
-        val dontSkipMinification = JsEnvironmentConfigurationDirectives.SKIP_MINIFICATION !in globalDirectives
-        val runMinifierByDefault = JsEnvironmentConfigurationDirectives.RUN_MINIFIER_BY_DEFAULT in globalDirectives
+        val dontSkipMinification = SKIP_MINIFICATION !in globalDirectives
+        val runMinifierByDefault = RUN_MINIFIER_BY_DEFAULT in globalDirectives
         val expectedReachableNodes = globalDirectives[EXPECTED_REACHABLE_NODES].singleOrNull()
 
         if (dontSkipMinification && (runMinifierByDefault || expectedReachableNodes != null)) {
