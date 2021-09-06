@@ -38,14 +38,6 @@ class ClassicJsBackendFacade(
         const val KOTLIN_TEST_INTERNAL = "\$kotlin_test_internal\$"
     }
 
-    private fun getOutputDir(file: File, testGroupOutputDir: File, stopFile: File): File {
-        return generateSequence(file.parentFile) { it.parentFile }
-            .takeWhile { it != stopFile }
-            .map { it.name }
-            .toList().asReversed()
-            .fold(testGroupOutputDir, ::File)
-    }
-
     private fun wrapWithModuleEmulationMarkers(content: String, moduleKind: ModuleKind, moduleId: String): String {
         val escapedModuleId = StringUtil.escapeStringCharacters(moduleId)
 
@@ -66,23 +58,6 @@ class ClassicJsBackendFacade(
     override fun transform(module: TestModule, inputArtifact: ClassicBackendInput): BinaryArtifacts.Js? {
         if (module.name.endsWith(JsEnvironmentConfigurator.OLD_MODULE_SUFFIX)) return null
         val originalFile = module.files.first().originalFile
-//        val stopFile = File(module.directives[JsEnvironmentConfigurationDirectives.PATH_TO_TEST_DIR].single())
-//        val pathToRootOutputDir = module.directives[JsEnvironmentConfigurationDirectives.PATH_TO_ROOT_OUTPUT_DIR].single()
-//        val testGroupOutputDirPrefix = module.directives[JsEnvironmentConfigurationDirectives.TEST_GROUP_OUTPUT_DIR_PREFIX].single()
-
-//        val testGroupOutputDirForCompilation = File(pathToRootOutputDir + "out/" + testGroupOutputDirPrefix)
-//        val testGroupOutputDirForMinification = File(pathToRootOutputDir + "out-min/" + testGroupOutputDirPrefix)
-//        val testGroupOutputDirForPir = File(pathToRootOutputDir + "out-pir/" + testGroupOutputDirPrefix)
-//
-//        val outputDir = getOutputDir(originalFile, testGroupOutputDirForCompilation, stopFile)
-//        val dceOutputDir = getOutputDir(originalFile, testGroupOutputDirForMinification, stopFile)
-//        val pirOutputDir = getOutputDir(originalFile, testGroupOutputDirForPir, stopFile)
-//
-//        val outputFileName = module.outputFileName(outputDir) + ".js"
-//        val dceOutputFileName = module.outputFileName(dceOutputDir) + ".js"
-//        val pirOutputFileName = module.outputFileName(pirOutputDir) + ".js"
-////        val abiVersion = module.abiVersion
-////        val isMainModule = mainModuleName == module.name
 
         val configuration = testServices.compilerConfigurationProvider.getCompilerConfiguration(module)
         val (psiFiles, analysisResult, project, _) = inputArtifact

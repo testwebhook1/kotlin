@@ -92,6 +92,7 @@ abstract class AbstractJsTest(
                     ::JsBoxRunner,
                     ::NodeJsGeneratorHandler,
                     ::JsMinifierRunner,
+                    ::JsArtifactsDumpHandler,
                 )
             }
         }
