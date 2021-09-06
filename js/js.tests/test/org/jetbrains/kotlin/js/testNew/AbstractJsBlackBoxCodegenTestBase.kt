@@ -11,6 +11,7 @@ import org.jetbrains.kotlin.test.TargetBackend
 import org.jetbrains.kotlin.test.backend.BlackBoxCodegenSuppressor
 import org.jetbrains.kotlin.test.backend.classic.ClassicBackendInput
 import org.jetbrains.kotlin.test.builders.TestConfigurationBuilder
+import org.jetbrains.kotlin.test.builders.configureJsArtifactsHandlersStep
 import org.jetbrains.kotlin.test.builders.jsArtifactsHandlersStep
 import org.jetbrains.kotlin.test.directives.JsEnvironmentConfigurationDirectives
 import org.jetbrains.kotlin.test.frontend.classic.ClassicFrontend2ClassicBackendConverter
@@ -175,6 +176,11 @@ open class AbstractOutputPrefixPostfixTest : AbstractJsTest(
         super.configure(builder)
         builder.defaultDirectives {
             -JsEnvironmentConfigurationDirectives.GENERATE_NODE_JS_RUNNER
+        }
+        builder.configureJsArtifactsHandlersStep {
+            useHandlers(
+                ::JsPrefixPostfixHandler
+            )
         }
     }
 }

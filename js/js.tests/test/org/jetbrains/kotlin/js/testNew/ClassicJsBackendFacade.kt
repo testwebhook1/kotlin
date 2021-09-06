@@ -85,8 +85,8 @@ class ClassicJsBackendFacade(
         }
 
         val outputFile = File(JsEnvironmentConfigurator.getJsModuleArtifactPath(testServices, module.name) + ".js")
-        val outputPrefixFile = originalFile.parentFile.resolve(originalFile.name + ".prefix").takeIf { it.exists() }
-        val outputPostfixFile = originalFile.parentFile.resolve(originalFile.name + ".postfix").takeIf { it.exists() }
+        val outputPrefixFile = JsEnvironmentConfigurator.getPrefixFile(module)
+        val outputPostfixFile = JsEnvironmentConfigurator.getPostfixFile(module)
         val outputFiles = translationResult.getOutputFiles(outputFile, outputPrefixFile, outputPostfixFile)
         outputFiles.writeAllTo(JsEnvironmentConfigurator.getJsArtifactsOutputDir(testServices))
 

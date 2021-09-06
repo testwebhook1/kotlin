@@ -84,6 +84,17 @@ class JsEnvironmentConfigurator(testServices: TestServices) : EnvironmentConfigu
             return testServices.temporaryDirectoryManager.getOrCreateTempDirectory(MINIFICATION_OUTPUT_DIR_NAME)
         }
 
+
+        private fun getPrefixPostfixFile(module: TestModule, prefix: Boolean): File? {
+            val suffix = if (prefix) ".prefix" else ".postfix"
+            val originalFile = module.files.first().originalFile
+            return originalFile.parentFile.resolve(originalFile.name + suffix).takeIf { it.exists() }
+        }
+
+        fun getPrefixFile(module: TestModule): File? = getPrefixPostfixFile(module, prefix = true)
+
+        fun getPostfixFile(module: TestModule): File? = getPrefixPostfixFile(module, prefix = false)
+
         fun createJsConfig(project: Project, configuration: CompilerConfiguration): JsConfig {
             return JsConfig(
                 project, configuration, CompilerEnvironment, METADATA_CACHE, (JsConfig.JS_STDLIB + JsConfig.JS_KOTLIN_TEST).toSet()

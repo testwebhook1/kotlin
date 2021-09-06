@@ -127,3 +127,9 @@ inline fun TestConfigurationBuilder.configureJvmArtifactsHandlersStep(
 ) {
     configureNamedHandlersStep(JVM_ARTIFACTS_HANDLERS_STEP_NAME, ArtifactKinds.Jvm, init)
 }
+
+inline fun TestConfigurationBuilder.configureJsArtifactsHandlersStep(
+    init: HandlersStepBuilder<BinaryArtifacts.Js>.() -> Unit = {}
+) {
+    configureNamedHandlersStep(JS_ARTIFACTS_HANDLERS_STEP_NAME, ArtifactKinds.Js, init)
+}
