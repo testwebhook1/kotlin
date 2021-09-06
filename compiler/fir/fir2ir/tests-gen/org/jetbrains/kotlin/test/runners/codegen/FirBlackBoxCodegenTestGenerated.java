@@ -8776,9 +8776,21 @@ public class FirBlackBoxCodegenTestGenerated extends AbstractFirBlackBoxCodegenT
             }
 
             @Test
+            @TestMetadata("forInListWithIndexBreak.kt")
+            public void testForInListWithIndexBreak() throws Exception {
+                runTest("compiler/testData/codegen/box/controlStructures/forInIterableWithIndex/forInListWithIndexBreak.kt");
+            }
+
+            @Test
             @TestMetadata("forInListWithIndexBreakAndContinue.kt")
             public void testForInListWithIndexBreakAndContinue() throws Exception {
                 runTest("compiler/testData/codegen/box/controlStructures/forInIterableWithIndex/forInListWithIndexBreakAndContinue.kt");
+            }
+
+            @Test
+            @TestMetadata("forInListWithIndexContinue.kt")
+            public void testForInListWithIndexContinue() throws Exception {
+                runTest("compiler/testData/codegen/box/controlStructures/forInIterableWithIndex/forInListWithIndexContinue.kt");
             }
 
             @Test
@@ -30157,6 +30169,12 @@ public class FirBlackBoxCodegenTestGenerated extends AbstractFirBlackBoxCodegenT
         }
 
         @Test
+        @TestMetadata("capturedLoopVar.kt")
+        public void testCapturedLoopVar() throws Exception {
+            runTest("compiler/testData/codegen/box/ranges/capturedLoopVar.kt");
+        }
+
+        @Test
         @TestMetadata("forByteProgressionWithIntIncrement.kt")
         public void testForByteProgressionWithIntIncrement() throws Exception {
             runTest("compiler/testData/codegen/box/ranges/forByteProgressionWithIntIncrement.kt");
@@ -31231,6 +31249,24 @@ public class FirBlackBoxCodegenTestGenerated extends AbstractFirBlackBoxCodegenT
             @TestMetadata("forInCollectionTypeParameterIndices.kt")
             public void testForInCollectionTypeParameterIndices() throws Exception {
                 runTest("compiler/testData/codegen/box/ranges/forInIndices/forInCollectionTypeParameterIndices.kt");
+            }
+
+            @Test
+            @TestMetadata("forInListIndices.kt")
+            public void testForInListIndices() throws Exception {
+                runTest("compiler/testData/codegen/box/ranges/forInIndices/forInListIndices.kt");
+            }
+
+            @Test
+            @TestMetadata("forInListIndicesBreak.kt")
+            public void testForInListIndicesBreak() throws Exception {
+                runTest("compiler/testData/codegen/box/ranges/forInIndices/forInListIndicesBreak.kt");
+            }
+
+            @Test
+            @TestMetadata("forInListIndicesContinue.kt")
+            public void testForInListIndicesContinue() throws Exception {
+                runTest("compiler/testData/codegen/box/ranges/forInIndices/forInListIndicesContinue.kt");
             }
 
             @Test
