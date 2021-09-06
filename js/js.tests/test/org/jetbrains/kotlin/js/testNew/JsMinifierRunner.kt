@@ -72,7 +72,6 @@ class JsMinifierRunner(testServices: TestServices) : JsBinaryArtifactHandler(tes
 
     companion object {
         private const val DIST_DIR_JS_PATH = "dist/js/"
-        private val engineForMinifier = createScriptEngine()
 
         private const val overwriteReachableNodesProperty = "kotlin.js.overwriteReachableNodes"
         private val overwriteReachableNodes = getBoolean(overwriteReachableNodesProperty)
@@ -156,12 +155,14 @@ class JsMinifierRunner(testServices: TestServices) : JsBinaryArtifactHandler(tes
             runList += "$TEST_DATA_DIR_PATH/nashorn-polyfills.js"
             runList += allJsFiles.map { filesToMinify[it]?.outputPath ?: it }
 
+            val engineForMinifier = createScriptEngine()
             val result = engineForMinifier.runAndRestoreContext {
                 loadFiles(runList)
                 overrideAsserter()
                 eval(SETUP_KOTLIN_OUTPUT)
                 runTestFunction(testModuleName, testPackage, testFunction, withModuleSystem)
             }
+            engineForMinifier.release()
             assertEquals(expectedResult, result)
         }
     }

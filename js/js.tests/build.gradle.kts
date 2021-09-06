@@ -263,6 +263,7 @@ projectTest(parallel = true) {
 
 projectTest("jsTest", parallel = true, jUnit5Enabled = true) {
     setUpJsBoxTests(jsEnabled = true, jsIrEnabled = false)
+    maxHeapSize = "3g"
     useJUnitPlatform()
 }
 

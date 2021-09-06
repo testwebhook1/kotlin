@@ -8,6 +8,7 @@ package org.jetbrains.kotlin.js.testNew
 import org.jetbrains.kotlin.platform.js.JsPlatforms
 import org.jetbrains.kotlin.test.Constructor
 import org.jetbrains.kotlin.test.TargetBackend
+import org.jetbrains.kotlin.test.backend.BlackBoxCodegenSuppressor
 import org.jetbrains.kotlin.test.backend.classic.ClassicBackendInput
 import org.jetbrains.kotlin.test.builders.TestConfigurationBuilder
 import org.jetbrains.kotlin.test.builders.jsArtifactsHandlersStep
@@ -32,8 +33,6 @@ abstract class AbstractJsBlackBoxCodegenTestBase<R : ResultingArtifact.FrontendO
     abstract val frontendFacade: Constructor<FrontendFacade<R>>
     abstract val frontendToBackendConverter: Constructor<Frontend2BackendConverter<R, I>>
     abstract val backendFacade: Constructor<BackendFacade<I, BinaryArtifacts.Js>>
-
-    private val runTestInNashorn: Boolean = getBoolean("kotlin.js.useNashorn")
 
     override fun TestConfigurationBuilder.configuration() {
         globalDefaults {
@@ -64,7 +63,7 @@ abstract class AbstractJsBlackBoxCodegenTestBase<R : ResultingArtifact.FrontendO
         useAdditionalSourceProviders(
             ::JsAdditionalSourceProvider
         )
-//        useAfterAnalysisCheckers(::BlackBoxCodegenSuppressor) TODO uncomment later
+        useAfterAnalysisCheckers(::BlackBoxCodegenSuppressor)
     }
 }
 
