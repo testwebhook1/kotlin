@@ -5,9 +5,7 @@
 
 package org.jetbrains.kotlin.js.testNew
 
-import org.jetbrains.kotlin.js.test.*
 import org.jetbrains.kotlin.js.testNew.utils.*
-import org.jetbrains.kotlin.test.TargetBackend
 import org.jetbrains.kotlin.test.backend.handlers.JsBinaryArtifactHandler
 import org.jetbrains.kotlin.test.directives.JsEnvironmentConfigurationDirectives.DONT_RUN_GENERATED_CODE
 import org.jetbrains.kotlin.test.directives.JsEnvironmentConfigurationDirectives.RUN_IR_DCE
@@ -22,7 +20,6 @@ import org.jetbrains.kotlin.test.services.defaultsProvider
 import org.jetbrains.kotlin.test.services.moduleStructure
 
 class JsBoxRunner(testServices: TestServices) : JsBinaryArtifactHandler(testServices) {
-    private val runTestInNashorn: Boolean = java.lang.Boolean.getBoolean("kotlin.js.useNashorn")
     val modulesToArtifact = mutableMapOf<TestModule, BinaryArtifacts.Js>()
 
     override fun processAfterAllModules(someAssertionWasFailed: Boolean) {
@@ -68,17 +65,8 @@ class JsBoxRunner(testServices: TestServices) : JsBinaryArtifactHandler(testServ
         expectedResult: String,
         withModuleSystem: Boolean
     ) {
-        getTestChecker()
+        getTestChecker(testServices)
             .check(jsFiles, testModuleName, testPackage, JsEnvironmentConfigurator.TEST_FUNCTION, expectedResult, withModuleSystem)
-    }
-
-    private fun getTestChecker(): AbstractJsTestChecker {
-        val targetBackend = testServices.defaultsProvider.defaultTargetBackend ?: TargetBackend.JS
-        return if (targetBackend.isIR) {
-            if (runTestInNashorn) NashornIrJsTestChecker else V8IrJsTestChecker
-        } else {
-            if (runTestInNashorn) NashornJsTestChecker else V8JsTestChecker
-        }
     }
 
     companion object {

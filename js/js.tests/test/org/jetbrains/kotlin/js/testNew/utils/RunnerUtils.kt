@@ -7,9 +7,11 @@ package org.jetbrains.kotlin.js.testNew.utils
 
 import org.jetbrains.kotlin.js.JavaScript
 import org.jetbrains.kotlin.js.config.JSConfigurationKeys
+import org.jetbrains.kotlin.js.test.*
 import org.jetbrains.kotlin.js.testNew.JsAdditionalSourceProvider
 import org.jetbrains.kotlin.psi.KtNamedFunction
 import org.jetbrains.kotlin.serialization.js.ModuleKind
+import org.jetbrains.kotlin.test.TargetBackend
 import org.jetbrains.kotlin.test.directives.JsEnvironmentConfigurationDirectives.INFER_MAIN_MODULE
 import org.jetbrains.kotlin.test.directives.JsEnvironmentConfigurationDirectives.NO_JS_MODULE_SYSTEM
 import org.jetbrains.kotlin.test.directives.JsEnvironmentConfigurationDirectives.RUN_PLAIN_BOX_FUNCTION
@@ -122,4 +124,14 @@ fun extractTestPackage(testServices: TestServices): String? {
         val boxFunction = ktFile.declarations.find { it is KtNamedFunction && it.name == TEST_FUNCTION }
         boxFunction != null
     }.packageFqName.asString().takeIf { it.isNotEmpty() }
+}
+
+fun getTestChecker(testServices: TestServices): AbstractJsTestChecker {
+    val runTestInNashorn = java.lang.Boolean.getBoolean("kotlin.js.useNashorn")
+    val targetBackend = testServices.defaultsProvider.defaultTargetBackend ?: TargetBackend.JS
+    return if (targetBackend.isIR) {
+        if (runTestInNashorn) NashornIrJsTestChecker else V8IrJsTestChecker
+    } else {
+        if (runTestInNashorn) NashornJsTestChecker else V8JsTestChecker
+    }
 }

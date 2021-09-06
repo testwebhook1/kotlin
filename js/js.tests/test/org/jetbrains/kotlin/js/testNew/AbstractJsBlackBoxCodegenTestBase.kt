@@ -22,6 +22,7 @@ import org.jetbrains.kotlin.test.runners.AbstractKotlinCompilerWithTargetBackend
 import org.jetbrains.kotlin.test.services.configuration.CommonEnvironmentConfigurator
 import org.jetbrains.kotlin.test.services.configuration.JsEnvironmentConfigurator
 import org.jetbrains.kotlin.test.services.configuration.JsEnvironmentConfigurator.Companion.TEST_DATA_DIR_PATH
+import org.jetbrains.kotlin.test.services.sourceProviders.CoroutineHelpersSourceFilesProvider
 import java.lang.Boolean.getBoolean
 
 abstract class AbstractJsBlackBoxCodegenTestBase<R : ResultingArtifact.FrontendOutput<R>, I : ResultingArtifact.BackendInput<I>>(
@@ -62,7 +63,11 @@ abstract class AbstractJsBlackBoxCodegenTestBase<R : ResultingArtifact.FrontendO
         )
 
         useAdditionalSourceProviders(
-            ::JsAdditionalSourceProvider
+            ::JsAdditionalSourceProvider,
+//            ::AdditionalDiagnosticsSourceFilesProvider,
+            ::CoroutineHelpersSourceFilesProvider,
+//            ::CodegenHelpersSourceFilesProvider,
+//            ::MainFunctionForBlackBoxTestsSourceProvider,
         )
         useAfterAnalysisCheckers(::BlackBoxCodegenSuppressor)
     }
@@ -188,7 +193,16 @@ open class AbstractOutputPrefixPostfixTest : AbstractJsTest(
 open class AbstractMultiModuleOrderTest : AbstractJsTest(
     pathToTestDir = "${TEST_DATA_DIR_PATH}/multiModuleOrder/",
     testGroupOutputDirPrefix = "multiModuleOrder/"
-)
+) {
+    override fun configure(builder: TestConfigurationBuilder) {
+        super.configure(builder)
+        builder.configureJsArtifactsHandlersStep {
+            useHandlers(
+                ::JsWrongModuleHandler
+            )
+        }
+    }
+}
 
 open class AbstractLegacyJsTypeScriptExportTest : AbstractJsTest(
     pathToTestDir = "${TEST_DATA_DIR_PATH}/typescript-export/",
