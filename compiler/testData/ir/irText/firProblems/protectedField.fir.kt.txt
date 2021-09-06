@@ -1,0 +1,32 @@
+// FILE: protectedField1.kt
+package first
+
+abstract class Base {
+  constructor(myProject: String) /* primary */ {
+    super/*Any*/()
+    /* <init>() */
+
+  }
+
+  protected val myProject: String
+    field = myProject
+    protected get
+
+}
+
+// FILE: protectedField2.kt
+package second
+
+class My : Base {
+  constructor() /* primary */ {
+    super/*Base*/(myProject = "OK")
+    /* <init>() */
+
+  }
+
+  private val status: String
+    private get(): String {
+      return <this>.<get-myProject>()
+    }
+
+}
