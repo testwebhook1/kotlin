@@ -24,9 +24,7 @@ import org.jetbrains.kotlin.test.services.moduleStructure
 import java.io.File
 
 // Only generate "node.js" file, execution is handled by 'runMocha' task
-class NodeJsGeneratorHandler(testServices: TestServices) : JsBinaryArtifactHandler(testServices) {
-    val modulesToArtifact = mutableMapOf<TestModule, BinaryArtifacts.Js>()
-
+class NodeJsGeneratorHandler(testServices: TestServices) : AbstractJsArtifactsCollector(testServices) {
     override fun processAfterAllModules(someAssertionWasFailed: Boolean) {
         if (someAssertionWasFailed) return
         val allJsFiles = getOnlyJsFilesForRunner(testServices, modulesToArtifact)
@@ -48,10 +46,6 @@ class NodeJsGeneratorHandler(testServices: TestServices) : JsBinaryArtifactHandl
 
         val nodeRunnerName = JsEnvironmentConfigurator.getJsModuleArtifactPath(testServices, mainModuleName) + ".node.js"
         FileUtil.writeToFile(File(nodeRunnerName), nodeRunnerText)
-    }
-
-    override fun processModule(module: TestModule, info: BinaryArtifacts.Js) {
-        modulesToArtifact[module] = info
     }
 
     companion object {

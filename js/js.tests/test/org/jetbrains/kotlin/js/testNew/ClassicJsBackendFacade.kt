@@ -56,9 +56,6 @@ class ClassicJsBackendFacade(
     }
 
     override fun transform(module: TestModule, inputArtifact: ClassicBackendInput): BinaryArtifacts.Js? {
-        if (module.name.endsWith(JsEnvironmentConfigurator.OLD_MODULE_SUFFIX)) return null
-        val originalFile = module.files.first().originalFile
-
         val configuration = testServices.compilerConfigurationProvider.getCompilerConfiguration(module)
         val (psiFiles, analysisResult, project, _) = inputArtifact
 

@@ -36,7 +36,7 @@ class JsEnvironmentConfigurator(testServices: TestServices) : EnvironmentConfigu
 
     companion object {
         const val TEST_DATA_DIR_PATH = "js/js.translator/testData"
-        const val OLD_MODULE_SUFFIX = "-old"
+        const val OLD_MODULE_SUFFIX = "_old"
 
         const val TEST_FUNCTION = "box"
 

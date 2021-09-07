@@ -26,9 +26,7 @@ import org.jetbrains.kotlin.test.services.moduleStructure
 import java.io.File
 import java.lang.Boolean.getBoolean
 
-class JsMinifierRunner(testServices: TestServices) : JsBinaryArtifactHandler(testServices) {
-    val modulesToArtifact = mutableMapOf<TestModule, BinaryArtifacts.Js>()
-
+class JsMinifierRunner(testServices: TestServices) : AbstractJsArtifactsCollector(testServices) {
     override fun processAfterAllModules(someAssertionWasFailed: Boolean) {
         if (someAssertionWasFailed) return
 
@@ -47,7 +45,7 @@ class JsMinifierRunner(testServices: TestServices) : JsBinaryArtifactHandler(tes
 
         val dontSkipMinification = SKIP_MINIFICATION !in globalDirectives
         val runMinifierByDefault = RUN_MINIFIER_BY_DEFAULT in globalDirectives
-        val expectedReachableNodes = globalDirectives[EXPECTED_REACHABLE_NODES].singleOrNull()
+        val expectedReachableNodes = globalDirectives[EXPECTED_REACHABLE_NODES].firstOrNull()
 
         if (dontSkipMinification && (runMinifierByDefault || expectedReachableNodes != null)) {
             val originalFile = testServices.moduleStructure.originalTestDataFiles.first()
@@ -64,10 +62,6 @@ class JsMinifierRunner(testServices: TestServices) : JsBinaryArtifactHandler(tes
                 withModuleSystem = withModuleSystem
             ) { expect, actual -> assertions.assertEquals(expect, actual) }
         }
-    }
-
-    override fun processModule(module: TestModule, info: BinaryArtifacts.Js) {
-        modulesToArtifact[module] = info
     }
 
     companion object {

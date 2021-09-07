@@ -19,9 +19,7 @@ import org.jetbrains.kotlin.test.services.configuration.JsEnvironmentConfigurato
 import org.jetbrains.kotlin.test.services.defaultsProvider
 import org.jetbrains.kotlin.test.services.moduleStructure
 
-class JsBoxRunner(testServices: TestServices) : JsBinaryArtifactHandler(testServices) {
-    val modulesToArtifact = mutableMapOf<TestModule, BinaryArtifacts.Js>()
-
+class JsBoxRunner(testServices: TestServices) : AbstractJsArtifactsCollector(testServices) {
     override fun processAfterAllModules(someAssertionWasFailed: Boolean) {
         if (someAssertionWasFailed) return
 
@@ -52,10 +50,6 @@ class JsBoxRunner(testServices: TestServices) : JsBinaryArtifactHandler(testServ
         if (runIrPir && dontSkipDceDriven) {
             runGeneratedCode(pirAllJsFiles, testModuleName, testPackage, DEFAULT_EXPECTED_RESULT, withModuleSystem)
         }
-    }
-
-    override fun processModule(module: TestModule, info: BinaryArtifacts.Js) {
-        modulesToArtifact[module] = info
     }
 
     private fun runGeneratedCode(
