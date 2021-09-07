@@ -49,6 +49,13 @@ private fun getAdditionalFiles(testServices: TestServices): List<String> {
         .takeIf { it.exists() }
         ?.let { additionalFiles += it.absolutePath }
 
+    return additionalFiles
+}
+
+private fun getAdditionalMainFiles(testServices: TestServices): List<String> {
+    val originalFile = testServices.moduleStructure.originalTestDataFiles.first()
+    val additionalFiles = mutableListOf<String>()
+
     originalFile.parentFile.resolve(originalFile.nameWithoutExtension + "__main.js")
         .takeIf { it.exists() }
         ?.let { additionalFiles += it.absolutePath }
@@ -73,14 +80,16 @@ fun getAllFilesForRunner(
 
     val commonFiles = JsAdditionalSourceProvider.getAdditionalJsFiles(originalFile.parent).map { it.absolutePath }
     val inputJsFiles = extractJsFiles(testServices, modulesToArtifact)
-
     val additionalFiles = getAdditionalFiles(testServices)
-    val artifactsPaths = modulesToArtifact.values.map { it.outputFile.absolutePath }
-    val allCommonFiles = additionalFiles + inputJsFiles + commonFiles
+    val additionalMainFiles = getAdditionalMainFiles(testServices)
 
-    val allJsFiles = allCommonFiles + artifactsPaths
-    val dceAllJsFiles = allCommonFiles + artifactsPaths.map { it.replace(outputDir.absolutePath, dceOutputDir.absolutePath) }
-    val pirAllJsFiles = allCommonFiles + artifactsPaths.map { it.replace(outputDir.absolutePath, pirOutputDir.absolutePath) }
+    val artifactsPaths = modulesToArtifact.values.map { it.outputFile.absolutePath }
+    val dceJsFiles = artifactsPaths.map { it.replace(outputDir.absolutePath, dceOutputDir.absolutePath) }
+    val pirJsFiles = artifactsPaths.map { it.replace(outputDir.absolutePath, pirOutputDir.absolutePath) }
+
+    val allJsFiles = additionalFiles + inputJsFiles + artifactsPaths + commonFiles + additionalMainFiles
+    val dceAllJsFiles = additionalFiles + inputJsFiles + dceJsFiles + commonFiles + additionalMainFiles
+    val pirAllJsFiles = additionalFiles + inputJsFiles + pirJsFiles + commonFiles + additionalMainFiles
 
     return Triple(allJsFiles, dceAllJsFiles, pirAllJsFiles)
 }
