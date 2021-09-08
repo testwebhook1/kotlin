@@ -166,8 +166,11 @@ private fun JavaClassifierType.toConeKotlinTypeForFlexibleBound(
             // When converting type parameter bounds we should not attempt to load any classes, as this may trigger
             // enhancement of type parameter bounds on some other class that depends on this one. Also, in case of raw
             // types specifically there could be an infinite recursion on the type parameter itself.
-            val typeParameters = lookupTag.takeIf { mode != FirJavaTypeConversionMode.TYPE_PARAMETER_BOUND }
-                ?.toFirRegularClass(session)?.typeParameters
+            val typeParameters by lazy(LazyThreadSafetyMode.NONE) {
+                lookupTag.takeIf { mode != FirJavaTypeConversionMode.TYPE_PARAMETER_BOUND }
+                    ?.toFirRegularClass(session)?.typeParameters
+            }
+
             val mappedTypeArguments = when {
                 isRaw ->
                     // Given `C<T : X>`, `C` -> `C<X>..C<*>?`.
