@@ -554,7 +554,8 @@ class JavaSymbolProvider(
         return try {
             val facade = KotlinJavaPsiFacade.getInstance(project)
             val javaPackage = facade.findPackage(fqName.asString(), searchScope) ?: return null
-            JavaPackageImpl(javaPackage, searchScope)
+
+            JavaPackageImpl(javaPackage, searchScope, hasTopLevelClassOf(ClassId.topLevel(fqName.child(PACKAGE_INFO_CLASS_NAME))))
         } catch (e: ProcessCanceledException) {
             return null
         }
@@ -571,3 +572,5 @@ class JavaSymbolProvider(
 
 fun FqName.topLevelName() =
     asString().substringBefore(".")
+
+private val PACKAGE_INFO_CLASS_NAME = Name.identifier("package-info")
