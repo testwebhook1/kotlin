@@ -8,6 +8,7 @@ package org.jetbrains.kotlin.analysis.low.level.api.fir.api
 import com.intellij.openapi.project.Project
 import org.jetbrains.kotlin.analysis.providers.getModuleInfo
 import org.jetbrains.kotlin.analyzer.ModuleInfo
+import org.jetbrains.kotlin.analyzer.ModuleSourceInfoBase
 import org.jetbrains.kotlin.fir.FirElement
 import org.jetbrains.kotlin.fir.analysis.diagnostics.FirPsiDiagnostic
 import org.jetbrains.kotlin.fir.declarations.*
@@ -18,7 +19,6 @@ import org.jetbrains.kotlin.psi.KtDeclaration
 import org.jetbrains.kotlin.psi.KtElement
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtLambdaExpression
-import kotlin.reflect.KClass
 
 /**
  * Returns [FirModuleResolveState] which corresponds to containing module
@@ -46,7 +46,7 @@ inline fun <R> KtDeclaration.withFirDeclaration(
     phase: FirResolvePhase = FirResolvePhase.RAW_FIR,
     action: (FirDeclaration) -> R
 ): R {
-    val firDeclaration = if (containingKtFile.isCompiled) {
+    val firDeclaration = if (this.getModuleInfo() !is ModuleSourceInfoBase) {
         resolveState.findSourceFirCompiledDeclaration(this)
     } else {
         resolveState.findSourceFirDeclaration(this)
