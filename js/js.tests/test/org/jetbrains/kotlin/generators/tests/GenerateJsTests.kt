@@ -27,7 +27,7 @@ fun main(args: Array<String>) {
     generateTestGroupSuite(args) {
         testGroup("js/js.tests/tests-gen", "js/js.translator/testData", testRunnerMethodName = "runTest0") {
             testClass<AbstractBoxJsTest> {
-                model("box", pattern = "^([^_](.+))\\.kt$", targetBackend = TargetBackend.JS)
+                model("box/incremental/", pattern = "^([^_](.+))\\.kt$", targetBackend = TargetBackend.JS)
             }
 
             testClass<AbstractIrBoxJsTest> {

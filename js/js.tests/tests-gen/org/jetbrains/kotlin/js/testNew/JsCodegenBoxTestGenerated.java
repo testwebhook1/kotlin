@@ -82,6 +82,18 @@ public class JsCodegenBoxTestGenerated extends AbstractJsCodegenBoxTest {
             public void testAllFilesPresentInInstances() throws Exception {
                 KtTestUtil.assertAllTestsPresentByMetadataWithExcluded(this.getClass(), new File("compiler/testData/codegen/box/annotations/instances"), Pattern.compile("^(.+)\\.kt$"), null, TargetBackend.JS, true);
             }
+
+            @Test
+            @TestMetadata("annotationInstances.kt")
+            public void testAnnotationInstances() throws Exception {
+                runTest("compiler/testData/codegen/box/annotations/instances/annotationInstances.kt");
+            }
+
+            @Test
+            @TestMetadata("multiplatformInstantiation.kt")
+            public void testMultiplatformInstantiation() throws Exception {
+                runTest("compiler/testData/codegen/box/annotations/instances/multiplatformInstantiation.kt");
+            }
         }
 
         @Nested
@@ -6060,9 +6072,21 @@ public class JsCodegenBoxTestGenerated extends AbstractJsCodegenBoxTest {
             }
 
             @Test
+            @TestMetadata("forInListWithIndexBreak.kt")
+            public void testForInListWithIndexBreak() throws Exception {
+                runTest("compiler/testData/codegen/box/controlStructures/forInIterableWithIndex/forInListWithIndexBreak.kt");
+            }
+
+            @Test
             @TestMetadata("forInListWithIndexBreakAndContinue.kt")
             public void testForInListWithIndexBreakAndContinue() throws Exception {
                 runTest("compiler/testData/codegen/box/controlStructures/forInIterableWithIndex/forInListWithIndexBreakAndContinue.kt");
+            }
+
+            @Test
+            @TestMetadata("forInListWithIndexContinue.kt")
+            public void testForInListWithIndexContinue() throws Exception {
+                runTest("compiler/testData/codegen/box/controlStructures/forInIterableWithIndex/forInListWithIndexContinue.kt");
             }
 
             @Test
@@ -9666,6 +9690,12 @@ public class JsCodegenBoxTestGenerated extends AbstractJsCodegenBoxTest {
         @TestMetadata("kt47073_nested.kt")
         public void testKt47073_nested() throws Exception {
             runTest("compiler/testData/codegen/box/defaultArguments/kt47073_nested.kt");
+        }
+
+        @Test
+        @TestMetadata("kt48391.kt")
+        public void testKt48391() throws Exception {
+            runTest("compiler/testData/codegen/box/defaultArguments/kt48391.kt");
         }
 
         @Test
@@ -14101,6 +14131,12 @@ public class JsCodegenBoxTestGenerated extends AbstractJsCodegenBoxTest {
             @TestMetadata("kt47744.kt")
             public void testKt47744() throws Exception {
                 runTest("compiler/testData/codegen/box/inference/builderInference/kt47744.kt");
+            }
+
+            @Test
+            @TestMetadata("kt48445.kt")
+            public void testKt48445() throws Exception {
+                runTest("compiler/testData/codegen/box/inference/builderInference/kt48445.kt");
             }
 
             @Test
@@ -21957,6 +21993,12 @@ public class JsCodegenBoxTestGenerated extends AbstractJsCodegenBoxTest {
         }
 
         @Test
+        @TestMetadata("capturedLoopVar.kt")
+        public void testCapturedLoopVar() throws Exception {
+            runTest("compiler/testData/codegen/box/ranges/capturedLoopVar.kt");
+        }
+
+        @Test
         @TestMetadata("forByteProgressionWithIntIncrement.kt")
         public void testForByteProgressionWithIntIncrement() throws Exception {
             runTest("compiler/testData/codegen/box/ranges/forByteProgressionWithIntIncrement.kt");
@@ -23019,6 +23061,24 @@ public class JsCodegenBoxTestGenerated extends AbstractJsCodegenBoxTest {
             @TestMetadata("forInCollectionTypeParameterIndices.kt")
             public void testForInCollectionTypeParameterIndices() throws Exception {
                 runTest("compiler/testData/codegen/box/ranges/forInIndices/forInCollectionTypeParameterIndices.kt");
+            }
+
+            @Test
+            @TestMetadata("forInListIndices.kt")
+            public void testForInListIndices() throws Exception {
+                runTest("compiler/testData/codegen/box/ranges/forInIndices/forInListIndices.kt");
+            }
+
+            @Test
+            @TestMetadata("forInListIndicesBreak.kt")
+            public void testForInListIndicesBreak() throws Exception {
+                runTest("compiler/testData/codegen/box/ranges/forInIndices/forInListIndicesBreak.kt");
+            }
+
+            @Test
+            @TestMetadata("forInListIndicesContinue.kt")
+            public void testForInListIndicesContinue() throws Exception {
+                runTest("compiler/testData/codegen/box/ranges/forInIndices/forInListIndicesContinue.kt");
             }
 
             @Test
@@ -29885,6 +29945,12 @@ public class JsCodegenBoxTestGenerated extends AbstractJsCodegenBoxTest {
         }
 
         @Test
+        @TestMetadata("kt47917.kt")
+        public void testKt47917() throws Exception {
+            runTest("compiler/testData/codegen/box/strings/kt47917.kt");
+        }
+
+        @Test
         @TestMetadata("kt5389_stringBuilderGet.kt")
         public void testKt5389_stringBuilderGet() throws Exception {
             runTest("compiler/testData/codegen/box/strings/kt5389_stringBuilderGet.kt");
@@ -29966,6 +30032,12 @@ public class JsCodegenBoxTestGenerated extends AbstractJsCodegenBoxTest {
         @TestMetadata("stringPlusOverride.kt")
         public void testStringPlusOverride() throws Exception {
             runTest("compiler/testData/codegen/box/strings/stringPlusOverride.kt");
+        }
+
+        @Test
+        @TestMetadata("surrogatePair.kt")
+        public void testSurrogatePair() throws Exception {
+            runTest("compiler/testData/codegen/box/strings/surrogatePair.kt");
         }
     }
 
@@ -30224,6 +30296,12 @@ public class JsCodegenBoxTestGenerated extends AbstractJsCodegenBoxTest {
         @TestMetadata("basicSuspendConversion.kt")
         public void testBasicSuspendConversion() throws Exception {
             runTest("compiler/testData/codegen/box/suspendConversion/basicSuspendConversion.kt");
+        }
+
+        @Test
+        @TestMetadata("basicSuspendConversionDefault.kt")
+        public void testBasicSuspendConversionDefault() throws Exception {
+            runTest("compiler/testData/codegen/box/suspendConversion/basicSuspendConversionDefault.kt");
         }
 
         @Test

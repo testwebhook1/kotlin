@@ -1825,6 +1825,18 @@ public class BoxJsTestGenerated extends AbstractBoxJsTest {
         }
 
         @Test
+        @TestMetadata("exportNestedObject.kt")
+        public void testExportNestedObject() throws Exception {
+            runTest("js/js.translator/testData/box/export/exportNestedObject.kt");
+        }
+
+        @Test
+        @TestMetadata("exportProtectedMembers.kt")
+        public void testExportProtectedMembers() throws Exception {
+            runTest("js/js.translator/testData/box/export/exportProtectedMembers.kt");
+        }
+
+        @Test
         @TestMetadata("nonIndetifierModuleName.kt")
         public void testNonIndetifierModuleName() throws Exception {
             runTest("js/js.translator/testData/box/export/nonIndetifierModuleName.kt");
