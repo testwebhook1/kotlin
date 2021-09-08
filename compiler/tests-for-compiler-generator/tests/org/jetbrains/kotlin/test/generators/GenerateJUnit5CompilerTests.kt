@@ -149,14 +149,6 @@ fun generateJUnit5CompilerTests(args: Array<String>) {
                 model("sourcemap/")
             }
 
-            testClass<AbstractWebDemoExamples1Test> {
-                model("webDemoExamples1/")
-            }
-
-            testClass<AbstractWebDemoExamples2Test> {
-                model("webDemoExamples2/")
-            }
-
             testClass<AbstractOutputPrefixPostfixTest> {
                 model("outputPrefixPostfix/")
             }
