@@ -925,7 +925,7 @@ abstract class BasicBoxTest(
         @JvmStatic
         protected val runTestInNashorn = getBoolean("kotlin.js.useNashorn")
 
-        const val TEST_MODULE = "JS_TESTS"
+        const val TEST_MODULE = "main"
         private const val DEFAULT_MODULE = "main"
         private const val TEST_FUNCTION = "box"
         private const val OLD_MODULE_SUFFIX = "_old"
