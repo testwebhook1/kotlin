@@ -81,5 +81,11 @@ public annotation class Metadata(
      */
     @SinceKotlin("1.1")
     @get:JvmName("xi")
-    val extraInt: Int = 0
+    val extraInt: Int = 0,
+    /**
+     * Serialized JVM IR.
+     */
+    @SinceKotlin("1.6")
+    @get:JvmName("si")
+    val serializedIr: Array<String> = [],
 )
