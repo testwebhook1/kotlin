@@ -3,17 +3,10 @@
  * Use of this source code is governed by the Apache 2.0 license that can be found in the license/LICENSE.txt file.
  */
 
-package org.jetbrains.kotlin.js.testNew
+package org.jetbrains.kotlin.js.testNew.handlers
 
 import org.jetbrains.kotlin.js.testNew.utils.*
-import org.jetbrains.kotlin.test.backend.handlers.JsBinaryArtifactHandler
-import org.jetbrains.kotlin.test.directives.JsEnvironmentConfigurationDirectives.DONT_RUN_GENERATED_CODE
-import org.jetbrains.kotlin.test.directives.JsEnvironmentConfigurationDirectives.RUN_IR_DCE
-import org.jetbrains.kotlin.test.directives.JsEnvironmentConfigurationDirectives.RUN_IR_PIR
-import org.jetbrains.kotlin.test.directives.JsEnvironmentConfigurationDirectives.SKIP_DCE_DRIVEN
-import org.jetbrains.kotlin.test.directives.JsEnvironmentConfigurationDirectives.SKIP_REGULAR_MODE
-import org.jetbrains.kotlin.test.model.BinaryArtifacts
-import org.jetbrains.kotlin.test.model.TestModule
+import org.jetbrains.kotlin.test.directives.JsEnvironmentConfigurationDirectives
 import org.jetbrains.kotlin.test.services.TestServices
 import org.jetbrains.kotlin.test.services.configuration.JsEnvironmentConfigurator
 import org.jetbrains.kotlin.test.services.defaultsProvider
@@ -24,7 +17,7 @@ class JsBoxRunner(testServices: TestServices) : AbstractJsArtifactsCollector(tes
         if (someAssertionWasFailed) return
 
         val globalDirectives = testServices.moduleStructure.allDirectives
-        val dontRunGeneratedCode = globalDirectives[DONT_RUN_GENERATED_CODE]
+        val dontRunGeneratedCode = globalDirectives[JsEnvironmentConfigurationDirectives.DONT_RUN_GENERATED_CODE]
             .contains(testServices.defaultsProvider.defaultTargetBackend?.name)
 
         if (dontRunGeneratedCode) return
@@ -35,10 +28,10 @@ class JsBoxRunner(testServices: TestServices) : AbstractJsArtifactsCollector(tes
         val testModuleName = getTestModuleName(testServices)
         val testPackage = extractTestPackage(testServices)
 
-        val dontSkipRegularMode = SKIP_REGULAR_MODE !in globalDirectives
-        val dontSkipDceDriven = SKIP_DCE_DRIVEN !in globalDirectives
-        val runIrDce = RUN_IR_DCE in globalDirectives
-        val runIrPir = RUN_IR_PIR in globalDirectives
+        val dontSkipRegularMode = JsEnvironmentConfigurationDirectives.SKIP_REGULAR_MODE !in globalDirectives
+        val dontSkipDceDriven = JsEnvironmentConfigurationDirectives.SKIP_DCE_DRIVEN !in globalDirectives
+        val runIrDce = JsEnvironmentConfigurationDirectives.RUN_IR_DCE in globalDirectives
+        val runIrPir = JsEnvironmentConfigurationDirectives.RUN_IR_PIR in globalDirectives
         if (dontSkipRegularMode) {
             runGeneratedCode(allJsFiles, testModuleName, testPackage, DEFAULT_EXPECTED_RESULT, withModuleSystem)
 

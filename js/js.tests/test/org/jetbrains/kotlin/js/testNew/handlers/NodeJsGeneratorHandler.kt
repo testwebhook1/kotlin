@@ -3,20 +3,15 @@
  * Use of this source code is governed by the Apache 2.0 license that can be found in the license/LICENSE.txt file.
  */
 
-package org.jetbrains.kotlin.js.testNew
+package org.jetbrains.kotlin.js.testNew.handlers
 
 import com.intellij.openapi.util.io.FileUtil
 import org.jetbrains.kotlin.js.testNew.utils.extractTestPackage
 import org.jetbrains.kotlin.js.testNew.utils.getMainModuleName
 import org.jetbrains.kotlin.js.testNew.utils.getOnlyJsFilesForRunner
 import org.jetbrains.kotlin.test.TargetBackend
-import org.jetbrains.kotlin.test.backend.handlers.JsBinaryArtifactHandler
-import org.jetbrains.kotlin.test.directives.CodegenTestDirectives.IGNORE_BACKEND
-import org.jetbrains.kotlin.test.directives.JsEnvironmentConfigurationDirectives.DONT_RUN_GENERATED_CODE
-import org.jetbrains.kotlin.test.directives.JsEnvironmentConfigurationDirectives.GENERATE_NODE_JS_RUNNER
-import org.jetbrains.kotlin.test.directives.JsEnvironmentConfigurationDirectives.SKIP_NODE_JS
-import org.jetbrains.kotlin.test.model.BinaryArtifacts
-import org.jetbrains.kotlin.test.model.TestModule
+import org.jetbrains.kotlin.test.directives.CodegenTestDirectives
+import org.jetbrains.kotlin.test.directives.JsEnvironmentConfigurationDirectives
 import org.jetbrains.kotlin.test.services.TestServices
 import org.jetbrains.kotlin.test.services.configuration.JsEnvironmentConfigurator
 import org.jetbrains.kotlin.test.services.defaultsProvider
@@ -31,16 +26,16 @@ class NodeJsGeneratorHandler(testServices: TestServices) : AbstractJsArtifactsCo
 
         val globalDirectives = testServices.moduleStructure.allDirectives
 
-        val dontRunGeneratedCode = globalDirectives[DONT_RUN_GENERATED_CODE]
+        val dontRunGeneratedCode = globalDirectives[JsEnvironmentConfigurationDirectives.DONT_RUN_GENERATED_CODE]
             .contains(testServices.defaultsProvider.defaultTargetBackend?.name)
-        val generateNodeJsRunner = GENERATE_NODE_JS_RUNNER in globalDirectives
-        val skipNodeJs = SKIP_NODE_JS in globalDirectives
+        val generateNodeJsRunner = JsEnvironmentConfigurationDirectives.GENERATE_NODE_JS_RUNNER in globalDirectives
+        val skipNodeJs = JsEnvironmentConfigurationDirectives.SKIP_NODE_JS in globalDirectives
 
         if (dontRunGeneratedCode || !generateNodeJsRunner || skipNodeJs) return
 
         val mainModuleName = getMainModuleName(testServices)
         val outputDir = File(JsEnvironmentConfigurator.getJsArtifactsOutputDir(testServices).absolutePath)
-        val ignored = globalDirectives[IGNORE_BACKEND].contains(TargetBackend.JS)
+        val ignored = globalDirectives[CodegenTestDirectives.IGNORE_BACKEND].contains(TargetBackend.JS)
         val testPackage = extractTestPackage(testServices)
         val nodeRunnerText = generateNodeRunner(allJsFiles, outputDir, mainModuleName, ignored, testPackage)
 

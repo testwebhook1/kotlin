@@ -3,7 +3,7 @@
  * Use of this source code is governed by the Apache 2.0 license that can be found in the license/LICENSE.txt file.
  */
 
-package org.jetbrains.kotlin.js.testNew
+package org.jetbrains.kotlin.js.testNew.handlers
 
 import com.google.gwt.dev.js.ThrowExceptionOnErrorReporter
 import org.jetbrains.kotlin.js.backend.JsToStringGenerationVisitor
@@ -23,15 +23,16 @@ import org.jetbrains.kotlin.test.backend.handlers.JsBinaryArtifactHandler
 import org.jetbrains.kotlin.test.directives.JsEnvironmentConfigurationDirectives
 import org.jetbrains.kotlin.test.model.BinaryArtifacts
 import org.jetbrains.kotlin.test.model.TestModule
-import org.jetbrains.kotlin.test.services.*
-import org.jetbrains.kotlin.test.services.configuration.JsEnvironmentConfigurator.Companion.getJsModuleArtifactPath
+import org.jetbrains.kotlin.test.services.TestServices
+import org.jetbrains.kotlin.test.services.assertions
+import org.jetbrains.kotlin.test.services.configuration.JsEnvironmentConfigurator
 import java.io.File
 
 class JsSourceMapHandler(testServices: TestServices) : JsBinaryArtifactHandler(testServices) {
     override fun processAfterAllModules(someAssertionWasFailed: Boolean) {}
 
     override fun processModule(module: TestModule, info: BinaryArtifacts.Js) {
-        val outputFile = File(getJsModuleArtifactPath(testServices, module.name))
+        val outputFile = File(JsEnvironmentConfigurator.getJsModuleArtifactPath(testServices, module.name))
         val program = (info as? BinaryArtifacts.OldJsArtifact)?.jsProgram
             ?: throw AssertionError("JsBoxRunner suppose to work only with old js backend")
         val remap = JsEnvironmentConfigurationDirectives.SKIP_SOURCEMAP_REMAPPING !in module.directives

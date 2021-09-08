@@ -36,6 +36,10 @@ import org.jetbrains.kotlin.js.parser.sourcemaps.SourceMapParser
 import org.jetbrains.kotlin.js.parser.sourcemaps.SourceMapSuccess
 import org.jetbrains.kotlin.js.test.utils.ExceptionThrowingReporter
 import org.jetbrains.kotlin.js.testNew.*
+import org.jetbrains.kotlin.js.testNew.handlers.JsAstHandler
+import org.jetbrains.kotlin.js.testNew.handlers.JsMinifierRunner
+import org.jetbrains.kotlin.js.testNew.handlers.JsSourceMapHandler
+import org.jetbrains.kotlin.js.testNew.handlers.NodeJsGeneratorHandler
 import org.jetbrains.kotlin.library.KotlinAbiVersion
 import org.jetbrains.kotlin.metadata.DebugProtoBuf
 import org.jetbrains.kotlin.psi.KtFile

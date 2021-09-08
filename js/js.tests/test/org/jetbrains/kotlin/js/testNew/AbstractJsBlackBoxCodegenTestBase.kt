@@ -5,20 +5,25 @@
 
 package org.jetbrains.kotlin.js.testNew
 
+import org.jetbrains.kotlin.js.testNew.converters.ClassicJsBackendFacade
+import org.jetbrains.kotlin.js.testNew.handlers.*
 import org.jetbrains.kotlin.platform.js.JsPlatforms
 import org.jetbrains.kotlin.test.Constructor
 import org.jetbrains.kotlin.test.TargetBackend
 import org.jetbrains.kotlin.test.backend.BlackBoxCodegenSuppressor
 import org.jetbrains.kotlin.test.backend.classic.ClassicBackendInput
 import org.jetbrains.kotlin.test.builders.TestConfigurationBuilder
+import org.jetbrains.kotlin.test.builders.classicFrontendHandlersStep
 import org.jetbrains.kotlin.test.builders.configureJsArtifactsHandlersStep
 import org.jetbrains.kotlin.test.builders.jsArtifactsHandlersStep
 import org.jetbrains.kotlin.test.directives.JsEnvironmentConfigurationDirectives
 import org.jetbrains.kotlin.test.frontend.classic.ClassicFrontend2ClassicBackendConverter
 import org.jetbrains.kotlin.test.frontend.classic.ClassicFrontendFacade
 import org.jetbrains.kotlin.test.frontend.classic.ClassicFrontendOutputArtifact
+import org.jetbrains.kotlin.test.frontend.classic.handlers.ClassicDiagnosticsHandler
 import org.jetbrains.kotlin.test.model.*
 import org.jetbrains.kotlin.test.runners.AbstractKotlinCompilerWithTargetBackendTest
+import org.jetbrains.kotlin.test.runners.codegen.commonClassicFrontendHandlersForCodegenTest
 import org.jetbrains.kotlin.test.services.configuration.CommonEnvironmentConfigurator
 import org.jetbrains.kotlin.test.services.configuration.JsEnvironmentConfigurator
 import org.jetbrains.kotlin.test.services.configuration.JsEnvironmentConfigurator.Companion.TEST_DATA_DIR_PATH
@@ -57,6 +62,11 @@ abstract class AbstractJsBlackBoxCodegenTestBase<R : ResultingArtifact.FrontendO
         facadeStep(frontendToBackendConverter)
         facadeStep(backendFacade)
 
+        classicFrontendHandlersStep {
+            commonClassicFrontendHandlersForCodegenTest()
+            useHandlers(::ClassicDiagnosticsHandler)
+        }
+
         useConfigurators(
             ::CommonEnvironmentConfigurator,
             ::JsEnvironmentConfigurator,
@@ -64,11 +74,9 @@ abstract class AbstractJsBlackBoxCodegenTestBase<R : ResultingArtifact.FrontendO
 
         useAdditionalSourceProviders(
             ::JsAdditionalSourceProvider,
-//            ::AdditionalDiagnosticsSourceFilesProvider,
             ::CoroutineHelpersSourceFilesProvider,
-//            ::CodegenHelpersSourceFilesProvider,
-//            ::MainFunctionForBlackBoxTestsSourceProvider,
         )
+
         useAfterAnalysisCheckers(::BlackBoxCodegenSuppressor)
     }
 }
@@ -144,30 +152,6 @@ open class AbstractSourceMapGenerationSmokeTest : AbstractJsTest(
         super.configure(builder)
         builder.defaultDirectives {
             +JsEnvironmentConfigurationDirectives.GENERATE_SOURCE_MAP
-            -JsEnvironmentConfigurationDirectives.GENERATE_NODE_JS_RUNNER
-        }
-    }
-}
-
-open class AbstractWebDemoExamples1Test : AbstractJsTest(
-    pathToTestDir = "${TEST_DATA_DIR_PATH}/webDemoExamples1/",
-    testGroupOutputDirPrefix = "webDemoExamples1/"
-) {
-    override fun configure(builder: TestConfigurationBuilder) {
-        super.configure(builder)
-        builder.defaultDirectives {
-            -JsEnvironmentConfigurationDirectives.GENERATE_NODE_JS_RUNNER
-        }
-    }
-}
-
-open class AbstractWebDemoExamples2Test : AbstractJsTest(
-    pathToTestDir = "${TEST_DATA_DIR_PATH}/webDemoExamples2/",
-    testGroupOutputDirPrefix = "webDemoExamples2/"
-) {
-    override fun configure(builder: TestConfigurationBuilder) {
-        super.configure(builder)
-        builder.defaultDirectives {
             -JsEnvironmentConfigurationDirectives.GENERATE_NODE_JS_RUNNER
         }
     }
