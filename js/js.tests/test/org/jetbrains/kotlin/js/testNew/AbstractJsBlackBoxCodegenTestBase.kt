@@ -77,7 +77,10 @@ abstract class AbstractJsBlackBoxCodegenTestBase<R : ResultingArtifact.FrontendO
             ::CoroutineHelpersSourceFilesProvider,
         )
 
-        useAfterAnalysisCheckers(::BlackBoxCodegenSuppressor)
+        useAfterAnalysisCheckers(
+            ::JsFailingTestSuppressor,
+            ::BlackBoxCodegenSuppressor,
+        )
     }
 }
 
