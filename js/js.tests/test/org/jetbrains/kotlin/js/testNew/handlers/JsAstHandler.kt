@@ -5,14 +5,17 @@
 
 package org.jetbrains.kotlin.js.testNew.handlers
 
+import org.jetbrains.kotlin.js.backend.ast.JsExpressionStatement
+import org.jetbrains.kotlin.js.backend.ast.JsNullLiteral
 import org.jetbrains.kotlin.js.backend.ast.JsProgram
+import org.jetbrains.kotlin.js.backend.ast.RecursiveJsVisitor
 import org.jetbrains.kotlin.js.test.utils.DirectiveTestUtils
-import org.jetbrains.kotlin.js.test.utils.verifyAst
 import org.jetbrains.kotlin.test.backend.handlers.JsBinaryArtifactHandler
 import org.jetbrains.kotlin.test.model.BinaryArtifacts
 import org.jetbrains.kotlin.test.model.TestModule
 import org.jetbrains.kotlin.test.services.TestServices
 import org.jetbrains.kotlin.test.services.isKtFile
+import org.junit.Assert
 
 class JsAstHandler(testServices: TestServices) : JsBinaryArtifactHandler(testServices) {
     override fun processAfterAllModules(someAssertionWasFailed: Boolean) {}
@@ -28,6 +31,17 @@ class JsAstHandler(testServices: TestServices) : JsBinaryArtifactHandler(testSer
         fun processJsProgram(program: JsProgram, psiFiles: List<String>) {
             psiFiles.forEach { DirectiveTestUtils.processDirectives(program, it) }
             program.verifyAst()
+        }
+
+        private fun JsProgram.verifyAst() {
+            accept(object : RecursiveJsVisitor() {
+                override fun visitExpressionStatement(x: JsExpressionStatement) {
+                    when (x.expression) {
+                        is JsNullLiteral -> Assert.fail("Expression statement contains `null` literal")
+                        else -> super.visitExpressionStatement(x)
+                    }
+                }
+            })
         }
     }
 }
