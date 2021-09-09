@@ -5,6 +5,7 @@
 
 package org.jetbrains.kotlin.fir.session
 
+import com.intellij.psi.search.GlobalSearchScope
 import org.jetbrains.annotations.TestOnly
 import org.jetbrains.kotlin.config.LanguageVersionSettings
 import org.jetbrains.kotlin.config.LanguageVersionSettingsImpl
@@ -146,19 +147,16 @@ object FirSessionFactory {
             register(FirProvider::class, firProvider)
 
             val symbolProviderForBinariesFromIncrementalCompilation = providerAndScopeForIncrementalCompilation?.let {
-                FirCompositeSymbolProvider(
+                val javaSymbolProvider = projectEnvironment.getJavaSymbolProvider(this, moduleData, it.scope)
+
+                KotlinDeserializedJvmSymbolsProvider(
                     this@session,
-                    listOfNotNull(
-                        KotlinDeserializedJvmSymbolsProvider(
-                            this@session,
-                            SingleModuleDataProvider(moduleData),
-                            kotlinScopeProvider,
-                            it.packagePartProvider,
-                            projectEnvironment.getKotlinClassFinder(it.scope),
-                            projectEnvironment.getJavaClassFinder(it.scope)
-                        ),
-                        projectEnvironment.getJavaSymbolProvider(this, moduleData, it.scope)
-                    )
+                    SingleModuleDataProvider(moduleData),
+                    kotlinScopeProvider,
+                    it.packagePartProvider,
+                    projectEnvironment.getKotlinClassFinder(it.scope),
+                    javaSymbolProvider,
+                    projectEnvironment.getJavaClassFinder(it.scope)
                 )
             }
 
@@ -210,6 +208,8 @@ object FirSessionFactory {
             registerCommonComponents(languageVersionSettings)
             registerCommonJavaComponents(projectEnvironment.getJavaModuleResolver())
 
+            val javaSymbolProvider = projectEnvironment.getJavaSymbolProvider(this, moduleDataProvider.allModuleData.last(), scope)
+
             val kotlinScopeProvider = FirKotlinScopeProvider(::wrapScopeWithJvmMapped)
 
             val deserializedProviderForIncrementalCompilation = KotlinDeserializedJvmSymbolsProvider(
@@ -218,6 +218,7 @@ object FirSessionFactory {
                 kotlinScopeProvider = kotlinScopeProvider,
                 packagePartProvider = packagePartProvider,
                 kotlinClassFinder = projectEnvironment.getKotlinClassFinder(scope),
+                javaSymbolProvider = javaSymbolProvider,
                 javaClassFinder = projectEnvironment.getJavaClassFinder(scope)
             )
 
@@ -233,7 +234,7 @@ object FirSessionFactory {
                     deserializedProviderForIncrementalCompilation,
                     FirBuiltinSymbolProvider(this, builtinsModuleData, kotlinScopeProvider),
                     FirCloneableSymbolProvider(this, builtinsModuleData, kotlinScopeProvider),
-                    projectEnvironment.getJavaSymbolProvider(this, moduleDataProvider.allModuleData.last(), scope),
+                    javaSymbolProvider, // TODO: looks like it can be removed
                     FirDependenciesSymbolProviderImpl(this)
                 )
             )
