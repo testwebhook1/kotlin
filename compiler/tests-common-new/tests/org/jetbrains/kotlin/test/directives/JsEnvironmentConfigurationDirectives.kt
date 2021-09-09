@@ -13,6 +13,7 @@ import org.jetbrains.kotlin.serialization.js.ModuleKind
 import org.jetbrains.kotlin.test.directives.model.DirectiveApplicability
 import org.jetbrains.kotlin.test.directives.model.SimpleDirectivesContainer
 
+// TODO fill up all descriptions
 object JsEnvironmentConfigurationDirectives : SimpleDirectivesContainer() {
     val MODULE_KIND by enumDirective<ModuleKind>(
         description = "Specifies kind of js module",
@@ -20,17 +21,17 @@ object JsEnvironmentConfigurationDirectives : SimpleDirectivesContainer() {
     )
 
     val NO_JS_MODULE_SYSTEM by directive(
-        description = "", // TODO
+        description = "",
         applicability = DirectiveApplicability.Global
     )
 
     val INFER_MAIN_MODULE by directive(
-        description = "", // TODO
+        description = "Infer main module automatically using dependency graph",
         applicability = DirectiveApplicability.Global
     )
 
     val RUN_PLAIN_BOX_FUNCTION by directive(
-        description = "", // TODO
+        description = "",
         applicability = DirectiveApplicability.Global
     )
 
@@ -40,83 +41,84 @@ object JsEnvironmentConfigurationDirectives : SimpleDirectivesContainer() {
     )
 
     val SKIP_NODE_JS by directive(
-        description = "", // TODO
+        description = "",
         applicability = DirectiveApplicability.Global
     )
 
     val SKIP_MINIFICATION by directive(
-        description = "", // TODO
+        description = "",
         applicability = DirectiveApplicability.Global
     )
 
     val SKIP_SOURCEMAP_REMAPPING by directive(
-        description = "", // TODO
+        description = "",
         applicability = DirectiveApplicability.Global
     )
 
     val EXPECTED_REACHABLE_NODES by valueDirective(
-        description = "", // TODO
+        description = "",
         applicability = DirectiveApplicability.Global,
         parser = { it.toIntOrNull() }
     )
 
     val RECOMPILE by directive(
-        description = "", // TODO
+        description = "",
         applicability = DirectiveApplicability.File
     )
 
     val SOURCE_MAP_EMBED_SOURCES by enumDirective<SourceMapSourceEmbedding>(
-        description = "", // TODO
+        description = "",
         applicability = DirectiveApplicability.Module
     )
 
     val CALL_MAIN by directive(
-        description = "", // TODO
+        description = "",
         applicability = DirectiveApplicability.Global
     )
 
     val KJS_WITH_FULL_RUNTIME by directive(
-        description = "", // TODO
+        description = "",
         applicability = DirectiveApplicability.Global
     )
 
     val EXPECT_ACTUAL_LINKER by directive(
-        description = "" // TODO
+        description = "",
+        applicability = DirectiveApplicability.Global
     )
 
     val SKIP_DCE_DRIVEN by directive(
-        description = "", // TODO
+        description = "",
         applicability = DirectiveApplicability.Global
     )
 
     val SPLIT_PER_MODULE by directive(
-        description = "", // TODO
+        description = "",
         applicability = DirectiveApplicability.Global
     )
 
     val SKIP_MANGLE_VERIFICATION by directive(
-        description = "", // TODO
+        description = "",
         applicability = DirectiveApplicability.Global
     )
 
     val ERROR_POLICY by enumDirective<ErrorTolerancePolicy>(
-        description = "", // TODO
+        description = "",
         applicability = DirectiveApplicability.Global,
         additionalParser = { ErrorTolerancePolicy.resolvePolicy(it) }
     )
 
     val PROPERTY_LAZY_INITIALIZATION by directive(
-        description = "", // TODO
+        description = "",
         applicability = DirectiveApplicability.Global
     )
 
     val SAFE_EXTERNAL_BOOLEAN by directive(
-        description = "", // TODO
+        description = "",
         applicability = DirectiveApplicability.Global
     )
 
     val SAFE_EXTERNAL_BOOLEAN_DIAGNOSTIC by enumDirective<RuntimeDiagnostic>(
-        description = "", // TODO
+        description = "",
         applicability = DirectiveApplicability.Global,
         additionalParser = {
             when (it.lowercase()) {
@@ -128,11 +130,11 @@ object JsEnvironmentConfigurationDirectives : SimpleDirectivesContainer() {
     )
 
     val DONT_RUN_GENERATED_CODE by stringDirective(
-        description = "", // TODO
+        description = "Specify target backend on which generated code will not be run",
         applicability = DirectiveApplicability.Global,
     )
 
-    // -----
+    // Next directives are used only inside test system and must not be present in test file
 
     val PATH_TO_TEST_DIR by stringDirective(
         description = "Specify the path to directory with test files. " +
@@ -141,52 +143,47 @@ object JsEnvironmentConfigurationDirectives : SimpleDirectivesContainer() {
     )
 
     val PATH_TO_ROOT_OUTPUT_DIR by stringDirective(
-        description = "",  // TODO
+        description = "Specify the path to output directory, where all artifacts will be stored",
         applicability = DirectiveApplicability.Global
     )
 
     val TEST_GROUP_OUTPUT_DIR_PREFIX by stringDirective(
-        description = "", // TODO
-        applicability = DirectiveApplicability.Global
-    )
-
-    val DUMP_ARTIFACTS_TO_OUTPUT_DIR by directive(
-        description = "", // TODO
+        description = "Specify the prefix directory for output directory that will contains artifacts",
         applicability = DirectiveApplicability.Global
     )
 
     val TYPED_ARRAYS by directive(
-        description = "", // TODO
+        description = "Enables typed arrays",
         applicability = DirectiveApplicability.Global
     )
 
     val GENERATE_SOURCE_MAP by directive(
-        description = "", // TODO
+        description = "Enables generation of source map",
         applicability = DirectiveApplicability.Global
     )
 
     val GENERATE_NODE_JS_RUNNER by directive(
-        description = "", // TODO
+        description = "Enables generation of `.node.js` file",
         applicability = DirectiveApplicability.Global
     )
 
     val RUN_MINIFIER_BY_DEFAULT by directive(
-        description = "", // TODO
+        description = "Enables minifier even if `EXPECTED_REACHABLE_NODES` directive is not set",
         applicability = DirectiveApplicability.Global
     )
 
     val SKIP_REGULAR_MODE by directive(
-        description = "", // TODO
+        description = "Disable js runner for common js and dce files",
         applicability = DirectiveApplicability.Global
     )
 
     val RUN_IR_DCE by directive(
-        description = "", // TODO
+        description = "Enables dead code elimination on IR",
         applicability = DirectiveApplicability.Global
     )
 
     val RUN_IR_PIR by directive(
-        description = "", // TODO
+        description = "Enables pir on IR", // TODO what `pir` stands for?
         applicability = DirectiveApplicability.Global
     )
 }
