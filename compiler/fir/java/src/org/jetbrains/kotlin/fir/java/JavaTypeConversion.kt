@@ -166,19 +166,23 @@ private fun JavaClassifierType.toConeKotlinTypeForFlexibleBound(
             // When converting type parameter bounds we should not attempt to load any classes, as this may trigger
             // enhancement of type parameter bounds on some other class that depends on this one. Also, in case of raw
             // types specifically there could be an infinite recursion on the type parameter itself.
-            val typeParameters by lazy(LazyThreadSafetyMode.NONE) {
-                lookupTag.takeIf { mode != FirJavaTypeConversionMode.TYPE_PARAMETER_BOUND }
-                    ?.toFirRegularClass(session)?.typeParameters
-            }
+
 
             val mappedTypeArguments = when {
-                isRaw ->
+                isRaw -> {
+                    val typeParameters =
+                        lookupTag.takeIf { lowerBound == null && mode != FirJavaTypeConversionMode.TYPE_PARAMETER_BOUND }
+                            ?.toFirRegularClass(session)?.typeParameters
                     // Given `C<T : X>`, `C` -> `C<X>..C<*>?`.
-                    typeParameters.takeIf { lowerBound == null }?.eraseToUpperBounds(session)
+                    typeParameters?.eraseToUpperBounds(session)
                         ?: Array(classifier.typeParameters.size) { ConeStarProjection }
+                }
                 lookupTag != lowerBound?.lookupTag ->
                     Array(typeArguments.size) { index ->
                         // TODO: check this
+                        val typeParameters =
+                            lookupTag.takeIf { mode != FirJavaTypeConversionMode.TYPE_PARAMETER_BOUND }
+                                ?.toFirRegularClass(session)?.typeParameters
                         val newMode = if (mode == FirJavaTypeConversionMode.ANNOTATION_MEMBER) FirJavaTypeConversionMode.DEFAULT else mode
                         val argument = typeArguments[index]
                         val variance = typeParameters?.getOrNull(index)?.symbol?.fir?.variance ?: Variance.INVARIANT
