@@ -11684,6 +11684,11 @@ public class LightAnalysisModeTestGenerated extends AbstractLightAnalysisModeTes
                     runTest("compiler/testData/codegen/box/diagnostics/functions/tailRecursion/recursiveCallInInlineLambdaWithCapture.kt");
                 }
 
+                @TestMetadata("tailrecWithExplicitCompanionObjectDispatcher.kt")
+                public void ignoreTailrecWithExplicitCompanionObjectDispatcher() throws Exception {
+                    runTest("compiler/testData/codegen/box/diagnostics/functions/tailRecursion/tailrecWithExplicitCompanionObjectDispatcher.kt");
+                }
+
                 private void runTest(String testDataFilePath) throws Exception {
                     KotlinTestUtils.runTest(this::doTest, TargetBackend.JVM, testDataFilePath);
                 }
@@ -11865,11 +11870,6 @@ public class LightAnalysisModeTestGenerated extends AbstractLightAnalysisModeTes
                 @TestMetadata("tailRecursionInFinally.kt")
                 public void testTailRecursionInFinally() throws Exception {
                     runTest("compiler/testData/codegen/box/diagnostics/functions/tailRecursion/tailRecursionInFinally.kt");
-                }
-
-                @TestMetadata("tailrecWithExplicitCompanionObjectDispatcher.kt")
-                public void testTailrecWithExplicitCompanionObjectDispatcher() throws Exception {
-                    runTest("compiler/testData/codegen/box/diagnostics/functions/tailRecursion/tailrecWithExplicitCompanionObjectDispatcher.kt");
                 }
 
                 @TestMetadata("tailrecWithExplicitObjectDispatcher.kt")

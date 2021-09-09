@@ -521,6 +521,9 @@ public class KotlinTestUtils {
             try {
                 test.invoke(filePath);
             }
+            catch (IgnoreTestException e) {
+                return;
+            }
             catch (Throwable e) {
                 if (!isIgnored && AUTOMATICALLY_MUTE_FAILED_TESTS) {
                     String text = KtTestUtil.doLoadFile(testDataFile);
@@ -639,5 +642,8 @@ public class KotlinTestUtils {
         }
         // Several extension if name contains another dot
         return name.indexOf('.', firstDotIndex + 1) != -1;
+    }
+
+    public static class IgnoreTestException extends RuntimeException {
     }
 }
