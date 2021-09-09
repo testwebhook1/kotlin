@@ -245,6 +245,7 @@ val testDataDir = project(":js:js.translator").projectDir.resolve("testData")
 
 projectTest(parallel = true) {
     setUpJsBoxTests(jsEnabled = true, jsIrEnabled = true)
+    maxHeapSize = "3g"
 
     inputs.dir(rootDir.resolve("compiler/cli/cli-common/resources")) // compiler.xml
 
@@ -301,6 +302,7 @@ projectTest("jsPirTest", true) {
 
 projectTest("quickTest", parallel = true, jUnit5Enabled = true) {
     setUpJsBoxTests(jsEnabled = true, jsIrEnabled = false)
+    maxHeapSize = "3g"
     systemProperty("kotlin.js.skipMinificationTest", "true")
     useJUnitPlatform()
 }
