@@ -56,3 +56,35 @@ fun use1() {
 }
 
 fun use2(f: <!OPT_IN_USAGE!>C<!>.D.E.F) = f.hashCode()
+
+// FILE: around-kt48570.kt
+
+@RequiresOptIn
+annotation class SomeOptInMarker
+
+@SomeOptInMarker
+class A {
+    class B {
+        class C
+
+        object D {
+            fun bar() {}
+        }
+    }
+}
+
+// Should we report something?
+fun foo(arg: <!OPT_IN_USAGE_ERROR!>A<!>.B.C) {  }
+
+fun bar() {
+    // Should we report something?
+    <!OPT_IN_USAGE_ERROR!>A<!>.B.D.bar()
+}
+
+// Should we report something?
+fun create() = <!OPT_IN_USAGE_ERROR!>A<!>.B.C()
+
+fun use() {
+    // Should we report something?
+    val c = create()
+}
