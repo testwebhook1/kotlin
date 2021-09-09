@@ -162,7 +162,7 @@ class ClassicFrontendFacade(
                 friendsDescriptors,
                 hasCommonModules
             )
-            targetPlatform.isJs() -> performJsModuleResolve(project, configuration, files)
+            targetPlatform.isJs() -> performJsModuleResolve(project, configuration, files, dependentDescriptors)
             targetPlatform.isNative() -> performNativeModuleResolve(module, project, files)
             targetPlatform.isCommon() -> performCommonModuleResolve(module, files)
             else -> error("Should not be here")
@@ -239,10 +239,20 @@ class ClassicFrontendFacade(
     private fun performJsModuleResolve(
         project: Project,
         configuration: CompilerConfiguration,
-        files: List<KtFile>
+        files: List<KtFile>,
+        dependentDescriptors: List<ModuleDescriptorImpl>
     ): AnalysisResult {
+        // `dependentDescriptors` - modules with source dependency kind
+        // 'jsConfig.moduleDescriptors' - modules with binary dependency kind
         val jsConfig = JsEnvironmentConfigurator.createJsConfig(project, configuration)
-        return TopDownAnalyzerFacadeForJS.analyzeFiles(files, jsConfig)
+        return TopDownAnalyzerFacadeForJS.analyzeFiles(
+            files,
+            project = jsConfig.project,
+            configuration = jsConfig.configuration,
+            moduleDescriptors = dependentDescriptors + jsConfig.moduleDescriptors,
+            friendModuleDescriptors = jsConfig.friendModuleDescriptors,
+            targetEnvironment = jsConfig.targetEnvironment,
+        )
     }
 
     private fun performNativeModuleResolve(

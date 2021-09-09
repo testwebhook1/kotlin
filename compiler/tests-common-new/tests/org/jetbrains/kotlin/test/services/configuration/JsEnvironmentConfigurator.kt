@@ -127,6 +127,7 @@ class JsEnvironmentConfigurator(testServices: TestServices) : EnvironmentConfigu
         val friends = module.friendDependencies.map { getJsModuleArtifactPath(testServices, it.moduleName) + ".meta.js" }
 
         val libraries = when (module.targetBackend) {
+            null -> JsConfig.JS_STDLIB + JsConfig.JS_KOTLIN_TEST
             TargetBackend.JS_IR_ES6 -> dependencies
             TargetBackend.JS_IR -> dependencies
             TargetBackend.JS -> JsConfig.JS_STDLIB + JsConfig.JS_KOTLIN_TEST + dependencies
@@ -167,7 +168,7 @@ class JsEnvironmentConfigurator(testServices: TestServices) : EnvironmentConfigu
             )
         )
 
-        configuration.put(CommonConfigurationKeys.EXPECT_ACTUAL_LINKER, registeredDirectives.contains(EXPECT_ACTUAL_LINKER))
+        configuration.put(CommonConfigurationKeys.EXPECT_ACTUAL_LINKER, EXPECT_ACTUAL_LINKER in registeredDirectives)
     }
 }
 
