@@ -45,7 +45,13 @@ class NodeJsGeneratorHandler(testServices: TestServices) : AbstractJsArtifactsCo
 
     companion object {
         fun generateNodeRunner(files: Collection<String>, dir: File, moduleName: String, ignored: Boolean, testPackage: String?): String {
-            val filesToLoad = files.map { FileUtil.getRelativePath(dir, File(it))!!.replace(File.separatorChar, '/') }.map { "\"$it\"" }
+            val filesToLoad = files.map {
+                val relativePath = when {
+                    it.startsWith(dir.absolutePath) -> FileUtil.getRelativePath(dir, File(it))!!
+                    else -> it
+                }
+                "\"${relativePath.replace(File.separatorChar, '/')}\""
+            }
             val fqn = testPackage?.let { ".$it" } ?: ""
             val loadAndRun = "load([${filesToLoad.joinToString(",")}], '$moduleName')$fqn.box()"
 

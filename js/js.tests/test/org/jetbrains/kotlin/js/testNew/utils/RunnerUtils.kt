@@ -43,7 +43,7 @@ private fun getAdditionalFiles(testServices: TestServices): List<String> {
     val withModuleSystem = testWithModuleSystem(testServices)
 
     val additionalFiles = mutableListOf<String>()
-    if (withModuleSystem) additionalFiles += MODULE_EMULATION_FILE
+    if (withModuleSystem) additionalFiles += File(MODULE_EMULATION_FILE).absolutePath
 
     originalFile.parentFile.resolve(originalFile.nameWithoutExtension + JavaScript.DOT_EXTENSION)
         .takeIf { it.exists() }
