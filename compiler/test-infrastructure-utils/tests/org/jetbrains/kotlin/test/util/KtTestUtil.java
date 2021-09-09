@@ -30,16 +30,32 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Set;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static org.jetbrains.kotlin.test.InTextDirectivesUtils.isCompatibleTarget;
 
 public class KtTestUtil {
     private static String homeDir = computeHomeDirectory();
 
+    private static boolean onWindows() {
+        return System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("windows");
+    }
+
     @NotNull
     public static File tmpDirForTest(@NotNull String testClassName, @NotNull String testName) throws IOException {
+        if (onWindows()) {
+            int lastDot = testClassName.lastIndexOf('.');
+            String packageName = testClassName.substring(0, lastDot + 1);
+            String simplifiedClassName = testClassName.substring(lastDot + 1).chars()
+                    .filter(it -> Character.isUpperCase(it) || it == '$')
+                    .mapToObj(it -> String.valueOf((char) it))
+                    .collect(Collectors.joining());
+
+            return normalizeFile(FileUtil.createTempDirectory(packageName + simplifiedClassName, testName, false));
+        }
         return normalizeFile(FileUtil.createTempDirectory(testClassName, testName, false));
     }
 

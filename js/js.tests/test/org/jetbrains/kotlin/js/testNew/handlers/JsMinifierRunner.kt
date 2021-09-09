@@ -47,10 +47,7 @@ class JsMinifierRunner(testServices: TestServices) : AbstractJsArtifactsCollecto
             minifyAndRun(
                 originalFile,
                 expectedReachableNodes,
-                workDir = File(
-                    JsEnvironmentConfigurator.getMinificationJsArtifactsOutputDir(testServices),
-                    originalFile.nameWithoutExtension
-                ),
+                workDir = JsEnvironmentConfigurator.getMinificationJsArtifactsOutputDir(testServices),
                 allJsFiles = allJsFiles,
                 generatedJsFiles = modulesToArtifact.map { it.value.outputFile.absolutePath to it.key.name },
                 expectedResult = "OK",
