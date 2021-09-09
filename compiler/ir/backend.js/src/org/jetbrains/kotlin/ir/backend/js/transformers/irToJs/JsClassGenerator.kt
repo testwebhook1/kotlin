@@ -107,12 +107,16 @@ class JsClassGenerator(private val irClass: IrClass, val context: JsGenerationCo
                 if (property.isFakeOverride)
                     continue
 
-                fun IrSimpleFunction.accessorRef(): JsNameRef? =
+                fun IrSimpleFunction.propertyAccessorForwarder(
+                    description: String,
+                    callActualAccessor: (JsNameRef) -> JsStatement
+                ): JsFunction? =
                     when (visibility) {
                         DescriptorVisibilities.PRIVATE -> null
-                        else -> JsNameRef(
-                            context.getNameForMemberFunction(this),
-                            classPrototypeRef
+                        else -> JsFunction(
+                            emptyScope,
+                            JsBlock(callActualAccessor(JsNameRef(context.getNameForMemberFunction(this), JsThisRef()))),
+                            description
                         )
                     }
 
@@ -120,14 +124,31 @@ class JsClassGenerator(private val irClass: IrClass, val context: JsGenerationCo
                     property.getter?.overridesExternal() == true ||
                     property.getJsName() != null
                 ) {
-                    val getterRef = property.getter?.accessorRef()
-                    val setterRef = property.setter?.accessorRef()
+                    val getterForwarder = property.getter?.propertyAccessorForwarder("getter forwarder") { getterRef ->
+                        JsReturn(
+                            JsInvocation(
+                                getterRef
+                            )
+                        )
+                    }
+                    val setterForwarder = property.setter?.let {
+                        val setterArgName = JsName("value")
+                        it.propertyAccessorForwarder("setter forwarder") { setterRef ->
+                            JsInvocation(
+                                setterRef,
+                                JsNameRef(setterArgName)
+                            ).makeStmt()
+                        }?.apply {
+                            parameters.add(JsParameter(setterArgName))
+                        }
+                    }
+
                     classBlock.statements += JsExpressionStatement(
                         defineProperty(
                             classPrototypeRef,
                             context.getNameForProperty(property).ident,
-                            getter = getterRef,
-                            setter = setterRef
+                            getter = getterForwarder,
+                            setter = setterForwarder
                         )
                     )
                 }
