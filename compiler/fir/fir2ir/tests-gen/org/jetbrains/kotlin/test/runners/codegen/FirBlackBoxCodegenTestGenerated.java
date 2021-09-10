@@ -24813,6 +24813,12 @@ public class FirBlackBoxCodegenTestGenerated extends AbstractFirBlackBoxCodegenT
         }
 
         @Test
+        @TestMetadata("fromDynamicPlugins.kt")
+        public void testFromDynamicPlugins() throws Exception {
+            runTest("compiler/testData/codegen/box/jvmField/fromDynamicPlugins.kt");
+        }
+
+        @Test
         @TestMetadata("initializersOrder.kt")
         public void testInitializersOrder() throws Exception {
             runTest("compiler/testData/codegen/box/jvmField/initializersOrder.kt");
