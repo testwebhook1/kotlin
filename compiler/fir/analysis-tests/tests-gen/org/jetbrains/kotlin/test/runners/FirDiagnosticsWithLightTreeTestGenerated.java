@@ -4235,6 +4235,12 @@ public class FirDiagnosticsWithLightTreeTestGenerated extends AbstractFirDiagnos
         }
 
         @Test
+        @TestMetadata("quiz.kt")
+        public void testQuiz() throws Exception {
+            runTest("compiler/fir/analysis-tests/testData/resolveWithStdlib/quiz.kt");
+        }
+
+        @Test
         @TestMetadata("rangeTo.kt")
         public void testRangeTo() throws Exception {
             runTest("compiler/fir/analysis-tests/testData/resolveWithStdlib/rangeTo.kt");

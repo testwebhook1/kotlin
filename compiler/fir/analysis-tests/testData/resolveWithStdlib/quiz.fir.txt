@@ -1,0 +1,36 @@
+FILE: quiz.kt
+    public open class Base : R|kotlin/Any| {
+        public constructor(): R|Base| {
+            super<R|kotlin/Any|>()
+        }
+
+    }
+    public final class Derived1 : R|Base|, R|kotlin/Comparable<Derived1>| {
+        public constructor(): R|Derived1| {
+            super<R|Base|>()
+        }
+
+        public final override operator fun compareTo(other: R|Derived1|): R|kotlin/Int| {
+            ^compareTo Int(0)
+        }
+
+    }
+    public final class Derived2 : R|Base|, R|kotlin/Comparable<Derived2>| {
+        public constructor(): R|Derived2| {
+            super<R|Base|>()
+        }
+
+        public final override operator fun compareTo(other: R|Derived2|): R|kotlin/Int| {
+            ^compareTo Int(0)
+        }
+
+    }
+    public final fun foo(arg: R|kotlin/Any|): R|kotlin/Unit| {
+        when () {
+            (R|<local>/arg| is R|Derived1|) || (R|<local>/arg| is R|Derived2|) ->  {
+                R|kotlin/io/println|(R|<local>/arg|)
+                R|<local>/arg|.<Inapplicable(INAPPLICABLE): kotlin/Comparable.compareTo>#(R|/Base.Base|())
+            }
+        }
+
+    }
