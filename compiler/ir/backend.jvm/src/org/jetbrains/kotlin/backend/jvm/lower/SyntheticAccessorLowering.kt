@@ -40,7 +40,7 @@ import org.jetbrains.org.objectweb.asm.Opcodes
 internal class SyntheticAccessorLowering(val context: JvmBackendContext) : IrElementTransformerVoidWithContext(), FileLoweringPass {
     data class LambdaCallSite(val scope: IrDeclaration, val crossinline: Boolean)
 
-    private val pendingAccessorsToAdd = mutableListOf<IrFunction>()
+    private val pendingAccessorsToAdd = mutableListOf<Pair<IrFunction, String>>()
     private val inlineLambdaToCallSite = mutableMapOf<IrFunction, LambdaCallSite>()
 
     override fun lower(irFile: IrFile) {
@@ -60,11 +60,12 @@ internal class SyntheticAccessorLowering(val context: JvmBackendContext) : IrEle
 
         irFile.transformChildrenVoid(this)
 
-        for (accessor in pendingAccessorsToAdd) {
+        for ((accessor, description) in pendingAccessorsToAdd) {
             assert(accessor.fileOrNull == irFile) {
                 "SyntheticAccessorLowering should not attempt to modify other files!\n" +
                         "While lowering this file: ${irFile.render()}\n" +
-                        "Trying to add this accessor: ${accessor.render()}"
+                        "Trying to add this accessor: ${accessor.render()}\n" +
+                        "With description: $description"
             }
             (accessor.parent as IrDeclarationContainer).declarations.add(accessor)
         }
@@ -169,11 +170,11 @@ internal class SyntheticAccessorLowering(val context: JvmBackendContext) : IrEle
             when (symbol) {
                 is IrConstructorSymbol ->
                     symbol.owner.makeConstructorAccessor()
-                        .also(pendingAccessorsToAdd::add)
+                        .also { pendingAccessorsToAdd.add(it to "constructor accessor ${symbol.owner.parentAsClass.name}") }
                         .symbol
                 is IrSimpleFunctionSymbol -> {
                     symbol.owner.makeSimpleFunctionAccessor(superQualifierSymbol, dispatchReceiverType, parent)
-                        .also(pendingAccessorsToAdd::add)
+                        .also { pendingAccessorsToAdd.add(it to "simple function accessor ${symbol.owner.name}") }
                         .symbol
                 }
                 else -> error("Unknown subclass of IrFunctionSymbol")
@@ -277,7 +278,7 @@ internal class SyntheticAccessorLowering(val context: JvmBackendContext) : IrEle
 
     override fun visitConstructor(declaration: IrConstructor): IrStatement {
         if (declaration.isOrShouldBeHidden) {
-            pendingAccessorsToAdd.add(handleHiddenConstructor(declaration))
+            pendingAccessorsToAdd.add(handleHiddenConstructor(declaration) to "hidden constructor of ${declaration.parentAsClass.name}")
             declaration.visibility = DescriptorVisibilities.PRIVATE
         }
 
@@ -461,7 +462,7 @@ internal class SyntheticAccessorLowering(val context: JvmBackendContext) : IrEle
             returnType = fieldSymbol.owner.type
         }.also { accessor ->
             accessor.parent = parent
-            pendingAccessorsToAdd.add(accessor)
+            pendingAccessorsToAdd.add(accessor to "just getter parent = ${parent.name} super = ${superQualifierSymbol?.owner?.name}")
 
             if (!fieldSymbol.owner.isStatic) {
                 // Accessors are always to one's own fields.
@@ -508,7 +509,7 @@ internal class SyntheticAccessorLowering(val context: JvmBackendContext) : IrEle
             returnType = context.irBuiltIns.unitType
         }.also { accessor ->
             accessor.parent = parent
-            pendingAccessorsToAdd.add(accessor)
+            pendingAccessorsToAdd.add(accessor to "just setter parent = ${parent.name} super = ${superQualifierSymbol?.owner?.name}")
 
             if (!fieldSymbol.owner.isStatic) {
                 // Accessors are always to one's own fields.
