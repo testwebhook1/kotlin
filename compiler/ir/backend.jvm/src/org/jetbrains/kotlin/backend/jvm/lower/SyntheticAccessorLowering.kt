@@ -465,13 +465,16 @@ internal class SyntheticAccessorLowering(val context: JvmBackendContext) : IrEle
         }.also { accessor ->
             accessor.parent = parent
             val propertySymbol = field.correspondingPropertySymbol
+            val scopeClassOrPackage = getScopeClassOrPackage()
+            val scopeFqName = scopeClassOrPackage?.getPackageFragment()?.fqName
             pendingAccessorsToAdd.add(
                 accessor to "just getter parent = ${parent.name} super = ${superQualifierSymbol?.owner?.name} " +
                         "field = ${field.name} fieldParent = ${(field.parent as? IrClass)?.name} " +
                         "fieldVisibility = ${field.visibility.name} " +
                         "jvmVisibility = ${AsmUtil.getVisibilityAccessFlag(field.visibility.delegate)} " +
                         "property = ${propertySymbol?.owner?.name} origin = ${propertySymbol?.owner?.origin} " +
-                        "dispatchReceiverClass = ${dispatchReceiverClassSymbol?.owner?.name}"
+                        "dispatchReceiverClass = ${dispatchReceiverClassSymbol?.owner?.name} " +
+                        "scopeClassOrPackage = ${scopeClassOrPackage?.kotlinFqName} scopeFqName = $scopeFqName"
             )
 
             if (!field.isStatic) {
