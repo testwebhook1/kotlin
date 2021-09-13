@@ -248,7 +248,7 @@ internal class SyntheticAccessorLowering(val context: JvmBackendContext) : IrEle
                 modifyGetterExpression(
                     expression,
                     getterMap.getOrPut(FieldKey(symbol, parent, expression.superQualifierSymbol)) {
-                        makeGetterAccessorSymbol(symbol, parent, expression.superQualifierSymbol)
+                        makeGetterAccessorSymbol(symbol, parent, expression.superQualifierSymbol, dispatchReceiverClassSymbol)
                     }
                 )
             } else {
@@ -450,29 +450,40 @@ internal class SyntheticAccessorLowering(val context: JvmBackendContext) : IrEle
     private fun makeGetterAccessorSymbol(
         fieldSymbol: IrFieldSymbol,
         parent: IrClass,
-        superQualifierSymbol: IrClassSymbol?
-    ): IrSimpleFunctionSymbol =
-        context.irFactory.buildFun {
+        superQualifierSymbol: IrClassSymbol?,
+        dispatchReceiverClassSymbol: IrClassSymbol?,
+    ): IrSimpleFunctionSymbol {
+        val field = fieldSymbol.owner
+        return context.irFactory.buildFun {
             startOffset = parent.startOffset
             endOffset = parent.startOffset
             origin = JvmLoweredDeclarationOrigin.SYNTHETIC_ACCESSOR
-            name = fieldSymbol.owner.accessorNameForGetter(superQualifierSymbol)
+            name = field.accessorNameForGetter(superQualifierSymbol)
             visibility = DescriptorVisibilities.PUBLIC
             modality = Modality.FINAL
-            returnType = fieldSymbol.owner.type
+            returnType = field.type
         }.also { accessor ->
             accessor.parent = parent
-            pendingAccessorsToAdd.add(accessor to "just getter parent = ${parent.name} super = ${superQualifierSymbol?.owner?.name}")
+            val propertySymbol = field.correspondingPropertySymbol
+            pendingAccessorsToAdd.add(
+                accessor to "just getter parent = ${parent.name} super = ${superQualifierSymbol?.owner?.name} " +
+                        "field = ${field.name} fieldParent = ${(field.parent as? IrClass)?.name} " +
+                        "fieldVisibility = ${field.visibility.name} " +
+                        "jvmVisibility = ${AsmUtil.getVisibilityAccessFlag(field.visibility.delegate)} " +
+                        "property = ${propertySymbol?.owner?.name} origin = ${propertySymbol?.owner?.origin} " +
+                        "dispatchReceiverClass = ${dispatchReceiverClassSymbol?.owner?.name}"
+            )
 
-            if (!fieldSymbol.owner.isStatic) {
+            if (!field.isStatic) {
                 // Accessors are always to one's own fields.
                 accessor.addValueParameter(
                     "\$this", parent.defaultType, JvmLoweredDeclarationOrigin.SYNTHETIC_ACCESSOR
                 )
             }
 
-            accessor.body = createAccessorBodyForGetter(fieldSymbol.owner, accessor, superQualifierSymbol)
+            accessor.body = createAccessorBodyForGetter(field, accessor, superQualifierSymbol)
         }.symbol
+    }
 
     private fun createAccessorBodyForGetter(
         targetField: IrField,
