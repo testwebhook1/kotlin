@@ -131,26 +131,26 @@ public inline fun <T> kotlin.time.TimeSource.measureTimedValue(block: () -> T): 
 @kotlin.Deprecated(level = DeprecationLevel.ERROR, message = "Subtracting one TimeMark from another is not a well defined operation because these time marks could have been obtained from the different time sources.")
 public inline operator fun kotlin.time.TimeMark.minus(other: kotlin.time.TimeMark): kotlin.time.Duration
 
-@kotlin.SinceKotlin(version = "1.3")
-@kotlin.time.ExperimentalTime
+@kotlin.SinceKotlin(version = "1.6")
+@kotlin.WasExperimental(markerClass = {kotlin.time.ExperimentalTime::class})
 @kotlin.internal.InlineOnly
 public inline operator fun kotlin.Double.times(duration: kotlin.time.Duration): kotlin.time.Duration
 
-@kotlin.SinceKotlin(version = "1.3")
-@kotlin.time.ExperimentalTime
+@kotlin.SinceKotlin(version = "1.6")
+@kotlin.WasExperimental(markerClass = {kotlin.time.ExperimentalTime::class})
 @kotlin.internal.InlineOnly
 public inline operator fun kotlin.Int.times(duration: kotlin.time.Duration): kotlin.time.Duration
 
-@kotlin.SinceKotlin(version = "1.3")
-@kotlin.time.ExperimentalTime
+@kotlin.SinceKotlin(version = "1.6")
+@kotlin.WasExperimental(markerClass = {kotlin.time.ExperimentalTime::class})
 public fun kotlin.Double.toDuration(unit: kotlin.time.DurationUnit): kotlin.time.Duration
 
-@kotlin.SinceKotlin(version = "1.3")
-@kotlin.time.ExperimentalTime
+@kotlin.SinceKotlin(version = "1.6")
+@kotlin.WasExperimental(markerClass = {kotlin.time.ExperimentalTime::class})
 public fun kotlin.Int.toDuration(unit: kotlin.time.DurationUnit): kotlin.time.Duration
 
-@kotlin.SinceKotlin(version = "1.3")
-@kotlin.time.ExperimentalTime
+@kotlin.SinceKotlin(version = "1.6")
+@kotlin.WasExperimental(markerClass = {kotlin.time.ExperimentalTime::class})
 public fun kotlin.Long.toDuration(unit: kotlin.time.DurationUnit): kotlin.time.Duration
 
 @kotlin.SinceKotlin(version = "1.3")
@@ -177,52 +177,59 @@ public abstract class AbstractLongTimeSource : kotlin.time.TimeSource {
     protected abstract fun read(): kotlin.Long
 }
 
-@kotlin.SinceKotlin(version = "1.3")
-@kotlin.time.ExperimentalTime
+@kotlin.SinceKotlin(version = "1.6")
+@kotlin.WasExperimental(markerClass = {kotlin.time.ExperimentalTime::class})
 @kotlin.jvm.JvmInline
 public final inline class Duration : kotlin.Comparable<kotlin.time.Duration> {
     public final val absoluteValue: kotlin.time.Duration { get; }
 
+    @kotlin.SinceKotlin(version = "1.3")
+    @kotlin.time.ExperimentalTime
     @kotlin.Deprecated(message = "Use inWholeDays property instead or convert toDouble(DAYS) if a double value is required.", replaceWith = kotlin.ReplaceWith(expression = "toDouble(DurationUnit.DAYS)", imports = {}))
     public final val inDays: kotlin.Double { get; }
 
+    @kotlin.SinceKotlin(version = "1.3")
+    @kotlin.time.ExperimentalTime
     @kotlin.Deprecated(message = "Use inWholeHours property instead or convert toDouble(HOURS) if a double value is required.", replaceWith = kotlin.ReplaceWith(expression = "toDouble(DurationUnit.HOURS)", imports = {}))
     public final val inHours: kotlin.Double { get; }
 
+    @kotlin.SinceKotlin(version = "1.3")
+    @kotlin.time.ExperimentalTime
     @kotlin.Deprecated(message = "Use inWholeMicroseconds property instead or convert toDouble(MICROSECONDS) if a double value is required.", replaceWith = kotlin.ReplaceWith(expression = "toDouble(DurationUnit.MICROSECONDS)", imports = {}))
     public final val inMicroseconds: kotlin.Double { get; }
 
+    @kotlin.SinceKotlin(version = "1.3")
+    @kotlin.time.ExperimentalTime
     @kotlin.Deprecated(message = "Use inWholeMilliseconds property instead or convert toDouble(MILLISECONDS) if a double value is required.", replaceWith = kotlin.ReplaceWith(expression = "toDouble(DurationUnit.MILLISECONDS)", imports = {}))
     public final val inMilliseconds: kotlin.Double { get; }
 
+    @kotlin.SinceKotlin(version = "1.3")
+    @kotlin.time.ExperimentalTime
     @kotlin.Deprecated(message = "Use inWholeMinutes property instead or convert toDouble(MINUTES) if a double value is required.", replaceWith = kotlin.ReplaceWith(expression = "toDouble(DurationUnit.MINUTES)", imports = {}))
     public final val inMinutes: kotlin.Double { get; }
 
+    @kotlin.SinceKotlin(version = "1.3")
+    @kotlin.time.ExperimentalTime
     @kotlin.Deprecated(message = "Use inWholeNanoseconds property instead or convert toDouble(NANOSECONDS) if a double value is required.", replaceWith = kotlin.ReplaceWith(expression = "toDouble(DurationUnit.NANOSECONDS)", imports = {}))
     public final val inNanoseconds: kotlin.Double { get; }
 
+    @kotlin.SinceKotlin(version = "1.3")
+    @kotlin.time.ExperimentalTime
     @kotlin.Deprecated(message = "Use inWholeSeconds property instead or convert toDouble(SECONDS) if a double value is required.", replaceWith = kotlin.ReplaceWith(expression = "toDouble(DurationUnit.SECONDS)", imports = {}))
     public final val inSeconds: kotlin.Double { get; }
 
-    @kotlin.SinceKotlin(version = "1.5")
     public final val inWholeDays: kotlin.Long { get; }
 
-    @kotlin.SinceKotlin(version = "1.5")
     public final val inWholeHours: kotlin.Long { get; }
 
-    @kotlin.SinceKotlin(version = "1.5")
     public final val inWholeMicroseconds: kotlin.Long { get; }
 
-    @kotlin.SinceKotlin(version = "1.5")
     public final val inWholeMilliseconds: kotlin.Long { get; }
 
-    @kotlin.SinceKotlin(version = "1.5")
     public final val inWholeMinutes: kotlin.Long { get; }
 
-    @kotlin.SinceKotlin(version = "1.5")
     public final val inWholeNanoseconds: kotlin.Long { get; }
 
-    @kotlin.SinceKotlin(version = "1.5")
     public final val inWholeSeconds: kotlin.Long { get; }
 
     public open override operator fun compareTo(other: kotlin.time.Duration): kotlin.Int
@@ -269,9 +276,13 @@ public final inline class Duration : kotlin.Comparable<kotlin.time.Duration> {
 
     public final fun toLong(unit: kotlin.time.DurationUnit): kotlin.Long
 
+    @kotlin.SinceKotlin(version = "1.3")
+    @kotlin.time.ExperimentalTime
     @kotlin.Deprecated(message = "Use inWholeMilliseconds property instead.", replaceWith = kotlin.ReplaceWith(expression = "this.inWholeMilliseconds", imports = {}))
     public final fun toLongMilliseconds(): kotlin.Long
 
+    @kotlin.SinceKotlin(version = "1.3")
+    @kotlin.time.ExperimentalTime
     @kotlin.Deprecated(message = "Use inWholeNanoseconds property instead.", replaceWith = kotlin.ReplaceWith(expression = "this.inWholeNanoseconds", imports = {}))
     public final fun toLongNanoseconds(): kotlin.Long
 
@@ -289,84 +300,101 @@ public final inline class Duration : kotlin.Comparable<kotlin.time.Duration> {
         public final fun convert(value: kotlin.Double, sourceUnit: kotlin.time.DurationUnit, targetUnit: kotlin.time.DurationUnit): kotlin.Double
 
         @kotlin.SinceKotlin(version = "1.5")
+        @kotlin.time.ExperimentalTime
         public final fun days(value: kotlin.Double): kotlin.time.Duration
 
         @kotlin.SinceKotlin(version = "1.5")
+        @kotlin.time.ExperimentalTime
         public final fun days(value: kotlin.Int): kotlin.time.Duration
 
         @kotlin.SinceKotlin(version = "1.5")
+        @kotlin.time.ExperimentalTime
         public final fun days(value: kotlin.Long): kotlin.time.Duration
 
         @kotlin.SinceKotlin(version = "1.5")
+        @kotlin.time.ExperimentalTime
         public final fun hours(value: kotlin.Double): kotlin.time.Duration
 
         @kotlin.SinceKotlin(version = "1.5")
+        @kotlin.time.ExperimentalTime
         public final fun hours(value: kotlin.Int): kotlin.time.Duration
 
         @kotlin.SinceKotlin(version = "1.5")
+        @kotlin.time.ExperimentalTime
         public final fun hours(value: kotlin.Long): kotlin.time.Duration
 
         @kotlin.SinceKotlin(version = "1.5")
+        @kotlin.time.ExperimentalTime
         public final fun microseconds(value: kotlin.Double): kotlin.time.Duration
 
         @kotlin.SinceKotlin(version = "1.5")
+        @kotlin.time.ExperimentalTime
         public final fun microseconds(value: kotlin.Int): kotlin.time.Duration
 
         @kotlin.SinceKotlin(version = "1.5")
+        @kotlin.time.ExperimentalTime
         public final fun microseconds(value: kotlin.Long): kotlin.time.Duration
 
         @kotlin.SinceKotlin(version = "1.5")
+        @kotlin.time.ExperimentalTime
         public final fun milliseconds(value: kotlin.Double): kotlin.time.Duration
 
         @kotlin.SinceKotlin(version = "1.5")
+        @kotlin.time.ExperimentalTime
         public final fun milliseconds(value: kotlin.Int): kotlin.time.Duration
 
         @kotlin.SinceKotlin(version = "1.5")
+        @kotlin.time.ExperimentalTime
         public final fun milliseconds(value: kotlin.Long): kotlin.time.Duration
 
         @kotlin.SinceKotlin(version = "1.5")
+        @kotlin.time.ExperimentalTime
         public final fun minutes(value: kotlin.Double): kotlin.time.Duration
 
         @kotlin.SinceKotlin(version = "1.5")
+        @kotlin.time.ExperimentalTime
         public final fun minutes(value: kotlin.Int): kotlin.time.Duration
 
         @kotlin.SinceKotlin(version = "1.5")
+        @kotlin.time.ExperimentalTime
         public final fun minutes(value: kotlin.Long): kotlin.time.Duration
 
         @kotlin.SinceKotlin(version = "1.5")
+        @kotlin.time.ExperimentalTime
         public final fun nanoseconds(value: kotlin.Double): kotlin.time.Duration
 
         @kotlin.SinceKotlin(version = "1.5")
+        @kotlin.time.ExperimentalTime
         public final fun nanoseconds(value: kotlin.Int): kotlin.time.Duration
 
         @kotlin.SinceKotlin(version = "1.5")
+        @kotlin.time.ExperimentalTime
         public final fun nanoseconds(value: kotlin.Long): kotlin.time.Duration
 
-        @kotlin.SinceKotlin(version = "1.5")
         public final fun parse(value: kotlin.String): kotlin.time.Duration
 
-        @kotlin.SinceKotlin(version = "1.5")
         public final fun parseIsoString(value: kotlin.String): kotlin.time.Duration
 
-        @kotlin.SinceKotlin(version = "1.5")
         public final fun parseIsoStringOrNull(value: kotlin.String): kotlin.time.Duration?
 
-        @kotlin.SinceKotlin(version = "1.5")
         public final fun parseOrNull(value: kotlin.String): kotlin.time.Duration?
 
         @kotlin.SinceKotlin(version = "1.5")
+        @kotlin.time.ExperimentalTime
         public final fun seconds(value: kotlin.Double): kotlin.time.Duration
 
         @kotlin.SinceKotlin(version = "1.5")
+        @kotlin.time.ExperimentalTime
         public final fun seconds(value: kotlin.Int): kotlin.time.Duration
 
         @kotlin.SinceKotlin(version = "1.5")
+        @kotlin.time.ExperimentalTime
         public final fun seconds(value: kotlin.Long): kotlin.time.Duration
     }
 }
 
-@kotlin.SinceKotlin(version = "1.3")
-@kotlin.time.ExperimentalTime
+@kotlin.SinceKotlin(version = "1.6")
+@kotlin.WasExperimental(markerClass = {kotlin.time.ExperimentalTime::class})
 public final enum class DurationUnit : kotlin.Enum<kotlin.time.DurationUnit> {
     enum entry NANOSECONDS
 

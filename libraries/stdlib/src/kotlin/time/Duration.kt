@@ -26,8 +26,8 @@ import kotlin.math.*
  * use the functions [toInt], [toLong], and [toDouble]
  * or the properties [inWholeHours], [inWholeMinutes], [inWholeSeconds], [inWholeNanoseconds], and so on.
  */
-@SinceKotlin("1.3")
-@ExperimentalTime
+@SinceKotlin("1.6")
+@WasExperimental(ExperimentalTime::class)
 @JvmInline
 public value class Duration internal constructor(private val rawValue: Long) : Comparable<Duration> {
 
@@ -61,10 +61,12 @@ public value class Duration internal constructor(private val rawValue: Long) : C
 
         /** Returns a [Duration] representing the specified [value] number of nanoseconds. */
         @SinceKotlin("1.5")
+        @ExperimentalTime
         public fun nanoseconds(value: Int): Duration = value.toDuration(DurationUnit.NANOSECONDS)
 
         /** Returns a [Duration] representing the specified [value] number of nanoseconds. */
         @SinceKotlin("1.5")
+        @ExperimentalTime
         public fun nanoseconds(value: Long): Duration = value.toDuration(DurationUnit.NANOSECONDS)
 
         /**
@@ -73,14 +75,17 @@ public value class Duration internal constructor(private val rawValue: Long) : C
          * @throws IllegalArgumentException if the provided `Double` [value] is `NaN`.
          */
         @SinceKotlin("1.5")
+        @ExperimentalTime
         public fun nanoseconds(value: Double): Duration = value.toDuration(DurationUnit.NANOSECONDS)
 
         /** Returns a [Duration] representing the specified [value] number of microseconds. */
         @SinceKotlin("1.5")
+        @ExperimentalTime
         public fun microseconds(value: Int): Duration = value.toDuration(DurationUnit.MICROSECONDS)
 
         /** Returns a [Duration] representing the specified [value] number of microseconds. */
         @SinceKotlin("1.5")
+        @ExperimentalTime
         public fun microseconds(value: Long): Duration = value.toDuration(DurationUnit.MICROSECONDS)
 
         /**
@@ -89,14 +94,17 @@ public value class Duration internal constructor(private val rawValue: Long) : C
          * @throws IllegalArgumentException if the provided `Double` [value] is `NaN`.
          */
         @SinceKotlin("1.5")
+        @ExperimentalTime
         public fun microseconds(value: Double): Duration = value.toDuration(DurationUnit.MICROSECONDS)
 
         /** Returns a [Duration] representing the specified [value] number of milliseconds. */
         @SinceKotlin("1.5")
+        @ExperimentalTime
         public fun milliseconds(value: Int): Duration = value.toDuration(DurationUnit.MILLISECONDS)
 
         /** Returns a [Duration] representing the specified [value] number of milliseconds. */
         @SinceKotlin("1.5")
+        @ExperimentalTime
         public fun milliseconds(value: Long): Duration = value.toDuration(DurationUnit.MILLISECONDS)
 
         /**
@@ -105,14 +113,17 @@ public value class Duration internal constructor(private val rawValue: Long) : C
          * @throws IllegalArgumentException if the provided `Double` [value] is `NaN`.
          */
         @SinceKotlin("1.5")
+        @ExperimentalTime
         public fun milliseconds(value: Double): Duration = value.toDuration(DurationUnit.MILLISECONDS)
 
         /** Returns a [Duration] representing the specified [value] number of seconds. */
         @SinceKotlin("1.5")
+        @ExperimentalTime
         public fun seconds(value: Int): Duration = value.toDuration(DurationUnit.SECONDS)
 
         /** Returns a [Duration] representing the specified [value] number of seconds. */
         @SinceKotlin("1.5")
+        @ExperimentalTime
         public fun seconds(value: Long): Duration = value.toDuration(DurationUnit.SECONDS)
 
         /**
@@ -121,14 +132,17 @@ public value class Duration internal constructor(private val rawValue: Long) : C
          * @throws IllegalArgumentException if the provided `Double` [value] is `NaN`.
          */
         @SinceKotlin("1.5")
+        @ExperimentalTime
         public fun seconds(value: Double): Duration = value.toDuration(DurationUnit.SECONDS)
 
         /** Returns a [Duration] representing the specified [value] number of minutes. */
         @SinceKotlin("1.5")
+        @ExperimentalTime
         public fun minutes(value: Int): Duration = value.toDuration(DurationUnit.MINUTES)
 
         /** Returns a [Duration] representing the specified [value] number of minutes. */
         @SinceKotlin("1.5")
+        @ExperimentalTime
         public fun minutes(value: Long): Duration = value.toDuration(DurationUnit.MINUTES)
 
         /**
@@ -137,14 +151,17 @@ public value class Duration internal constructor(private val rawValue: Long) : C
          * @throws IllegalArgumentException if the provided `Double` [value] is `NaN`.
          */
         @SinceKotlin("1.5")
+        @ExperimentalTime
         public fun minutes(value: Double): Duration = value.toDuration(DurationUnit.MINUTES)
 
         /** Returns a [Duration] representing the specified [value] number of hours. */
         @SinceKotlin("1.5")
+        @ExperimentalTime
         public fun hours(value: Int): Duration = value.toDuration(DurationUnit.HOURS)
 
         /** Returns a [Duration] representing the specified [value] number of hours. */
         @SinceKotlin("1.5")
+        @ExperimentalTime
         public fun hours(value: Long): Duration = value.toDuration(DurationUnit.HOURS)
 
         /**
@@ -153,14 +170,17 @@ public value class Duration internal constructor(private val rawValue: Long) : C
          * @throws IllegalArgumentException if the provided `Double` [value] is `NaN`.
          */
         @SinceKotlin("1.5")
+        @ExperimentalTime
         public fun hours(value: Double): Duration = value.toDuration(DurationUnit.HOURS)
 
         /** Returns a [Duration] representing the specified [value] number of days. */
         @SinceKotlin("1.5")
+        @ExperimentalTime
         public fun days(value: Int): Duration = value.toDuration(DurationUnit.DAYS)
 
         /** Returns a [Duration] representing the specified [value] number of days. */
         @SinceKotlin("1.5")
+        @ExperimentalTime
         public fun days(value: Long): Duration = value.toDuration(DurationUnit.DAYS)
 
         /**
@@ -169,6 +189,7 @@ public value class Duration internal constructor(private val rawValue: Long) : C
          * @throws IllegalArgumentException if the provided `Double` [value] is `NaN`.
          */
         @SinceKotlin("1.5")
+        @ExperimentalTime
         public fun days(value: Double): Duration = value.toDuration(DurationUnit.DAYS)
 
         /**
@@ -183,7 +204,6 @@ public value class Duration internal constructor(private val rawValue: Long) : C
          * @throws IllegalArgumentException if the string doesn't represent a duration in any of the supported formats.
          * @sample samples.time.Durations.parse
          */
-        @SinceKotlin("1.5")
         public fun parse(value: String): Duration = try {
             parseDuration(value, strictIso = false)
         } catch (e: IllegalArgumentException) {
@@ -196,7 +216,6 @@ public value class Duration internal constructor(private val rawValue: Long) : C
          * @throws IllegalArgumentException if the string doesn't represent a duration in ISO-8601 format.
          * @sample samples.time.Durations.parseIsoString
          */
-        @SinceKotlin("1.5")
         public fun parseIsoString(value: String): Duration = try {
             parseDuration(value, strictIso = true)
         } catch (e: IllegalArgumentException) {
@@ -214,7 +233,6 @@ public value class Duration internal constructor(private val rawValue: Long) : C
          *   e.g. `10s`, `1h 30m` or `-(1h 30m)`.
          *   @sample samples.time.Durations.parse
          */
-        @SinceKotlin("1.5")
         public fun parseOrNull(value: String): Duration? = try {
             parseDuration(value, strictIso = false)
         } catch (e: IllegalArgumentException) {
@@ -226,7 +244,6 @@ public value class Duration internal constructor(private val rawValue: Long) : C
          * or `null` if the string doesn't represent a duration in ISO-8601 format.
          * @sample samples.time.Durations.parseIsoString
          */
-        @SinceKotlin("1.5")
         public fun parseIsoStringOrNull(value: String): Duration? = try {
             parseDuration(value, strictIso = true)
         } catch (e: IllegalArgumentException) {
@@ -570,30 +587,44 @@ public value class Duration internal constructor(private val rawValue: Long) : C
         toLong(unit).coerceIn(Int.MIN_VALUE.toLong(), Int.MAX_VALUE.toLong()).toInt()
 
     /** The value of this duration expressed as a [Double] number of days. */
+    @SinceKotlin("1.3")
+    @ExperimentalTime
     @Deprecated("Use inWholeDays property instead or convert toDouble(DAYS) if a double value is required.", ReplaceWith("toDouble(DurationUnit.DAYS)"))
     public val inDays: Double get() = toDouble(DurationUnit.DAYS)
 
     /** The value of this duration expressed as a [Double] number of hours. */
+    @SinceKotlin("1.3")
+    @ExperimentalTime
     @Deprecated("Use inWholeHours property instead or convert toDouble(HOURS) if a double value is required.", ReplaceWith("toDouble(DurationUnit.HOURS)"))
     public val inHours: Double get() = toDouble(DurationUnit.HOURS)
 
     /** The value of this duration expressed as a [Double] number of minutes. */
+    @SinceKotlin("1.3")
+    @ExperimentalTime
     @Deprecated("Use inWholeMinutes property instead or convert toDouble(MINUTES) if a double value is required.", ReplaceWith("toDouble(DurationUnit.MINUTES)"))
     public val inMinutes: Double get() = toDouble(DurationUnit.MINUTES)
 
     /** The value of this duration expressed as a [Double] number of seconds. */
+    @SinceKotlin("1.3")
+    @ExperimentalTime
     @Deprecated("Use inWholeSeconds property instead or convert toDouble(SECONDS) if a double value is required.", ReplaceWith("toDouble(DurationUnit.SECONDS)"))
     public val inSeconds: Double get() = toDouble(DurationUnit.SECONDS)
 
     /** The value of this duration expressed as a [Double] number of milliseconds. */
+    @SinceKotlin("1.3")
+    @ExperimentalTime
     @Deprecated("Use inWholeMilliseconds property instead or convert toDouble(MILLISECONDS) if a double value is required.", ReplaceWith("toDouble(DurationUnit.MILLISECONDS)"))
     public val inMilliseconds: Double get() = toDouble(DurationUnit.MILLISECONDS)
 
     /** The value of this duration expressed as a [Double] number of microseconds. */
+    @SinceKotlin("1.3")
+    @ExperimentalTime
     @Deprecated("Use inWholeMicroseconds property instead or convert toDouble(MICROSECONDS) if a double value is required.", ReplaceWith("toDouble(DurationUnit.MICROSECONDS)"))
     public val inMicroseconds: Double get() = toDouble(DurationUnit.MICROSECONDS)
 
     /** The value of this duration expressed as a [Double] number of nanoseconds. */
+    @SinceKotlin("1.3")
+    @ExperimentalTime
     @Deprecated("Use inWholeNanoseconds property instead or convert toDouble(NANOSECONDS) if a double value is required.", ReplaceWith("toDouble(DurationUnit.NANOSECONDS)"))
     public val inNanoseconds: Double get() = toDouble(DurationUnit.NANOSECONDS)
 
@@ -603,7 +634,6 @@ public value class Duration internal constructor(private val rawValue: Long) : C
      *
      * An infinite duration value is converted either to [Long.MAX_VALUE] or [Long.MIN_VALUE] depending on its sign.
      */
-    @SinceKotlin("1.5")
     public val inWholeDays: Long
         get() = toLong(DurationUnit.DAYS)
 
@@ -612,7 +642,6 @@ public value class Duration internal constructor(private val rawValue: Long) : C
      *
      * An infinite duration value is converted either to [Long.MAX_VALUE] or [Long.MIN_VALUE] depending on its sign.
      */
-    @SinceKotlin("1.5")
     public val inWholeHours: Long
         get() = toLong(DurationUnit.HOURS)
 
@@ -621,7 +650,6 @@ public value class Duration internal constructor(private val rawValue: Long) : C
      *
      * An infinite duration value is converted either to [Long.MAX_VALUE] or [Long.MIN_VALUE] depending on its sign.
      */
-    @SinceKotlin("1.5")
     public val inWholeMinutes: Long
         get() = toLong(DurationUnit.MINUTES)
 
@@ -630,7 +658,6 @@ public value class Duration internal constructor(private val rawValue: Long) : C
      *
      * An infinite duration value is converted either to [Long.MAX_VALUE] or [Long.MIN_VALUE] depending on its sign.
      */
-    @SinceKotlin("1.5")
     public val inWholeSeconds: Long
         get() = toLong(DurationUnit.SECONDS)
 
@@ -639,7 +666,6 @@ public value class Duration internal constructor(private val rawValue: Long) : C
      *
      * An infinite duration value is converted either to [Long.MAX_VALUE] or [Long.MIN_VALUE] depending on its sign.
      */
-    @SinceKotlin("1.5")
     public val inWholeMilliseconds: Long
         get() {
             return if (isInMillis() && isFinite()) value else toLong(DurationUnit.MILLISECONDS)
@@ -654,7 +680,6 @@ public value class Duration internal constructor(private val rawValue: Long) : C
      *
      * An infinite duration value is converted either to [Long.MAX_VALUE] or [Long.MIN_VALUE] depending on its sign.
      */
-    @SinceKotlin("1.5")
     public val inWholeMicroseconds: Long
         get() = toLong(DurationUnit.MICROSECONDS)
 
@@ -667,7 +692,6 @@ public value class Duration internal constructor(private val rawValue: Long) : C
      *
      * An infinite duration value is converted either to [Long.MAX_VALUE] or [Long.MIN_VALUE] depending on its sign.
      */
-    @SinceKotlin("1.5")
     public val inWholeNanoseconds: Long
         get() {
             val value = value
@@ -688,6 +712,8 @@ public value class Duration internal constructor(private val rawValue: Long) : C
      *
      * The range of durations that can be expressed as a `Long` number of nanoseconds is approximately ±292 years.
      */
+    @SinceKotlin("1.3")
+    @ExperimentalTime
     @Deprecated("Use inWholeNanoseconds property instead.", ReplaceWith("this.inWholeNanoseconds"))
     public fun toLongNanoseconds(): Long = inWholeNanoseconds
 
@@ -698,6 +724,8 @@ public value class Duration internal constructor(private val rawValue: Long) : C
      *
      * The range of durations that can be expressed as a `Long` number of milliseconds is approximately ±292 million years.
      */
+    @SinceKotlin("1.3")
+    @ExperimentalTime
     @Deprecated("Use inWholeMilliseconds property instead.", ReplaceWith("this.inWholeMilliseconds"))
     public fun toLongMilliseconds(): Long = inWholeMilliseconds
 
@@ -851,8 +879,8 @@ public value class Duration internal constructor(private val rawValue: Long) : C
 // extension functions
 
 /** Returns a [Duration] equal to this [Int] number of the specified [unit]. */
-@SinceKotlin("1.3")
-@ExperimentalTime
+@SinceKotlin("1.6")
+@WasExperimental(ExperimentalTime::class)
 public fun Int.toDuration(unit: DurationUnit): Duration {
     return if (unit <= DurationUnit.SECONDS) {
         durationOfNanos(convertDurationUnitOverflow(this.toLong(), unit, DurationUnit.NANOSECONDS))
@@ -861,8 +889,8 @@ public fun Int.toDuration(unit: DurationUnit): Duration {
 }
 
 /** Returns a [Duration] equal to this [Long] number of the specified [unit]. */
-@SinceKotlin("1.3")
-@ExperimentalTime
+@SinceKotlin("1.6")
+@WasExperimental(ExperimentalTime::class)
 public fun Long.toDuration(unit: DurationUnit): Duration {
     val maxNsInUnit = convertDurationUnitOverflow(MAX_NANOS, DurationUnit.NANOSECONDS, unit)
     if (this in -maxNsInUnit..maxNsInUnit) {
@@ -878,8 +906,8 @@ public fun Long.toDuration(unit: DurationUnit): Duration {
  *
  * @throws IllegalArgumentException if this `Double` value is `NaN`.
  */
-@SinceKotlin("1.3")
-@ExperimentalTime
+@SinceKotlin("1.6")
+@WasExperimental(ExperimentalTime::class)
 public fun Double.toDuration(unit: DurationUnit): Duration {
     val valueInNs = convertDurationUnit(this, unit, DurationUnit.NANOSECONDS)
     require(!valueInNs.isNaN()) { "Duration value cannot be NaN." }
@@ -1051,8 +1079,8 @@ public val Double.days get() = toDuration(DurationUnit.DAYS)
 
 
 /** Returns a duration whose value is the specified [duration] value multiplied by this number. */
-@SinceKotlin("1.3")
-@ExperimentalTime
+@SinceKotlin("1.6")
+@WasExperimental(ExperimentalTime::class)
 @kotlin.internal.InlineOnly
 public inline operator fun Int.times(duration: Duration): Duration = duration * this
 
@@ -1061,14 +1089,13 @@ public inline operator fun Int.times(duration: Duration): Duration = duration * 
  *
  * @throws IllegalArgumentException if the operation results in a `NaN` value.
  */
-@SinceKotlin("1.3")
-@ExperimentalTime
+@SinceKotlin("1.6")
+@WasExperimental(ExperimentalTime::class)
 @kotlin.internal.InlineOnly
 public inline operator fun Double.times(duration: Duration): Duration = duration * this
 
 
 
-@ExperimentalTime
 private fun parseDuration(value: String, strictIso: Boolean): Duration {
     var length = value.length
     if (length == 0) throw IllegalArgumentException("The string is empty")
@@ -1197,17 +1224,17 @@ private const val MAX_NANOS_IN_MILLIS = MAX_NANOS / NANOS_IN_MILLIS
 private fun nanosToMillis(nanos: Long): Long = nanos / NANOS_IN_MILLIS
 private fun millisToNanos(millis: Long): Long = millis * NANOS_IN_MILLIS
 
-@ExperimentalTime private fun durationOfNanos(normalNanos: Long) = Duration(normalNanos shl 1)
-@ExperimentalTime private fun durationOfMillis(normalMillis: Long) = Duration((normalMillis shl 1) + 1)
-@ExperimentalTime private fun durationOf(normalValue: Long, unitDiscriminator: Int) = Duration((normalValue shl 1) + unitDiscriminator)
-@ExperimentalTime private fun durationOfNanosNormalized(nanos: Long) =
+private fun durationOfNanos(normalNanos: Long) = Duration(normalNanos shl 1)
+private fun durationOfMillis(normalMillis: Long) = Duration((normalMillis shl 1) + 1)
+private fun durationOf(normalValue: Long, unitDiscriminator: Int) = Duration((normalValue shl 1) + unitDiscriminator)
+private fun durationOfNanosNormalized(nanos: Long) =
     if (nanos in -MAX_NANOS..MAX_NANOS) {
         durationOfNanos(nanos)
     } else {
         durationOfMillis(nanosToMillis(nanos))
     }
 
-@ExperimentalTime private fun durationOfMillisNormalized(millis: Long) =
+private fun durationOfMillisNormalized(millis: Long) =
     if (millis in -MAX_NANOS_IN_MILLIS..MAX_NANOS_IN_MILLIS) {
         durationOfNanos(millisToNanos(millis))
     } else {
