@@ -70,14 +70,6 @@ public val Path.invariantSeparatorsPathString: String
         return if (separator != "/") toString().replace(separator, "/") else toString()
     }
 
-@SinceKotlin("1.4")
-@ExperimentalPathApi
-@Deprecated("Use invariantSeparatorsPathString property instead.", ReplaceWith("invariantSeparatorsPathString"),
-            level = DeprecationLevel.ERROR)
-@kotlin.internal.InlineOnly
-public inline val Path.invariantSeparatorsPath: String
-    get() = invariantSeparatorsPathString
-
 /**
  * Converts this possibly relative path to an absolute path.
  *
