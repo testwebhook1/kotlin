@@ -128,6 +128,7 @@ abstract class AnnotationImplementationTransformer(val context: BackendContext, 
     abstract fun getEqualsProperties(annotationClass: IrClass, implClass: IrClass): List<IrProperty>
     abstract fun getHashCodeProperties(annotationClass: IrClass, implClass: IrClass): List<IrProperty>
     abstract fun getToStringProperties(annotationClass: IrClass, implClass: IrClass): List<IrProperty>
+    open val forbidDirectFieldAccessInMethods = false
 
     fun implementGeneratedFunctions(
         annotationClass: IrClass,
@@ -137,6 +138,7 @@ abstract class AnnotationImplementationTransformer(val context: BackendContext, 
         val generator = AnnotationImplementationMemberGenerator(
             context, implClass,
             nameForToString = "@" + annotationClass.fqNameWhenAvailable!!.asString(),
+            forbidDirectFieldAccess = forbidDirectFieldAccessInMethods
         ) { type, a, b ->
             generatedEquals(this, type, a, b)
         }
@@ -153,8 +155,9 @@ class AnnotationImplementationMemberGenerator(
     backendContext: BackendContext,
     irClass: IrClass,
     val nameForToString: String,
+    forbidDirectFieldAccess: Boolean,
     val selectEquals: IrBlockBodyBuilder.(IrType, IrExpression, IrExpression) -> IrExpression,
-) : LoweringDataClassMemberGenerator(backendContext, irClass, ANNOTATION_IMPLEMENTATION) {
+) : LoweringDataClassMemberGenerator(backendContext, irClass, ANNOTATION_IMPLEMENTATION, forbidDirectFieldAccess) {
 
     override fun IrClass.classNameForToString(): String = nameForToString
 

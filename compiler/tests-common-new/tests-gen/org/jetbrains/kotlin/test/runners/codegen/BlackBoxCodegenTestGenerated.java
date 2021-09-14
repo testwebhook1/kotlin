@@ -396,6 +396,12 @@ public class BlackBoxCodegenTestGenerated extends AbstractBlackBoxCodegenTest {
             }
 
             @Test
+            @TestMetadata("annotationFromStdlib.kt")
+            public void testAnnotationFromStdlib() throws Exception {
+                runTest("compiler/testData/codegen/box/annotations/instances/annotationFromStdlib.kt");
+            }
+
+            @Test
             @TestMetadata("annotationInstances.kt")
             public void testAnnotationInstances() throws Exception {
                 runTest("compiler/testData/codegen/box/annotations/instances/annotationInstances.kt");

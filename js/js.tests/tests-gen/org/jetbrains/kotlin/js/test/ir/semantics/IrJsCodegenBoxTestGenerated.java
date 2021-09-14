@@ -97,6 +97,11 @@ public class IrJsCodegenBoxTestGenerated extends AbstractIrJsCodegenBoxTest {
                 runTest("compiler/testData/codegen/box/annotations/instances/annotationEqHc.kt");
             }
 
+            @TestMetadata("annotationFromStdlib.kt")
+            public void testAnnotationFromStdlib() throws Exception {
+                runTest("compiler/testData/codegen/box/annotations/instances/annotationFromStdlib.kt");
+            }
+
             @TestMetadata("annotationInstances.kt")
             public void testAnnotationInstances() throws Exception {
                 runTest("compiler/testData/codegen/box/annotations/instances/annotationInstances.kt");

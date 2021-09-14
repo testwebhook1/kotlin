@@ -344,6 +344,11 @@ public class LightAnalysisModeTestGenerated extends AbstractLightAnalysisModeTes
                 runTest("compiler/testData/codegen/box/annotations/instances/annotationEqHc.kt");
             }
 
+            @TestMetadata("annotationFromStdlib.kt")
+            public void ignoreAnnotationFromStdlib() throws Exception {
+                runTest("compiler/testData/codegen/box/annotations/instances/annotationFromStdlib.kt");
+            }
+
             @TestMetadata("annotationInstances.kt")
             public void ignoreAnnotationInstances() throws Exception {
                 runTest("compiler/testData/codegen/box/annotations/instances/annotationInstances.kt");

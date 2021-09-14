@@ -35,7 +35,8 @@ abstract class DataClassMembersGenerator(
     val context: IrGeneratorContext,
     val symbolTable: ReferenceSymbolTable,
     val irClass: IrClass,
-    val origin: IrDeclarationOrigin
+    val origin: IrDeclarationOrigin,
+    val forbidDirectFieldAccess: Boolean = false
 ) {
     private val irPropertiesByDescriptor: Map<PropertyDescriptor, IrProperty> =
         irClass.properties.associateBy { it.descriptor }
@@ -88,7 +89,7 @@ abstract class DataClassMembersGenerator(
             // data classes and corresponding properties can be non-final.
             // We should use getters for such properties (see KT-41284).
             val backingField = property.backingField
-            return if (property.modality == Modality.FINAL && backingField != null) {
+            return if (!forbidDirectFieldAccess && property.modality == Modality.FINAL && backingField != null) {
                 irGetField(receiver, backingField)
             } else {
                 irCall(property.getter!!).apply {

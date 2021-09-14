@@ -67,13 +67,15 @@ class MethodsFromAnyGeneratorForLowerings(val context: BackendContext, val irCla
 open class LoweringDataClassMemberGenerator(
     val backendContext: BackendContext,
     irClass: IrClass,
-    origin: IrDeclarationOrigin
+    origin: IrDeclarationOrigin,
+    forbidDirectFieldAccess: Boolean = false
 ) :
     DataClassMembersGenerator(
         IrGeneratorContextBase(backendContext.irBuiltIns),
         backendContext.ir.symbols.externalSymbolTable,
         irClass,
-        origin
+        origin,
+        forbidDirectFieldAccess
     ) {
 
     override fun declareSimpleFunction(startOffset: Int, endOffset: Int, functionDescriptor: FunctionDescriptor): IrFunction {
