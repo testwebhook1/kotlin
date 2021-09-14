@@ -30,6 +30,7 @@ dependencies {
 
     api project(":kotlin-stdlib")
     api project(kotlinCompilerModule)
+    api project(":kotlinx-metadata")
     api project(":kotlinx-metadata-klib")
     api project(":native:kotlin-native-utils")
     implementation(project(":compiler:util"))
