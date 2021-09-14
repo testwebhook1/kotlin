@@ -6,8 +6,6 @@
 package org.jetbrains.kotlin.backend.jvm.ir
 
 import org.jetbrains.kotlin.backend.jvm.JvmBackendContext
-import org.jetbrains.kotlin.backend.jvm.codegen.isInlineFunctionCall
-import org.jetbrains.kotlin.backend.jvm.codegen.isInlineIrExpression
 import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.declarations.*
 import org.jetbrains.kotlin.ir.expressions.IrBlock
