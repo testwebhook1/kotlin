@@ -214,7 +214,7 @@ object FirSessionFactory {
                 kotlinScopeProvider,
                 packagePartProvider,
                 projectEnvironment.getKotlinClassFinder(scope),
-                projectEnvironment.getJavaClassConverter(this, moduleData, scope)
+                projectEnvironment.getJavaClassConverter(this, moduleDataProvider.allModuleData.last(), scope)
             )
 
             val builtinsModuleData = createModuleDataForBuiltins(
