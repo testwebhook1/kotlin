@@ -7,7 +7,7 @@ package org.jetbrains.kotlin.fir.session.environment
 
 import org.jetbrains.kotlin.fir.FirModuleData
 import org.jetbrains.kotlin.fir.FirSession
-import org.jetbrains.kotlin.fir.java.JavaClassConverter
+import org.jetbrains.kotlin.fir.java.FirJavaFacade
 import org.jetbrains.kotlin.load.kotlin.KotlinClassFinder
 import org.jetbrains.kotlin.load.kotlin.PackagePartProvider
 import org.jetbrains.kotlin.resolve.jvm.modules.JavaModuleResolver
@@ -57,5 +57,5 @@ interface AbstractProjectEnvironment {
         firSession: FirSession,
         baseModuleData: FirModuleData,
         fileSearchScope: AbstractProjectFileSearchScope
-    ): JavaClassConverter
+    ): FirJavaFacade
 }
