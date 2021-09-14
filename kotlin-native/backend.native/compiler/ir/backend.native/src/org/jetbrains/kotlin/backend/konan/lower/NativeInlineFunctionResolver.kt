@@ -14,6 +14,7 @@ import org.jetbrains.kotlin.backend.common.lower.inline.LocalClassesInInlineLamb
 import org.jetbrains.kotlin.backend.konan.Context
 import org.jetbrains.kotlin.backend.konan.InlineFunctionInfo
 import org.jetbrains.kotlin.backend.konan.descriptors.findPackage
+import org.jetbrains.kotlin.ir.declarations.IrExternalPackageFragment
 import org.jetbrains.kotlin.ir.declarations.IrFunction
 import org.jetbrains.kotlin.ir.symbols.IrFunctionSymbol
 import org.jetbrains.kotlin.ir.util.dump
@@ -28,11 +29,12 @@ internal class NativeInlineFunctionResolver(override val context: Context) : Def
         if (function in context.specialDeclarationsFactory.loweredInlineFunctions)
             return function
 
-        if (context.llvmModuleSpecification.containsDeclaration(function)) {
+        val packageFragment = function.findPackage()
+        val functionFromCache = function.findPackage() is IrExternalPackageFragment
+        if (!functionFromCache) {
             context.specialDeclarationsFactory.loweredInlineFunctions[function] =
                     InlineFunctionInfo(function.fileOrNull, function.startOffset, function.endOffset)
         } else {
-            val packageFragment = function.findPackage()
             val moduleDescriptor = packageFragment.packageFragmentDescriptor.containingDeclaration
             val moduleDeserializer = context.irLinker!!.cachedLibraryModuleDeserializers[moduleDescriptor]
                     ?: error("No module deserializer for ${function.render()}")
@@ -53,7 +55,7 @@ internal class NativeInlineFunctionResolver(override val context: Context) : Def
 
         LocalClassesInInlineLambdasLowering(context).lower(body, function)
 
-        if (context.llvmModuleSpecification.containsDeclaration(function)) {
+        if (!functionFromCache) {
             // Do not extract local classes off of inline functions from cached libraries.
             LocalClassesInInlineFunctionsLowering(context).lower(body, function)
             LocalClassesExtractionFromInlineFunctionsLowering(context).lower(body, function)

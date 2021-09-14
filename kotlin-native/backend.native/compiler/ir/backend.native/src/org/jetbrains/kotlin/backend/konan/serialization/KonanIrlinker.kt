@@ -16,6 +16,7 @@
 
 package org.jetbrains.kotlin.backend.konan.serialization
 
+import org.jetbrains.kotlin.backend.common.lower.parents
 import org.jetbrains.kotlin.backend.common.overrides.FakeOverrideBuilder
 import org.jetbrains.kotlin.backend.common.overrides.FakeOverrideClassFilter
 import org.jetbrains.kotlin.backend.common.overrides.FileLocalAwareLinker
@@ -28,6 +29,7 @@ import org.jetbrains.kotlin.backend.common.serialization.encodings.FunctionFlags
 import org.jetbrains.kotlin.backend.konan.*
 import org.jetbrains.kotlin.backend.konan.InlineFunctionInfo
 import org.jetbrains.kotlin.backend.konan.descriptors.ClassLayoutBuilder
+import org.jetbrains.kotlin.backend.konan.descriptors.findPackage
 import org.jetbrains.kotlin.backend.konan.descriptors.isInteropLibrary
 import org.jetbrains.kotlin.backend.konan.ir.interop.IrProviderForCEnumAndCStructStubs
 import org.jetbrains.kotlin.descriptors.*
@@ -679,7 +681,20 @@ internal class KonanIrLinker(
             }
         }
 
+        private val inlineFunctionFiles = mutableMapOf<IrExternalPackageFragment, IrFile>()
+
         fun deserializeInlineFunction(function: IrFunction): InlineFunctionInfo {
+            val packageFragment = function.findPackage() as? IrExternalPackageFragment
+                    ?: error("Expected an external package fragment for ${function.render()}")
+            if (function.parents.any { (it as? IrFunction)?.isInline == true}) {
+                // Already deserialized by the top-most inline function.
+                return InlineFunctionInfo(
+                        inlineFunctionFiles[packageFragment]
+                                ?: error("${function.render()} should've been deserialized along with its parent"),
+                        function.startOffset, function.endOffset
+                )
+            }
+
             val signature = function.symbol.signature
                     ?: error("No signature for ${function.render()}")
             val inlineFunctionReference = inlineFunctionReferences[signature]
@@ -728,6 +743,8 @@ internal class KonanIrLinker(
             }
 
             fileDeserializationInfo.fakeOverrideBuilder.provideFakeOverrides()
+
+            inlineFunctionFiles[packageFragment] = fileDeserializationInfo.file
 
             return InlineFunctionInfo(fileDeserializationInfo.file, inlineFunctionReference.startOffset, inlineFunctionReference.endOffset)
         }
