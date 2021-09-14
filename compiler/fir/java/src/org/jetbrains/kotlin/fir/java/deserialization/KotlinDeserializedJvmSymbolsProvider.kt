@@ -12,11 +12,10 @@ import org.jetbrains.kotlin.fir.ThreadSafeMutableState
 import org.jetbrains.kotlin.fir.declarations.getDeprecationInfos
 import org.jetbrains.kotlin.fir.deserialization.*
 import org.jetbrains.kotlin.fir.expressions.FirAnnotation
-import org.jetbrains.kotlin.fir.java.JavaClassConverter
+import org.jetbrains.kotlin.fir.java.FirJavaFacade
 import org.jetbrains.kotlin.fir.languageVersionSettings
 import org.jetbrains.kotlin.fir.scopes.FirKotlinScopeProvider
 import org.jetbrains.kotlin.fir.symbols.impl.FirRegularClassSymbol
-import org.jetbrains.kotlin.load.java.JavaClassFinder
 import org.jetbrains.kotlin.load.kotlin.*
 import org.jetbrains.kotlin.load.kotlin.header.KotlinClassHeader
 import org.jetbrains.kotlin.metadata.jvm.deserialization.JvmMetadataVersion
@@ -38,14 +37,14 @@ class KotlinDeserializedJvmSymbolsProvider(
     kotlinScopeProvider: FirKotlinScopeProvider,
     private val packagePartProvider: PackagePartProvider,
     private val kotlinClassFinder: KotlinClassFinder,
-    private val javaClassConverter: JavaClassConverter,
+    private val javaFacade: FirJavaFacade,
 ) : AbstractFirDeserializedSymbolsProvider(session, moduleDataProvider, kotlinScopeProvider) {
     private val annotationsLoader = AnnotationsLoader(session, kotlinClassFinder)
 
     override fun computePackagePartsInfos(packageFqName: FqName): List<PackagePartsCacheData> {
         return packagePartProvider.findPackageParts(packageFqName.asString()).mapNotNull { partName ->
             val classId = ClassId.topLevel(JvmClassName.byInternalName(partName).fqNameForTopLevelClassMaybeWithDollars)
-            if (!javaClassConverter.hasTopLevelClassOf(classId)) return@mapNotNull null
+            if (!javaFacade.hasTopLevelClassOf(classId)) return@mapNotNull null
             val (kotlinJvmBinaryClass, byteContent) =
                 kotlinClassFinder.findKotlinClassOrContent(classId) as? KotlinClassFinder.Result.KotlinClass ?: return@mapNotNull null
 
@@ -89,7 +88,7 @@ class KotlinDeserializedJvmSymbolsProvider(
 
     override fun extractClassMetadata(classId: ClassId, parentContext: FirDeserializationContext?): ClassMetadataFindResult? {
         // Kotlin classes are annotated Java classes, so this check also looks for them.
-        if (!javaClassConverter.hasTopLevelClassOf(classId)) return null
+        if (!javaFacade.hasTopLevelClassOf(classId)) return null
 
         val result = try {
             kotlinClassFinder.findKotlinClassOrContent(classId)
@@ -100,12 +99,12 @@ class KotlinDeserializedJvmSymbolsProvider(
             is KotlinClassFinder.Result.KotlinClass -> result.kotlinJvmBinaryClass
             is KotlinClassFinder.Result.ClassFileContent -> {
                 val javaClass = try {
-                    javaClassConverter.findClass(classId, result.content) ?: return null
+                    javaFacade.findClass(classId, result.content) ?: return null
                 } catch (e: ProcessCanceledException) {
                     return null
                 }
                 return ClassMetadataFindResult.NoMetadata { symbol ->
-                    javaClassConverter.convertJavaClassToFir(symbol, classId.outerClassId?.let(::getClass), javaClass)
+                    javaFacade.convertJavaClassToFir(symbol, classId.outerClassId?.let(::getClass), javaClass)
                 }
             }
             null -> return null
@@ -126,7 +125,7 @@ class KotlinDeserializedJvmSymbolsProvider(
     }
 
     override fun getPackage(fqName: FqName): FqName? =
-        javaClassConverter.getPackage(fqName)
+        javaFacade.getPackage(fqName)
 
     private fun loadAnnotationsFromClassFile(
         kotlinClass: KotlinClassFinder.Result.KotlinClass,
