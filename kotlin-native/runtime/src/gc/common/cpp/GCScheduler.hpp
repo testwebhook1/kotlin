@@ -10,7 +10,10 @@
 #include <cinttypes>
 #include <cstddef>
 #include <functional>
+#include <thread>
 
+#include "CompilerConstants.hpp"
+#include "Porting.h"
 #include "Utils.hpp"
 
 namespace kotlin {
@@ -21,8 +24,16 @@ struct GCSchedulerConfig {
     std::atomic<size_t> allocationThresholdBytes = 10 * 1024 * 1024; // 10MiB by default.
     std::atomic<uint64_t> cooldownThresholdNs = 200 * 1000 * 1000; // 200 milliseconds by default.
     std::atomic<bool> autoTune = false;
+    std::atomic<uint64_t> regularGcIntervalMs = 5 * 1000 * 1000; // 5 seconds by default.
 
-    GCSchedulerConfig() noexcept;
+    GCSchedulerConfig() noexcept {
+        if (compiler::gcAggressive()) {
+            // TODO: Make it even more aggressive and run on a subset of backend.native tests.
+            threshold = 1000;
+            allocationThresholdBytes = 10000;
+            cooldownThresholdNs = 0;
+        }
+    }
 };
 
 // TODO: Consider calling GC from the scheduler itself.
@@ -30,7 +41,7 @@ class GCScheduler : private Pinned {
 public:
     class ThreadData {
     public:
-        using OnSafePointCallback = std::function<bool(size_t, size_t)>;
+        using OnSafePointCallback = std::function<void(ThreadData&)>;
 
         static constexpr size_t kFunctionEpilogueWeight = 1;
         static constexpr size_t kLoopBodyWeight = 1;
@@ -42,29 +53,46 @@ public:
         }
 
         // Should be called on encountering a safepoint.
-        bool OnSafePointRegular(size_t weight) noexcept {
-            safePointsCounter_ += weight;
-            if (safePointsCounter_ < safePointsCounterThreshold_) {
-                return false;
+        void OnSafePointRegular(size_t weight) noexcept {
+            // TODO: Counting safepoints is also needed for targets without threads.
+            if (compiler::gcAggressive()) {
+                safePointsCounter_ += weight;
+                if (safePointsCounter_ < safePointsCounterThreshold_) {
+                    return;
+                }
+                OnSafePointSlowPath();
             }
-            return OnSafePointSlowPath();
         }
 
         // Should be called on encountering a safepoint placed by the allocator.
         // TODO: Should this even be a safepoint (i.e. a place, where we suspend)?
-        bool OnSafePointAllocation(size_t size) noexcept {
+        void OnSafePointAllocation(size_t size) noexcept {
             allocatedBytes_ += size;
             if (allocatedBytes_ < allocatedBytesThreshold_) {
-                return false;
+                return;
             }
-            return OnSafePointSlowPath();
+            OnSafePointSlowPath();
         }
 
         void OnStoppedForGC() noexcept { ClearCountersAndUpdateThresholds(); }
 
+        size_t allocatedBytes() const noexcept { return allocatedBytes_; }
+
+        size_t safePointsCounter() const noexcept { return safePointsCounter_; }
+
     private:
-        bool OnSafePointSlowPath() noexcept;
-        void ClearCountersAndUpdateThresholds() noexcept;
+        void OnSafePointSlowPath() noexcept {
+            onSafePoint_(*this);
+            ClearCountersAndUpdateThresholds();
+        }
+
+        void ClearCountersAndUpdateThresholds() noexcept {
+            allocatedBytes_ = 0;
+            safePointsCounter_ = 0;
+
+            allocatedBytesThreshold_ = config_.allocationThresholdBytes;
+            safePointsCounterThreshold_ = config_.threshold;
+        }
 
         GCSchedulerConfig& config_;
         OnSafePointCallback onSafePoint_;
@@ -75,6 +103,7 @@ public:
         size_t safePointsCounterThreshold_ = 0;
     };
 
+    // TODO: We need a separate `GCData` for targets without threads.
     class GCData {
     public:
         using CurrentTimeCallback = std::function<uint64_t()>;
@@ -82,23 +111,35 @@ public:
         GCData(GCSchedulerConfig& config, CurrentTimeCallback currentTimeCallbackNs) noexcept;
 
         // May be called by different threads via `ThreadData`.
-        bool OnSafePoint(size_t allocatedBytes, size_t safePointsCounter) noexcept;
+        void OnSafePoint(ThreadData& threadData) noexcept;
 
         // Always called by the GC thread.
         void OnPerformFullGC() noexcept;
 
+        // Can only be called once.
+        void SetScheduleGC(std::function<void()> scheduleGC) noexcept;
+
     private:
+        void TimerThreadRoutine() noexcept;
+        void OnTimer() noexcept;
+
         GCSchedulerConfig& config_;
         CurrentTimeCallback currentTimeCallbackNs_;
 
         std::atomic<uint64_t> timeOfLastGcNs_;
+        std::function<void()> scheduleGC_;
+        // TODO: Must stop this thread.
+        std::thread timerThread_;
     };
 
-    GCScheduler() noexcept;
+    GCScheduler() noexcept: gcData_(config_, []() { return konan::getTimeNanos(); }) {}
 
     GCSchedulerConfig& config() noexcept { return config_; }
     GCData& gcData() noexcept { return gcData_; }
-    ThreadData NewThreadData() noexcept;
+
+    ThreadData NewThreadData() noexcept {
+        return ThreadData(config_, [this](ThreadData& threadData) { gcData().OnSafePoint(threadData); });
+    }
 
 private:
     GCSchedulerConfig config_;

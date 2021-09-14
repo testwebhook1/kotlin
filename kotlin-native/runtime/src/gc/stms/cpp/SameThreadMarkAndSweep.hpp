@@ -62,7 +62,7 @@ public:
         mm::ThreadData& threadData_;
     };
 
-    SameThreadMarkAndSweep() noexcept = default;
+    SameThreadMarkAndSweep() noexcept;
     ~SameThreadMarkAndSweep() = default;
 
 private:

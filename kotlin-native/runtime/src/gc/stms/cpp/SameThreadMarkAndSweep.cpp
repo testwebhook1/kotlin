@@ -51,24 +51,42 @@ struct FinalizeTraits {
     using ObjectFactory = mm::ObjectFactory<gc::SameThreadMarkAndSweep>;
 };
 
+// Global, because it's accessed on a hot path: avoid memory load from `this`.
+std::atomic<bool> interesting = false;
+// TODO: Move needsGc to a field.
+std::atomic<bool> needsGc = false;
+
 } // namespace
 
-void gc::SameThreadMarkAndSweep::ThreadData::SafePointFunctionEpilogue() noexcept {
-    SafePointRegular(GCScheduler::ThreadData::kFunctionEpilogueWeight);
+ALWAYS_INLINE void gc::SameThreadMarkAndSweep::ThreadData::SafePointFunctionEpilogue() noexcept {
+    constexpr auto weight = GCScheduler::ThreadData::kFunctionEpilogueWeight;
+    threadData_.gcScheduler().OnSafePointRegular(weight);
+    if (interesting) {
+        SafePointRegular(weight);
+    }
 }
 
-void gc::SameThreadMarkAndSweep::ThreadData::SafePointLoopBody() noexcept {
-    SafePointRegular(GCScheduler::ThreadData::kLoopBodyWeight);
+ALWAYS_INLINE void gc::SameThreadMarkAndSweep::ThreadData::SafePointLoopBody() noexcept {
+    constexpr auto weight = GCScheduler::ThreadData::kLoopBodyWeight;
+    threadData_.gcScheduler().OnSafePointRegular(weight);
+    if (interesting) {
+        SafePointRegular(weight);
+    }
 }
 
-void gc::SameThreadMarkAndSweep::ThreadData::SafePointExceptionUnwind() noexcept {
-    SafePointRegular(GCScheduler::ThreadData::kExceptionUnwindWeight);
+ALWAYS_INLINE void gc::SameThreadMarkAndSweep::ThreadData::SafePointExceptionUnwind() noexcept {
+    constexpr auto weight = GCScheduler::ThreadData::kExceptionUnwindWeight;
+    threadData_.gcScheduler().OnSafePointRegular(weight);
+    if (interesting) {
+        SafePointRegular(weight);
+    }
 }
 
 void gc::SameThreadMarkAndSweep::ThreadData::SafePointAllocation(size_t size) noexcept {
     threadData_.suspensionData().suspendIfRequested();
     auto& scheduler = threadData_.gcScheduler();
-    if (scheduler.OnSafePointAllocation(size)) {
+    scheduler.OnSafePointAllocation(size);
+    if (needsGc) {
         RuntimeLogDebug({kTagGC}, "Attempt to GC at SafePointAllocation size=%zu", size);
         PerformFullGC();
     }
@@ -104,18 +122,25 @@ void gc::SameThreadMarkAndSweep::ThreadData::OnOOM(size_t size) noexcept {
     PerformFullGC();
 }
 
-void gc::SameThreadMarkAndSweep::ThreadData::SafePointRegular(size_t weight) noexcept {
+NO_INLINE void gc::SameThreadMarkAndSweep::ThreadData::SafePointRegular(size_t weight) noexcept {
     threadData_.suspensionData().suspendIfRequested();
-    auto& scheduler = threadData_.gcScheduler();
-    if (scheduler.OnSafePointRegular(weight)) {
+    if (needsGc) {
         RuntimeLogDebug({kTagGC}, "Attempt to GC at SafePointRegular weight=%zu", weight);
         PerformFullGC();
     }
 }
 
+gc::SameThreadMarkAndSweep::SameThreadMarkAndSweep() noexcept {
+    mm::GlobalData::Instance().gcScheduler().gcData().SetScheduleGC([]() {
+        needsGc = true;
+        interesting = true;
+    });
+}
+
 mm::ObjectFactory<gc::SameThreadMarkAndSweep>::FinalizerQueue gc::SameThreadMarkAndSweep::PerformFullGC() noexcept {
     RuntimeLogDebug({kTagGC}, "Attempt to suspend threads by thread %d", konan::currentThreadId());
     auto timeStartUs = konan::getTimeMicros();
+    interesting = true;
     bool didSuspend = mm::SuspendThreads();
     auto timeSuspendUs = konan::getTimeMicros();
     if (!didSuspend) {
@@ -185,6 +210,8 @@ mm::ObjectFactory<gc::SameThreadMarkAndSweep>::FinalizerQueue gc::SameThreadMark
     // Can be unsafe, because we've stopped the world.
     auto objectsCountAfter = mm::GlobalData::Instance().objectFactory().GetSizeUnsafe();
 
+    interesting = false;
+    needsGc = false;
     mm::ResumeThreads();
     auto timeResumeUs = konan::getTimeMicros();
 
