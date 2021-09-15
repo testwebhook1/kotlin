@@ -3366,6 +3366,14 @@ internal class UselessElvisRightIsNullImpl(
     override val firDiagnostic: FirPsiDiagnostic by weakRef(firDiagnostic)
 }
 
+internal class CannotCheckForErasedImpl(
+    override val type: KtType,
+    firDiagnostic: FirPsiDiagnostic,
+    override val token: ValidityToken,
+) : KtFirDiagnostic.CannotCheckForErased(), KtAbstractFirDiagnostic<PsiElement> {
+    override val firDiagnostic: FirPsiDiagnostic by weakRef(firDiagnostic)
+}
+
 internal class UselessCastImpl(
     firDiagnostic: FirPsiDiagnostic,
     override val token: ValidityToken,
