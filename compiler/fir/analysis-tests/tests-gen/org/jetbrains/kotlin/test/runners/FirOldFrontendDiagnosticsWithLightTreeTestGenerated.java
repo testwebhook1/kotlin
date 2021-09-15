@@ -24455,6 +24455,12 @@ public class FirOldFrontendDiagnosticsWithLightTreeTestGenerated extends Abstrac
                 }
 
                 @Test
+                @TestMetadata("typeAliasToBuiltinFunctionType.kt")
+                public void testTypeAliasToBuiltinFunctionType() throws Exception {
+                    runTest("compiler/testData/diagnostics/tests/resolve/dslMarker/typeAliasToBuiltinFunctionType.kt");
+                }
+
+                @Test
                 @TestMetadata("unsupportedFeature.kt")
                 public void testUnsupportedFeature() throws Exception {
                     runTest("compiler/testData/diagnostics/tests/resolve/dslMarker/unsupportedFeature.kt");

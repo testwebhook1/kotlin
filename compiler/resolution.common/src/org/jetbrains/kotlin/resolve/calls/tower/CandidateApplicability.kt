@@ -5,7 +5,7 @@
 
 package org.jetbrains.kotlin.resolve.calls.tower
 
-enum class CandidateApplicability {
+enum class CandidateApplicability(val shouldStopAtLevel: Boolean = false) {
     RESOLVED_TO_SAM_WITH_VARARG, // migration warning up to 1.5 (when resolve to function with SAM conversion and array without spread as vararg)
     HIDDEN, // removed from resolve
     UNSUPPORTED, // unsupported feature
@@ -19,11 +19,12 @@ enum class CandidateApplicability {
     UNSAFE_CALL, // receiver or argument nullability doesn't match
     UNSTABLE_SMARTCAST, // unstable smart cast
     CONVENTION_ERROR, // missing infix, operator etc
-    RESOLVED_LOW_PRIORITY,
-    PROPERTY_AS_OPERATOR, // using property of functional type as an operator. From resolution perspective, this is considered successful.
-    RESOLVED_NEED_PRESERVE_COMPATIBILITY, // call resolved successfully, but using new features that changes resolve
-    RESOLVED_WITH_ERROR, // call has error, but it is still successful from resolution perspective
-    RESOLVED, // call success or has uncompleted inference or in other words possible successful candidate
+    DSL_SCOPE_VIOLATION(true), // Skip other levels for DSL_SCOPE_VIOLATION because if the candidate is marked DSL_SCOPE_VIOLATION with an inner receiver, one should not keep going to outer receivers.
+    RESOLVED_LOW_PRIORITY(true),
+    PROPERTY_AS_OPERATOR(true), // using property of functional type as an operator. From resolution perspective, this is considered successful.
+    RESOLVED_NEED_PRESERVE_COMPATIBILITY(true), // call resolved successfully, but using new features that changes resolve
+    RESOLVED_WITH_ERROR(true), // call has error, but it is still successful from resolution perspective
+    RESOLVED(true), // call success or has uncompleted inference or in other words possible successful candidate
 }
 
 val CandidateApplicability.isSuccess: Boolean
