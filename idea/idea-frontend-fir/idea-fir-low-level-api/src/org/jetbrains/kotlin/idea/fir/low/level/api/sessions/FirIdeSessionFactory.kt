@@ -181,6 +181,7 @@ internal object FirIdeSessionFactory {
             registerCommonJavaComponents(JavaModuleResolver.getInstance(project))
             registerJavaSpecificResolveComponents()
 
+            val javaClassFinder = project.createJavaClassFinder(searchScope)
             val kotlinSymbolProvider = KotlinDeserializedJvmSymbolsProvider(
                 this@session,
                 moduleDataProvider = project.stateConfigurator.createModuleDataProvider(mainModuleInfo).apply {
@@ -189,9 +190,17 @@ internal object FirIdeSessionFactory {
                 kotlinScopeProvider = FirKotlinScopeProvider(::wrapScopeWithJvmMapped),
                 packagePartProvider = project.stateConfigurator.createPackagePartsProvider(mainModuleInfo, searchScope),
                 kotlinClassFinder = VirtualFileFinderFactory.getInstance(project).create(searchScope),
-                javaClassFinder = project.createJavaClassFinder(searchScope)
+                javaClassFinder = javaClassFinder
             )
-            val symbolProvider = FirCompositeSymbolProvider(this, listOf(kotlinSymbolProvider, builtinsAndCloneableSession.symbolProvider))
+
+            val mainModuleData = FirModuleInfoBasedModuleData(mainModuleInfo).apply { bindSession(this@session) }
+            val javaSymbolProvider = JavaSymbolProvider(this@session, mainModuleData, javaClassFinder)
+
+            val symbolProvider =
+                FirCompositeSymbolProvider(
+                    this,
+                    listOf(kotlinSymbolProvider, javaSymbolProvider, builtinsAndCloneableSession.symbolProvider)
+                )
             register(FirProvider::class, FirIdeLibrariesSessionProvider(symbolProvider))
             register(FirSymbolProvider::class, symbolProvider)
             register(FirJvmTypeMapper::class, FirJvmTypeMapper(this))
