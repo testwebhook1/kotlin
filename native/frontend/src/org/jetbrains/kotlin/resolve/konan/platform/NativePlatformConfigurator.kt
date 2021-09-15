@@ -27,8 +27,9 @@ object NativePlatformConfigurator : PlatformConfiguratorBase(
     ),
     additionalDeclarationCheckers = listOf(
         NativeThrowsChecker, NativeSharedImmutableChecker,
-        NativeTopLevelSingletonChecker, NativeThreadLocalChecker
-    )
+        NativeTopLevelSingletonChecker, NativeThreadLocalChecker,
+        LeakingPhantomTypesChecker.Declaration,
+    ),
 ) {
     override fun configureModuleComponents(container: StorageComponentContainer, languageVersionSettings: LanguageVersionSettings) {
         container.useInstance(NativeInliningRule)
