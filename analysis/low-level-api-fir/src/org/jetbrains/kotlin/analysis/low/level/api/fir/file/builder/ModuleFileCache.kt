@@ -21,7 +21,7 @@ import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
 /**
- * Caches mapping [KtFile] -> [FirFile] of module [moduleInfo]
+ * Caches mapping [KtFile] -> [FirFile] of module [ProjectModule]
  */
 @ThreadSafe
 internal abstract class ModuleFileCache {
