@@ -516,27 +516,23 @@ public fun kotlin.Long.rotateLeft(bitCount: kotlin.Int): kotlin.Long
 @kotlin.WasExperimental(markerClass = {kotlin.ExperimentalStdlibApi::class})
 public fun kotlin.Short.rotateLeft(bitCount: kotlin.Int): kotlin.Short
 
-@kotlin.SinceKotlin(version = "1.3")
-@kotlin.ExperimentalStdlibApi
-@kotlin.WasExperimental(markerClass = {kotlin.ExperimentalUnsignedTypes::class})
+@kotlin.SinceKotlin(version = "1.6")
+@kotlin.WasExperimental(markerClass = {kotlin.ExperimentalStdlibApi::class, kotlin.ExperimentalUnsignedTypes::class})
 @kotlin.internal.InlineOnly
 public inline fun kotlin.UByte.rotateLeft(bitCount: kotlin.Int): kotlin.UByte
 
-@kotlin.SinceKotlin(version = "1.3")
-@kotlin.ExperimentalStdlibApi
-@kotlin.WasExperimental(markerClass = {kotlin.ExperimentalUnsignedTypes::class})
+@kotlin.SinceKotlin(version = "1.6")
+@kotlin.WasExperimental(markerClass = {kotlin.ExperimentalStdlibApi::class, kotlin.ExperimentalUnsignedTypes::class})
 @kotlin.internal.InlineOnly
 public inline fun kotlin.UInt.rotateLeft(bitCount: kotlin.Int): kotlin.UInt
 
-@kotlin.SinceKotlin(version = "1.3")
-@kotlin.ExperimentalStdlibApi
-@kotlin.WasExperimental(markerClass = {kotlin.ExperimentalUnsignedTypes::class})
+@kotlin.SinceKotlin(version = "1.6")
+@kotlin.WasExperimental(markerClass = {kotlin.ExperimentalStdlibApi::class, kotlin.ExperimentalUnsignedTypes::class})
 @kotlin.internal.InlineOnly
 public inline fun kotlin.ULong.rotateLeft(bitCount: kotlin.Int): kotlin.ULong
 
-@kotlin.SinceKotlin(version = "1.3")
-@kotlin.ExperimentalStdlibApi
-@kotlin.WasExperimental(markerClass = {kotlin.ExperimentalUnsignedTypes::class})
+@kotlin.SinceKotlin(version = "1.6")
+@kotlin.WasExperimental(markerClass = {kotlin.ExperimentalStdlibApi::class, kotlin.ExperimentalUnsignedTypes::class})
 @kotlin.internal.InlineOnly
 public inline fun kotlin.UShort.rotateLeft(bitCount: kotlin.Int): kotlin.UShort
 
@@ -557,27 +553,23 @@ public inline fun kotlin.Long.rotateRight(bitCount: kotlin.Int): kotlin.Long
 @kotlin.WasExperimental(markerClass = {kotlin.ExperimentalStdlibApi::class})
 public fun kotlin.Short.rotateRight(bitCount: kotlin.Int): kotlin.Short
 
-@kotlin.SinceKotlin(version = "1.3")
-@kotlin.ExperimentalStdlibApi
-@kotlin.WasExperimental(markerClass = {kotlin.ExperimentalUnsignedTypes::class})
+@kotlin.SinceKotlin(version = "1.6")
+@kotlin.WasExperimental(markerClass = {kotlin.ExperimentalStdlibApi::class, kotlin.ExperimentalUnsignedTypes::class})
 @kotlin.internal.InlineOnly
 public inline fun kotlin.UByte.rotateRight(bitCount: kotlin.Int): kotlin.UByte
 
-@kotlin.SinceKotlin(version = "1.3")
-@kotlin.ExperimentalStdlibApi
-@kotlin.WasExperimental(markerClass = {kotlin.ExperimentalUnsignedTypes::class})
+@kotlin.SinceKotlin(version = "1.6")
+@kotlin.WasExperimental(markerClass = {kotlin.ExperimentalStdlibApi::class, kotlin.ExperimentalUnsignedTypes::class})
 @kotlin.internal.InlineOnly
 public inline fun kotlin.UInt.rotateRight(bitCount: kotlin.Int): kotlin.UInt
 
-@kotlin.SinceKotlin(version = "1.3")
-@kotlin.ExperimentalStdlibApi
-@kotlin.WasExperimental(markerClass = {kotlin.ExperimentalUnsignedTypes::class})
+@kotlin.SinceKotlin(version = "1.6")
+@kotlin.WasExperimental(markerClass = {kotlin.ExperimentalStdlibApi::class, kotlin.ExperimentalUnsignedTypes::class})
 @kotlin.internal.InlineOnly
 public inline fun kotlin.ULong.rotateRight(bitCount: kotlin.Int): kotlin.ULong
 
-@kotlin.SinceKotlin(version = "1.3")
-@kotlin.ExperimentalStdlibApi
-@kotlin.WasExperimental(markerClass = {kotlin.ExperimentalUnsignedTypes::class})
+@kotlin.SinceKotlin(version = "1.6")
+@kotlin.WasExperimental(markerClass = {kotlin.ExperimentalStdlibApi::class, kotlin.ExperimentalUnsignedTypes::class})
 @kotlin.internal.InlineOnly
 public inline fun kotlin.UShort.rotateRight(bitCount: kotlin.Int): kotlin.UShort
 
