@@ -8,15 +8,13 @@ package org.jetbrains.kotlin.commonizer
 import kotlinx.metadata.klib.ChunkedKlibModuleFragmentWriteStrategy
 import org.jetbrains.kotlin.commonizer.ResultsConsumer.Status
 import org.jetbrains.kotlin.commonizer.core.CommonizationVisitor
-import org.jetbrains.kotlin.commonizer.mergedtree.CirClassifierIndex
-import org.jetbrains.kotlin.commonizer.mergedtree.CirCommonizedClassifierNodes
-import org.jetbrains.kotlin.commonizer.mergedtree.CirKnownClassifiers
+import org.jetbrains.kotlin.commonizer.mergedtree.*
 import org.jetbrains.kotlin.commonizer.mergedtree.CirNode.Companion.indexOfCommon
-import org.jetbrains.kotlin.commonizer.mergedtree.CirRootNode
 import org.jetbrains.kotlin.commonizer.metadata.CirTreeSerializer
 import org.jetbrains.kotlin.commonizer.transformer.AliasedTypeSubstitutor
 import org.jetbrains.kotlin.commonizer.transformer.UnderscoredTypeAliasTypeSubstitutor
 import org.jetbrains.kotlin.commonizer.transformer.InlineTypeAliasCirNodeTransformer
+import org.jetbrains.kotlin.commonizer.transformer.phantom.PhantomGenerationTransformer
 import org.jetbrains.kotlin.commonizer.transformer.TypeSubstitutionCirNodeTransformer
 import org.jetbrains.kotlin.commonizer.tree.CirTreeRoot
 import org.jetbrains.kotlin.commonizer.tree.defaultCirTreeRootDeserializer
@@ -74,6 +72,8 @@ internal fun commonizeTarget(
             parameters.storageManager, classifiers,
             UnderscoredTypeAliasTypeSubstitutor(classifiers.classifierIndices)
         ).invoke(mergedTree)
+
+        PhantomGenerationTransformer(parameters.storageManager).invoke(mergedTree)
 
         mergedTree.accept(CommonizationVisitor(classifiers, mergedTree), Unit)
 
