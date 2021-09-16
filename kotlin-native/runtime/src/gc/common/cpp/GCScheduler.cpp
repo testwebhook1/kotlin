@@ -7,7 +7,6 @@
 
 #include "CompilerConstants.hpp"
 #include "KAssert.h"
-#include "Porting.h"
 
 using namespace kotlin;
 
@@ -26,14 +25,10 @@ void gc::GCScheduler::GCData::SetScheduleGC(std::function<void()> scheduleGC) no
     RuntimeAssert(static_cast<bool>(scheduleGC), "scheduleGC cannot be empty");
     RuntimeAssert(!static_cast<bool>(scheduleGC_), "scheduleGC must not have been set");
     scheduleGC_ = std::move(scheduleGC);
-    timerThread_ = std::thread([this]() { TimerThreadRoutine(); });
-}
-
-void RUNTIME_NORETURN gc::GCScheduler::GCData::TimerThreadRoutine() noexcept {
-    while (true) {
-        std::this_thread::sleep_for(std::chrono::microseconds(config_.regularGcIntervalMs));
+    timer_ = ::make_unique<RepeatedTimer>(std::chrono::microseconds(config_.regularGcIntervalUs), [this]() {
         OnTimer();
-    }
+        return std::chrono::microseconds(config_.regularGcIntervalUs);
+    });
 }
 
 void gc::GCScheduler::GCData::OnTimer() noexcept {
