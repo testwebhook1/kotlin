@@ -40,9 +40,6 @@ internal class LlvmDeclarations(private val unique: Map<UniqueKind, UniqueLlvmDe
     fun forClass(irClass: IrClass) = (irClass.metadata as? CodegenClassMetadata)?.llvm ?:
             error(irClass.descriptor.toString())
 
-    fun forField(field: IrField) = (field.metadata as? CodegenInstanceFieldMetadata)?.llvm ?:
-            error(field.descriptor.toString())
-
     fun forStaticField(field: IrField) = (field.metadata as? CodegenStaticFieldMetadata)?.llvm ?:
             error(field.descriptor.toString())
 
@@ -70,13 +67,11 @@ internal class KotlinObjCClassLlvmDeclarations(
 
 internal class FunctionLlvmDeclarations(val llvmFunction: LLVMValueRef)
 
-internal class FieldLlvmDeclarations(val index: Int, val classBodyType: LLVMTypeRef)
-
 internal class StaticFieldLlvmDeclarations(val storageAddressAccess: AddressAccess)
 
 internal class UniqueLlvmDeclarations(val pointer: ConstPointer)
 
-private fun ContextUtils.createClassBodyType(name: String, fields: List<ClassLayoutBuilder.FieldInfo>): LLVMTypeRef {
+internal fun ContextUtils.createClassBodyType(name: String, fields: List<ClassLayoutBuilder.FieldInfo>): LLVMTypeRef {
     val fieldTypes = listOf(runtime.objHeaderType) + fields.map { getLLVMType(it.type) }
     // TODO: consider adding synthetic ObjHeader field to Any.
 
@@ -302,21 +297,7 @@ private class DeclarationsGeneratorVisitor(override val context: Context) :
         super.visitField(declaration)
 
         val containingClass = declaration.parent as? IrClass
-        if (containingClass != null) {
-            if (!containingClass.requiresRtti()) return
-            val classDeclarations = (containingClass.metadata as? CodegenClassMetadata)?.llvm
-                    ?: error(containingClass.descriptor.toString())
-            val allFields = context.getLayoutBuilder(containingClass).fields
-            val fieldInfo = allFields.firstOrNull { it.irField == declaration } ?: error("Field ${declaration.render()} is not found")
-            declaration.metadata = CodegenInstanceFieldMetadata(
-                    declaration.metadata?.name,
-                    containingClass.konanLibrary,
-                    FieldLlvmDeclarations(
-                            fieldInfo.index,
-                            classDeclarations.bodyType
-                    )
-            )
-        } else {
+        if (containingClass == null) {
             // Fields are module-private, so we use internal name:
             val name = "kvar:" + qualifyInternalName(declaration)
             val storage = if (declaration.storageKind == FieldStorageKind.THREAD_LOCAL) {
@@ -402,14 +383,6 @@ private class CodegenFunctionMetadata(
         konanLibrary: KotlinLibrary?,
         val llvm: FunctionLlvmDeclarations
 ) : KonanMetadata(name, konanLibrary), MetadataSource.Function
-
-private class CodegenInstanceFieldMetadata(
-        name: Name?,
-        konanLibrary: KotlinLibrary?,
-        val llvm: FieldLlvmDeclarations
-) : KonanMetadata(name, konanLibrary), MetadataSource.Property {
-    override val isConst = false
-}
 
 private class CodegenStaticFieldMetadata(
         name: Name?,

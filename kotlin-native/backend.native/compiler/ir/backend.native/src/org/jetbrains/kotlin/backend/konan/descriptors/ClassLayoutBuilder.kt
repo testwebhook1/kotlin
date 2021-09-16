@@ -467,6 +467,7 @@ internal class ClassLayoutBuilder(val irClass: IrClass, val context: Context, va
      * Fields declared in the class.
      */
     fun getDeclaredFields(): List<FieldInfo> {
+        val outerThisField = if (irClass.isInner) context.specialDeclarationsFactory.getOuterThisField(irClass) else null
         if (!context.llvmModuleSpecification.containsDeclaration(irClass)) {
             val packageFragment = irClass.findPackage()
             val moduleDescriptor = packageFragment.packageFragmentDescriptor.containingDeclaration
@@ -474,18 +475,13 @@ internal class ClassLayoutBuilder(val irClass: IrClass, val context: Context, va
                 return emptyList()
             val moduleDeserializer = context.irLinker!!.cachedLibraryModuleDeserializers[moduleDescriptor]
                     ?: error("No module deserializer for ${irClass.render()}")
-            val fields = moduleDeserializer.deserializeClassFields(irClass).toMutableList()
-            if (irClass.isInner)
-                fields.add(InnerClassLowering.addOuterThisField(mutableListOf(), irClass, context).toFieldInfo())
-            return fields
+            return moduleDeserializer.deserializeClassFields(irClass, outerThisField)
         }
 
-        val declarations: List<IrDeclaration> = if (irClass.isInner && !isLowered) {
-            // Note: copying to avoid mutation of the original class.
-            irClass.declarations.toMutableList()
-                    .also { InnerClassLowering.addOuterThisField(it, irClass, context) }
-        } else {
-            irClass.declarations
+        val declarations = irClass.declarations.toMutableList()
+        outerThisField?.let {
+            if (!declarations.contains(it))
+                declarations += it
         }
         return declarations.mapNotNull {
             when (it) {

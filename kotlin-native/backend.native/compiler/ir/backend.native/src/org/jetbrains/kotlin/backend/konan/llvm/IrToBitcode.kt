@@ -7,6 +7,7 @@ package org.jetbrains.kotlin.backend.konan.llvm
 
 import kotlinx.cinterop.*
 import llvm.*
+import org.jetbrains.kotlin.backend.common.atMostOne
 import org.jetbrains.kotlin.backend.common.ir.allParameters
 import org.jetbrains.kotlin.backend.common.ir.allParametersCount
 import org.jetbrains.kotlin.backend.common.ir.ir2string
@@ -1771,13 +1772,20 @@ internal class CodeGeneratorVisitor(val context: Context, val lifetimes: Map<IrE
 
     private val vectorType = FqName("kotlin.native.Vector128").toUnsafe()
 
-    //-------------------------------------------------------------------------//
+    private val cachedClassesBodyTypes = mutableMapOf<IrClass, LLVMTypeRef>()
+
     private fun fieldPtrOfClass(thisPtr: LLVMValueRef, value: IrField): LLVMValueRef {
-        val fieldInfo = context.llvmDeclarations.forField(value)
+        val irClass = value.parentAsClass
+        val allFields = context.getLayoutBuilder(irClass).fields
 
-        val typePtr = pointerType(fieldInfo.classBodyType)
+        val bodyType = if (context.llvmModuleSpecification.containsDeclaration(irClass))
+            context.llvmDeclarations.forClass(irClass).bodyType
+        else cachedClassesBodyTypes.getOrPut(irClass) {
+            functionGenerationContext.createClassBodyType(irClass.kotlinFqName.asString() + "#cached", allFields)
+        }
 
-        val typedBodyPtr = functionGenerationContext.bitcast(typePtr, thisPtr)
+        val typedBodyPtr = functionGenerationContext.bitcast(pointerType(bodyType), thisPtr)
+        val fieldInfo = allFields.atMostOne { it.irField == value } ?: error("Field ${value.render()} is not found in ${irClass.render()}")
         val fieldPtr = LLVMBuildStructGEP(functionGenerationContext.builder, typedBodyPtr, fieldInfo.index, "")
         return fieldPtr!!
     }
