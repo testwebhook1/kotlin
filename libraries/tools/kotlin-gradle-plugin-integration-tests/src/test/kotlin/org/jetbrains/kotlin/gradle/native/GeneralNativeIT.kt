@@ -590,10 +590,17 @@ class GeneralNativeIT : BaseGradleIT() {
 
     @Test
     fun testNativeTests() = with(transformNativeTestProject("native-tests")) {
-        val testTasks = listOf("hostTest", "iosTest")
+        val testTasks = listOf("hostTest", "iosTest", "iosArm64Test")
         val hostTestTask = "hostTest"
 
         val suffix = if (isWindows) "exe" else "kexe"
+
+        projectDir.walk()
+            .filter { it.isFile && (it.name == "build.gradle.kts" || it.name == "build.gradle") }
+            .forEach { file ->
+                println("Temporary debug:")
+                println(file.readText())
+            }
 
         val defaultOutputFile = "build/bin/host/debugTest/test.$suffix"
         val anotherOutputFile = "build/bin/host/anotherDebugTest/another.$suffix"
