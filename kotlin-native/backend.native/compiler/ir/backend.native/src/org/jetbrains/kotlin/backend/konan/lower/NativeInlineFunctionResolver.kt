@@ -18,7 +18,7 @@ import org.jetbrains.kotlin.ir.declarations.IrExternalPackageFragment
 import org.jetbrains.kotlin.ir.declarations.IrFunction
 import org.jetbrains.kotlin.ir.symbols.IrFunctionSymbol
 import org.jetbrains.kotlin.ir.util.dump
-import org.jetbrains.kotlin.ir.util.fileOrNull
+import org.jetbrains.kotlin.ir.util.file
 import org.jetbrains.kotlin.ir.util.render
 
 // TODO: This is a bit hacky. Think about adopting persistent IR ideas.
@@ -33,7 +33,7 @@ internal class NativeInlineFunctionResolver(override val context: Context) : Def
         val functionFromCache = function.findPackage() is IrExternalPackageFragment
         if (!functionFromCache) {
             context.specialDeclarationsFactory.loweredInlineFunctions[function] =
-                    InlineFunctionInfo(function.fileOrNull, function.startOffset, function.endOffset)
+                    InlineFunctionInfo(function.file, function.startOffset, function.endOffset)
         } else {
             val moduleDescriptor = packageFragment.packageFragmentDescriptor.containingDeclaration
             val moduleDeserializer = context.irLinker!!.cachedLibraryModuleDeserializers[moduleDescriptor]
@@ -43,7 +43,7 @@ internal class NativeInlineFunctionResolver(override val context: Context) : Def
 
         val body = function.body ?: return function
 
-        PreInlineLowering(context).lower(body, function, context.specialDeclarationsFactory.loweredInlineFunctions[function]!!.irFile!!)
+        PreInlineLowering(context).lower(body, function, context.specialDeclarationsFactory.loweredInlineFunctions[function]!!.irFile)
 
         ArrayConstructorLowering(context).lower(body, function)
 

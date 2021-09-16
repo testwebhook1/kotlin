@@ -54,7 +54,7 @@ import org.jetbrains.kotlin.konan.util.disposeNativeMemoryAllocator
 import org.jetbrains.kotlin.library.SerializedIrModule
 import org.jetbrains.kotlin.resolve.descriptorUtil.isEffectivelyExternal
 
-internal class InlineFunctionInfo(val irFile: IrFile?, val startOffset: Int, val endOffset: Int)
+internal class InlineFunctionInfo(val irFile: IrFile, val startOffset: Int, val endOffset: Int)
 
 /**
  * Offset for synthetic elements created by lowerings and not attributable to other places in the source code.
