@@ -418,10 +418,11 @@ internal class KonanIrLinker(
                     protoDeclaration.irFunction
                 else protoDeclaration.irProperty.findAccessor(irProperty, irFunction)
             } else {
-                val firstNotInnerClassIndex = outerClasses.dropLast(1).indexOfLast { !it.isInner }
+                val firstNotInnerClassIndex = outerClasses.indexOfLast { !it.isInner }
                 var protoClass = protoDeclaration.irClass
                 outerClasses.indices.forEach { classIndex ->
-                    if (classIndex > firstNotInnerClassIndex) {
+                    if (classIndex > firstNotInnerClassIndex
+                            || classIndex == outerClasses.size - 1 /* owner's type parameters always accessible */) {
                         (0 until protoClass.typeParameterCount).mapTo(typeParameterSigs) {
                             BinarySymbolData.decode(protoClass.getTypeParameter(it).base.symbol).signatureId
                         }
@@ -473,9 +474,10 @@ internal class KonanIrLinker(
 
             val typeParameterSigs = mutableListOf<Int>()
             var protoClass = protoDeclaration.irClass
-            val firstNotInnerClassIndex = outerClasses.dropLast(1).indexOfLast { !it.isInner }
+            val firstNotInnerClassIndex = outerClasses.indexOfLast { !it.isInner }
             for (classIndex in outerClasses.indices) {
-                if (classIndex > firstNotInnerClassIndex) {
+                if (classIndex > firstNotInnerClassIndex
+                        || classIndex == outerClasses.size - 1 /* owner's type parameters always accessible */) {
                     (0 until protoClass.typeParameterCount).mapTo(typeParameterSigs) {
                         BinarySymbolData.decode(protoClass.getTypeParameter(it).base.symbol).signatureId
                     }
