@@ -1813,9 +1813,9 @@ internal class CodeGeneratorVisitor(val context: Context, val lifetimes: Map<IrE
 
     //-------------------------------------------------------------------------//
 
-    private class IrStaticValueCacheKey(val value: IrConstantValue) {
+    private class IrConstValueCacheKey(val value: IrConstantValue) {
         override fun equals(other: Any?): Boolean {
-            if (other !is IrStaticValueCacheKey) return false
+            if (other !is IrConstValueCacheKey) return false
             return value.contentEquals(other.value)
         }
 
@@ -1824,10 +1824,10 @@ internal class CodeGeneratorVisitor(val context: Context, val lifetimes: Map<IrE
         }
     }
 
-    private val constantValuesCache = mutableMapOf<IrStaticValueCacheKey, ConstValue>()
+    private val constantValuesCache = mutableMapOf<IrConstValueCacheKey, ConstValue>()
 
     private fun evaluateConstantValue(value: IrConstantValue): ConstValue =
-            constantValuesCache.getOrPut(IrStaticValueCacheKey(value)) {
+            constantValuesCache.getOrPut(IrConstValueCacheKey(value)) {
                 evaluateConstantValueImpl(value)
             }
 
