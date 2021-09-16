@@ -131,7 +131,7 @@ public:
         KStdUniquePtr<RepeatedTimer> timer_;
     };
 
-    GCScheduler() noexcept: gcData_(config_, []() { return konan::getTimeNanos(); }) {}
+    GCScheduler() noexcept : gcData_(config_, []() { return konan::getTimeNanos(); }) {}
 
     GCSchedulerConfig& config() noexcept { return config_; }
     GCData& gcData() noexcept { return gcData_; }
