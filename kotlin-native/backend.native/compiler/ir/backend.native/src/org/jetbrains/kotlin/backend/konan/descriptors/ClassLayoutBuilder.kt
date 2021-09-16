@@ -394,7 +394,7 @@ internal class ClassLayoutBuilder(val irClass: IrClass, val context: Context, va
         return context.getLayoutBuilder(superFunction.parentAsClass).itablePlace(superFunction)
     }
 
-    class FieldInfo(val name: String, val type: IrType, val isReadonly: Boolean, val isConst: Boolean, val irField: IrField?) {
+    class FieldInfo(val name: String, val type: IrType, val isConst: Boolean, val hasConstInitializer: Boolean, val irField: IrField?) {
         var index = -1
     }
 

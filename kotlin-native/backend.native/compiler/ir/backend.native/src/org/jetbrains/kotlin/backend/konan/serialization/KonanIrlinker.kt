@@ -151,8 +151,8 @@ internal object InlineFunctionBodyReferenceSerializer {
 
 class SerializedClassFieldInfo(val name: Int, val binaryType: Int, val type: Int, val flags: Int) {
     companion object {
-        const val FLAG_READONLY = 1
-        const val FLAG_CONST = 2
+        const val FLAG_IS_CONST = 1
+        const val FLAG_CONST_INITIALIZER = 2
     }
 }
 
@@ -518,10 +518,10 @@ internal class KonanIrLinker(
                         val protoField = protoFieldsMap[field.name] ?: error("No proto for ${irField.render()}")
                         val nameAndType = BinaryNameAndType.decode(protoField.nameType)
                         var flags = 0
-                        if (field.isReadonly)
-                            flags = flags or SerializedClassFieldInfo.FLAG_READONLY
                         if (field.isConst)
-                            flags = flags or SerializedClassFieldInfo.FLAG_CONST
+                            flags = flags or SerializedClassFieldInfo.FLAG_IS_CONST
+                        if (field.hasConstInitializer)
+                            flags = flags or SerializedClassFieldInfo.FLAG_CONST_INITIALIZER
                         val classifier = irField.type.classifierOrNull ?: error("Fields of type ${irField.type.render()} are not supported")
                         val primitiveBinaryType = irField.type.computePrimitiveBinaryTypeOrNull()
 
@@ -804,8 +804,8 @@ internal class KonanIrLinker(
                 }
                 ClassLayoutBuilder.FieldInfo(
                         name, type,
-                        isReadonly = (it.flags and SerializedClassFieldInfo.FLAG_READONLY) != 0,
-                        isConst = (it.flags and SerializedClassFieldInfo.FLAG_CONST) != 0,
+                        isConst = (it.flags and SerializedClassFieldInfo.FLAG_IS_CONST) != 0,
+                        hasConstInitializer = (it.flags and SerializedClassFieldInfo.FLAG_CONST_INITIALIZER) != 0,
                         irField = null)
             }
         }
