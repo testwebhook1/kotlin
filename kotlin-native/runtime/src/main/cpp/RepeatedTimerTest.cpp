@@ -17,7 +17,7 @@ TEST(RepeatedTimerTest, WillRun) {
         return std::chrono::milliseconds(10);
     });
     // The function is not executed immediately.
-    EXPECT_THAT(counter, 0);
+    EXPECT_THAT(counter.load(), 0);
     // And now wait until the counter increases at least twice
     while (counter < 2) {
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -33,7 +33,7 @@ TEST(RepeatedTimerTest, WillStop) {
         });
     }
     // The function was never executed.
-    EXPECT_THAT(counter, 0);
+    EXPECT_THAT(counter.load(), 0);
 }
 
 TEST(RepeatedTimerTest, AdjustInterval) {
@@ -49,8 +49,8 @@ TEST(RepeatedTimerTest, AdjustInterval) {
     // Wait until counter grows to 2, when the waiting time changes to 10 minutes.
     while (counter < 2) {
     }
-    EXPECT_THAT(counter, 2);
+    EXPECT_THAT(counter.load(), 2);
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
     // After we've slept for 10ms, we still haven't executed the function another time.
-    EXPECT_THAT(counter, 2);
+    EXPECT_THAT(counter.load(), 2);
 }

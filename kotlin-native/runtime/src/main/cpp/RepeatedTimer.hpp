@@ -8,6 +8,7 @@
 
 #include <chrono>
 #include <condition_variable>
+#include <iostream>
 #include <mutex>
 #include <thread>
 
@@ -23,8 +24,10 @@ public:
         thread_([this, interval, f]() noexcept { Run(interval, f); }) {}
 
     ~RepeatedTimer() {
-        std::unique_lock lock(mutex_);
-        run_ = false;
+        {
+            std::unique_lock lock(mutex_);
+            run_ = false;
+        }
         wait_.notify_all();
         thread_.join();
     }
@@ -41,7 +44,7 @@ private:
             RuntimeAssert(run_, "Can only happen if we timed out on waiting and run_ is still true");
             auto newInterval = f();
             // The next waiting will use the new interval.
-            interval = std::chrono::duration_cast < std::chrono::duration<Rep, Period>(newInterval);
+            interval = std::chrono::duration_cast<std::chrono::duration<Rep, Period>>(newInterval);
         }
     }
 
