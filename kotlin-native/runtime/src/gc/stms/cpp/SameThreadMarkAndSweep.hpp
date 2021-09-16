@@ -70,7 +70,6 @@ private:
 
     size_t epoch_ = 0;
     uint64_t lastGCTimestampUs_ = 0;
-    std::atomic<bool> needsGC_ = false;
 };
 
 } // namespace gc

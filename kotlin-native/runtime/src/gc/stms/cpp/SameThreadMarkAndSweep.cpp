@@ -53,6 +53,8 @@ struct FinalizeTraits {
 
 // Global, because it's accessed on a hot path: avoid memory load from `this`.
 std::atomic<bool> interesting = false;
+// TODO: Move needsGc to a field.
+std::atomic<bool> needsGc = false;
 
 } // namespace
 
@@ -84,7 +86,7 @@ void gc::SameThreadMarkAndSweep::ThreadData::SafePointAllocation(size_t size) no
     threadData_.suspensionData().suspendIfRequested();
     auto& scheduler = threadData_.gcScheduler();
     scheduler.OnSafePointAllocation(size);
-    if (gc_.needsGC_) {
+    if (needsGc) {
         RuntimeLogDebug({kTagGC}, "Attempt to GC at SafePointAllocation size=%zu", size);
         PerformFullGC();
     }
@@ -122,15 +124,15 @@ void gc::SameThreadMarkAndSweep::ThreadData::OnOOM(size_t size) noexcept {
 
 NO_INLINE void gc::SameThreadMarkAndSweep::ThreadData::SafePointRegular(size_t weight) noexcept {
     threadData_.suspensionData().suspendIfRequested();
-    if (gc_.needsGC_) {
+    if (needsGc) {
         RuntimeLogDebug({kTagGC}, "Attempt to GC at SafePointRegular weight=%zu", weight);
         PerformFullGC();
     }
 }
 
 gc::SameThreadMarkAndSweep::SameThreadMarkAndSweep() noexcept {
-    mm::GlobalData::Instance().gcScheduler().gcData().SetScheduleGC([this]() {
-        needsGC_ = true;
+    mm::GlobalData::Instance().gcScheduler().gcData().SetScheduleGC([]() {
+        needsGc = true;
         interesting = true;
     });
 }
@@ -209,7 +211,7 @@ mm::ObjectFactory<gc::SameThreadMarkAndSweep>::FinalizerQueue gc::SameThreadMark
     auto objectsCountAfter = mm::GlobalData::Instance().objectFactory().GetSizeUnsafe();
 
     interesting = false;
-    needsGC_ = false;
+    needsGc = false;
     mm::ResumeThreads();
     auto timeResumeUs = konan::getTimeMicros();
 
