@@ -386,6 +386,8 @@ internal class KonanIrLinker(
         return outerClasses
     }
 
+    private val InvalidIndex = -1
+
     inner class KonanModuleDeserializer(
             moduleDescriptor: ModuleDescriptor,
             klib: KotlinLibrary,
@@ -440,15 +442,15 @@ internal class KonanIrLinker(
             val defaultValues = mutableListOf<Int>()
             val valueParameterSigs = (0 until protoFunction.base.valueParameterCount).map {
                 val valueParameter = protoFunction.base.getValueParameter(it)
-                defaultValues.add(if (valueParameter.hasDefaultValue()) valueParameter.defaultValue else -1)
+                defaultValues.add(if (valueParameter.hasDefaultValue()) valueParameter.defaultValue else InvalidIndex)
                 BinarySymbolData.decode(valueParameter.base.symbol).signatureId
             }
             val extensionReceiverSig = irFunction.extensionReceiverParameter?.let {
                 BinarySymbolData.decode(protoFunction.base.extensionReceiver.base.symbol).signatureId
-            } ?: -1
+            } ?: InvalidIndex
             val dispatchReceiverSig = irFunction.dispatchReceiverParameter?.let {
                 BinarySymbolData.decode(protoFunction.base.dispatchReceiver.base.symbol).signatureId
-            } ?: -1
+            } ?: InvalidIndex
 
             return SerializedInlineFunctionReference(fileDeserializationState.fileIndex, functionSignature, protoFunction.base.body,
                     irFunction.startOffset, irFunction.endOffset, extensionReceiverSig, dispatchReceiverSig,
@@ -527,9 +529,9 @@ internal class KonanIrLinker(
 
                         SerializedClassFieldInfo(
                                 nameAndType.nameIndex,
-                                primitiveBinaryType?.ordinal ?: -1,
+                                primitiveBinaryType?.ordinal ?: InvalidIndex,
                                 if (with(KonanManglerIr) { (classifier as? IrClassSymbol)?.owner?.isExported(compatibleMode) } == false)
-                                    -1
+                                    InvalidIndex
                                 else nameAndType.typeIndex,
                                 flags)
                     })
@@ -727,12 +729,12 @@ internal class KonanIrLinker(
             }
             function.extensionReceiverParameter?.let { parameter ->
                 val sigIndex = inlineFunctionReference.extensionReceiverSig
-                require(sigIndex >= 0) { "Expected a valid sig reference to the extension receiver for ${function.render()}" }
+                require(sigIndex != InvalidIndex) { "Expected a valid sig reference to the extension receiver for ${function.render()}" }
                 symbolDeserializer.referenceLocalIrSymbol(parameter.symbol, symbolDeserializer.deserializeIdSignature(sigIndex))
             }
             function.dispatchReceiverParameter?.let { parameter ->
                 val sigIndex = inlineFunctionReference.dispatchReceiverSig
-                require(sigIndex >= 0) { "Expected a valid sig reference to the dispatch receiver for ${function.render()}" }
+                require(sigIndex != InvalidIndex) { "Expected a valid sig reference to the dispatch receiver for ${function.render()}" }
                 symbolDeserializer.referenceLocalIrSymbol(parameter.symbol, symbolDeserializer.deserializeIdSignature(sigIndex))
             }
 
@@ -740,7 +742,7 @@ internal class KonanIrLinker(
 
             function.valueParameters.forEachIndexed { index, parameter ->
                 val defaultValueIndex = inlineFunctionReference.defaultValues[index]
-                if (defaultValueIndex >= 0)
+                if (defaultValueIndex != InvalidIndex)
                     parameter.defaultValue = declarationDeserializer.deserializeExpressionBody(defaultValueIndex)
             }
 
@@ -787,8 +789,8 @@ internal class KonanIrLinker(
             return serializedClassFields.fields.map {
                 val name = fileDeserializationInfo.fileReader.deserializeString(it.name)
                 val type = when {
-                    it.type != -1 -> declarationDeserializer.deserializeIrType(it.type)
-                    it.binaryType == -1 -> builtIns.anyNType
+                    it.type != InvalidIndex -> declarationDeserializer.deserializeIrType(it.type)
+                    it.binaryType == InvalidIndex -> builtIns.anyNType
                     else -> when (PrimitiveBinaryType.values().getOrNull(it.binaryType)) {
                         PrimitiveBinaryType.BOOLEAN -> builtIns.booleanType
                         PrimitiveBinaryType.BYTE -> builtIns.byteType
