@@ -126,15 +126,13 @@ private:
 
 namespace internal {
 
-KStdUniquePtr<GCSchedulerData> MakeGCSchedulerDataWithTimer(
-        GCSchedulerConfig& config, std::function<uint64_t()> currentTimeCallbackNs) noexcept;
+KStdUniquePtr<GCSchedulerData> MakeGCSchedulerDataWithTimer(GCSchedulerConfig& config) noexcept;
 KStdUniquePtr<GCSchedulerData> MakeGCSchedulerDataWithoutTimer(
         GCSchedulerConfig& config, std::function<uint64_t()> currentTimeCallbackNs) noexcept;
 KStdUniquePtr<GCSchedulerData> MakeGCSchedulerData(GCSchedulerConfig& config) noexcept;
 
 } // namespace internal
 
-// TODO: Consider calling GC from the scheduler itself.
 class GCScheduler : private Pinned {
 public:
     GCScheduler() noexcept : gcData_(internal::MakeGCSchedulerData(config_)) {}
