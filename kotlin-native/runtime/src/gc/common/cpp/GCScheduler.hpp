@@ -40,16 +40,30 @@ struct GCSchedulerConfig {
 // TODO: Consider calling GC from the scheduler itself.
 class GCScheduler : private Pinned {
 public:
+    class ThreadData;
+
+    class GCData {
+    public:
+        virtual ~GCData() = default;
+
+        // May be called by different threads via `ThreadData`.
+        virtual void OnSafePoint(ThreadData& threadData) noexcept = 0;
+
+        // Always called by the GC thread.
+        virtual void OnPerformFullGC() noexcept = 0;;
+
+        // Can only be called once.
+        virtual void SetScheduleGC(std::function<void()> scheduleGC) noexcept = 0;;
+    };
+
     class ThreadData {
     public:
-        using OnSafePointCallback = std::function<void(ThreadData&)>;
-
         static constexpr size_t kFunctionEpilogueWeight = 1;
         static constexpr size_t kLoopBodyWeight = 1;
         static constexpr size_t kExceptionUnwindWeight = 1;
 
-        explicit ThreadData(GCSchedulerConfig& config, OnSafePointCallback onSafePoint) noexcept :
-            config_(config), onSafePoint_(std::move(onSafePoint)) {
+        explicit ThreadData(GCSchedulerConfig& config, GCData& gcData) noexcept :
+            config_(config), gcData_(gcData) {
             ClearCountersAndUpdateThresholds();
         }
 
@@ -83,7 +97,7 @@ public:
 
     private:
         void OnSafePointSlowPath() noexcept {
-            onSafePoint_(*this);
+            gcData_.OnSafePoint(*this);
             ClearCountersAndUpdateThresholds();
         }
 
@@ -96,26 +110,12 @@ public:
         }
 
         GCSchedulerConfig& config_;
-        OnSafePointCallback onSafePoint_;
+        GCData& gcData_;
 
         size_t allocatedBytes_ = 0;
         size_t allocatedBytesThreshold_ = 0;
         size_t safePointsCounter_ = 0;
         size_t safePointsCounterThreshold_ = 0;
-    };
-
-    class GCData {
-    public:
-        virtual ~GCData() = default;
-
-        // May be called by different threads via `ThreadData`.
-        virtual void OnSafePoint(ThreadData& threadData) noexcept = 0;
-
-        // Always called by the GC thread.
-        virtual void OnPerformFullGC() noexcept = 0;;
-
-        // Can only be called once.
-        virtual void SetScheduleGC(std::function<void()> scheduleGC) noexcept = 0;;
     };
 
     static KStdUniquePtr<GCData> NewGCDataImpl(GCSchedulerConfig& config, std::function<uint64_t()> currentTimeCallbackNs) noexcept;
@@ -126,7 +126,7 @@ public:
     GCData& gcData() noexcept { return *gcData_; }
 
     ThreadData NewThreadData() noexcept {
-        return ThreadData(config_, [this](ThreadData& threadData) { gcData().OnSafePoint(threadData); });
+        return ThreadData(config_, *gcData_);
     }
 
 private:
