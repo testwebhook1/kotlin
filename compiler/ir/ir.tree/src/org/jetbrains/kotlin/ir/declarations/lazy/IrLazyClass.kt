@@ -112,13 +112,19 @@ class IrLazyClass(
         get() = null
         set(_) = error("We should never need to store metadata of external declarations.")
 
-    private var irLoaded: Boolean? = null
+    private var irLoadingStarted: Boolean = false
 
-    override fun loadIr(): Boolean {
+    /*  loadIr is always invoked under lock, so no race is possible.
+       However when performing after-deserialization setup, a recursive attempt to load may occur
+       when non-serialized declarations are touched. We need to prevent those, hence the need for the irLoadingStarted variable.
+       Upon successful load, irLoaded will be set by the deserializer.
+    */
+    override fun loadIr() {
         assert(parent is IrPackageFragment)
-        irLoaded?.let { return it }
-        return stubGenerator.extensions.deserializeLazyClass(
+        if (irLoadingStarted) return
+        irLoadingStarted = true
+        stubGenerator.extensions.deserializeLazyClass(
             this, stubGenerator, parent, allowErrorNodes = false
-        ).also { irLoaded = it }
+        )
     }
 }

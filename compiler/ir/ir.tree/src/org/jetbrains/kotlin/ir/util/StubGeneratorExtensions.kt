@@ -14,7 +14,7 @@ import org.jetbrains.kotlin.serialization.deserialization.descriptors.Deserializ
 import org.jetbrains.kotlin.types.KotlinType
 
 interface DeserializableClass {
-    fun loadIr(): Boolean
+    fun loadIr()
 }
 
 open class StubGeneratorExtensions {

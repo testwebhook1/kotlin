@@ -111,9 +111,10 @@ class LazyIrFactory(
         isExpect: Boolean,
         isFakeOverride: Boolean,
         containerSource: DeserializedContainerSource?
-    ): IrSimpleFunction = if (symbol.isBound)
+    ): IrSimpleFunction = if (symbol.isBound) {
+        (symbol.owner as? IrLazyFunction)?.irLoaded = true
         symbol.owner
-    else
+    } else
         delegate.createFunction(
             startOffset, endOffset, origin, symbol, name, visibility, modality, returnType,
             isInline, isExternal, isTailrec, isSuspend, isOperator, isInfix, isExpect, isFakeOverride, containerSource

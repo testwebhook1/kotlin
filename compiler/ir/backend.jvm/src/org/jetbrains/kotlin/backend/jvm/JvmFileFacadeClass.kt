@@ -25,11 +25,16 @@ class JvmFileFacadeClass(
     source = source
 ), DeserializableClass {
 
-    private var irLoaded: Boolean? = null
+    private var irLoadingStarted: Boolean = false
 
-    override fun loadIr(): Boolean {
-        irLoaded?.let { return it }
-        irLoaded = stubGenerator.extensions.deserializeFacadeClass(this, stubGenerator, parent, allowErrorNodes = false)
-        return irLoaded!!
+    /*  loadIr is always invoked under lock, so no race is possible.
+       However when performing after-deserialization setup, a recursive attempt to load may occur
+       when non-serialized declarations are touched. We need to prevent those, hence the need for the irLoadingStarted variable.
+       Upon successful load, irLoaded will be set by the deserializer.
+    */
+    override fun loadIr() {
+        if (irLoadingStarted) return
+        irLoadingStarted = true
+        stubGenerator.extensions.deserializeFacadeClass(this, stubGenerator, parent, allowErrorNodes = false)
     }
 }
