@@ -50,25 +50,30 @@ class IrLazyFunction(
     override var annotations: List<IrConstructorCall> by createLazyAnnotations()
 
     override var body: IrBody? by lazyVar(stubGenerator.lock) {
-        if (tryLoadIr()) body else null
+        tryLoadIr()
+        if (irLoaded) body else null
     }
 
     override var returnType: IrType by lazyVar(stubGenerator.lock) {
-        if (tryLoadIr()) returnType else createReturnType()
+        tryLoadIr()
+        if (irLoaded) returnType else createReturnType()
     }
 
     override val initialSignatureFunction: IrFunction? by createInitialSignatureFunction()
 
     override var dispatchReceiverParameter: IrValueParameter? by lazyVar(stubGenerator.lock) {
-        if (tryLoadIr()) dispatchReceiverParameter else createReceiverParameter(descriptor.dispatchReceiverParameter, true)
+        tryLoadIr()
+        if (irLoaded) dispatchReceiverParameter else createReceiverParameter(descriptor.dispatchReceiverParameter, true)
     }
 
     override var extensionReceiverParameter: IrValueParameter? by lazyVar(stubGenerator.lock) {
-        if (tryLoadIr()) extensionReceiverParameter else createReceiverParameter(descriptor.extensionReceiverParameter)
+        tryLoadIr()
+        if (irLoaded) extensionReceiverParameter else createReceiverParameter(descriptor.extensionReceiverParameter)
     }
 
     override var valueParameters: List<IrValueParameter> by lazyVar(stubGenerator.lock) {
-        if (tryLoadIr()) valueParameters else createValueParameters()
+        tryLoadIr()
+        if (irLoaded) valueParameters else createValueParameters()
     }
 
     override var metadata: MetadataSource?
@@ -76,7 +81,8 @@ class IrLazyFunction(
         set(_) = error("We should never need to store metadata of external declarations.")
 
     override var typeParameters: List<IrTypeParameter> by lazyVar(stubGenerator.lock) {
-        if (tryLoadIr()) return@lazyVar typeParameters
+        tryLoadIr()
+        if (irLoaded) return@lazyVar typeParameters
         typeTranslator.buildWithScope(this) {
             stubGenerator.symbolTable.withScope(this) {
                 val propertyIfAccessor = descriptor.propertyIfAccessor
@@ -108,11 +114,20 @@ class IrLazyFunction(
     override val containerSource: DeserializedContainerSource?
         get() = (descriptor as? DescriptorWithContainerSource)?.containerSource
 
-    private fun tryLoadIr(): Boolean {
-        if (!stubGenerator.extensions.irDeserializationEnabled) return false
-        if (!isInline || isFakeOverride) return false
-        val toplevel = getToplevel()
-        return (toplevel as? DeserializableClass)?.loadIr() ?: false
+    /* tryLoadIr is always invoked under lock, so no race is possible.
+       However when performing after-deserialization setup, a recursive attempt to load may occur
+       when non-serialized declarations are touched. We need to prevent those, hence the need for the irLoadingStarted variable.
+       Upon successful load, irLoaded will be set by the deserializer.
+    */
+    var irLoaded: Boolean = false
+    private var irLoadingStarted: Boolean = false
+
+    private fun tryLoadIr() {
+        if (irLoadingStarted) return
+        if (!stubGenerator.extensions.irDeserializationEnabled) return
+        if (!isInline || isFakeOverride) return
+        irLoadingStarted = true
+        (getToplevel() as? DeserializableClass)?.loadIr()
     }
 
     private fun getToplevel(): IrDeclaration {
