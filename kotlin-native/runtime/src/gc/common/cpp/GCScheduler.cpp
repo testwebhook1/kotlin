@@ -6,9 +6,12 @@
 #include "GCScheduler.hpp"
 
 #include "CompilerConstants.hpp"
+#include "GlobalData.hpp"
 #include "KAssert.h"
 #include "Porting.h"
 #include "RepeatedTimer.hpp"
+#include "ThreadRegistry.hpp"
+#include "ThreadData.hpp"
 
 using namespace kotlin;
 
@@ -41,6 +44,16 @@ public:
 
 private:
     void OnTimer() noexcept {
+        auto allThreadsAreNative = []() {
+            auto threadRegistryIter = mm::GlobalData::Instance().threadRegistry().LockForIter();
+            return std::all_of(threadRegistryIter.begin(), threadRegistryIter.end(), [](mm::ThreadData& thread) {
+                return thread.state() == ThreadState::kNative;
+            });
+        }();
+        // Don't run, if kotlin code is not being executed.
+        if (allThreadsAreNative)
+            return;
+
         // TODO: Probably makes sense to check memory usage of the process.
         scheduleGC_();
     }

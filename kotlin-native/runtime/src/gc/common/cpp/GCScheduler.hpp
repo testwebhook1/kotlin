@@ -36,7 +36,7 @@ struct GCSchedulerConfig {
     std::atomic<size_t> allocationThresholdBytes = 10 * 1024 * 1024; // 10MiB by default.
     std::atomic<uint64_t> cooldownThresholdNs = 200 * 1000 * 1000; // 200 milliseconds by default.
     std::atomic<bool> autoTune = false;
-    std::atomic<uint64_t> regularGcIntervalUs = 5 * 1000 * 1000; // 5 seconds by default.
+    std::atomic<uint64_t> regularGcIntervalUs = 200 * 1000; // 200 milliseconds by default.
 
     GCSchedulerConfig() noexcept {
         if (compiler::gcAggressive()) {
