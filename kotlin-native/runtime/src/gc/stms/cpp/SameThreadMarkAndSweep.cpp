@@ -59,27 +59,15 @@ std::atomic<bool> needsGc = false;
 } // namespace
 
 ALWAYS_INLINE void gc::SameThreadMarkAndSweep::ThreadData::SafePointFunctionEpilogue() noexcept {
-    constexpr auto weight = GCSchedulerThreadData::kFunctionEpilogueWeight;
-    threadData_.gcScheduler().OnSafePointRegular(weight);
-    if (interesting) {
-        SafePointRegular(weight);
-    }
+    SafePointRegular(GCSchedulerThreadData::kFunctionEpilogueWeight);
 }
 
 ALWAYS_INLINE void gc::SameThreadMarkAndSweep::ThreadData::SafePointLoopBody() noexcept {
-    constexpr auto weight = GCSchedulerThreadData::kLoopBodyWeight;
-    threadData_.gcScheduler().OnSafePointRegular(weight);
-    if (interesting) {
-        SafePointRegular(weight);
-    }
+    SafePointRegular(GCSchedulerThreadData::kLoopBodyWeight);
 }
 
 ALWAYS_INLINE void gc::SameThreadMarkAndSweep::ThreadData::SafePointExceptionUnwind() noexcept {
-    constexpr auto weight = GCSchedulerThreadData::kExceptionUnwindWeight;
-    threadData_.gcScheduler().OnSafePointRegular(weight);
-    if (interesting) {
-        SafePointRegular(weight);
-    }
+    SafePointRegular(GCSchedulerThreadData::kExceptionUnwindWeight);
 }
 
 void gc::SameThreadMarkAndSweep::ThreadData::SafePointAllocation(size_t size) noexcept {
@@ -122,7 +110,14 @@ void gc::SameThreadMarkAndSweep::ThreadData::OnOOM(size_t size) noexcept {
     PerformFullGC();
 }
 
-NO_INLINE void gc::SameThreadMarkAndSweep::ThreadData::SafePointRegular(size_t weight) noexcept {
+ALWAYS_INLINE void gc::SameThreadMarkAndSweep::ThreadData::SafePointRegular(size_t weight) noexcept {
+    threadData_.gcScheduler().OnSafePointRegular(weight);
+    if (interesting) {
+        SafePointRegularSlowPath(weight);
+    }
+}
+
+NO_INLINE void gc::SameThreadMarkAndSweep::ThreadData::SafePointRegularSlowPath(size_t weight) noexcept {
     threadData_.suspensionData().suspendIfRequested();
     if (needsGc) {
         RuntimeLogDebug({kTagGC}, "Attempt to GC at SafePointRegular weight=%zu", weight);

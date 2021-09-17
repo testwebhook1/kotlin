@@ -57,6 +57,7 @@ public:
 
     private:
         void SafePointRegular(size_t weight) noexcept;
+        void SafePointRegularSlowPath(size_t weight) noexcept;
 
         SameThreadMarkAndSweep& gc_;
         mm::ThreadData& threadData_;
