@@ -23,6 +23,7 @@ import org.jetbrains.kotlin.ir.declarations.impl.IrFunctionImpl
 import org.jetbrains.kotlin.ir.declarations.impl.IrPropertyImpl
 import org.jetbrains.kotlin.ir.expressions.*
 import org.jetbrains.kotlin.ir.expressions.impl.IrCallImpl
+import org.jetbrains.kotlin.ir.expressions.impl.IrConstantPrimitiveImpl
 import org.jetbrains.kotlin.ir.symbols.*
 import org.jetbrains.kotlin.ir.symbols.impl.IrFieldSymbolImpl
 import org.jetbrains.kotlin.ir.symbols.impl.IrPropertySymbolImpl
@@ -158,10 +159,15 @@ private class AutoboxingTransformer(val context: Context) : AbstractValueUsageTr
         return if (conversion == null) {
             this
         } else {
+            if (this is IrConst<*>) {
+                return IrConstantPrimitiveImpl(this.startOffset, this.endOffset, this).apply {
+                    type = expectedType
+                }
+            }
             if (this is IrConstantValue) {
                 return when (this) {
                     is IrConstantPrimitive -> {
-                        this.apply { this.type = expectedType }
+                        this.apply { type = expectedType }
                     }
                     is IrConstantObject -> {
                         val expectedInlinedType = expectedType.getInlinedClassNative()
