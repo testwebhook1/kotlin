@@ -7,34 +7,32 @@
 
 #include "CompilerConstants.hpp"
 #include "KAssert.h"
+#include "Porting.h"
+#include "RepeatedTimer.hpp"
 
 using namespace kotlin;
 
 namespace {
 
 // TODO: We need a separate `GCData` for targets without threads.
-class GCDataImpl : public gc::GCScheduler::GCData {
+class GCSchedulerDataWithTimer : public gc::GCSchedulerData {
 public:
     using CurrentTimeCallback = std::function<uint64_t()>;
 
-    GCDataImpl(gc::GCSchedulerConfig& config, CurrentTimeCallback currentTimeCallbackNs) noexcept :
+    GCSchedulerDataWithTimer(gc::GCSchedulerConfig& config, CurrentTimeCallback currentTimeCallbackNs) noexcept :
         config_(config), currentTimeCallbackNs_(std::move(currentTimeCallbackNs)), timeOfLastGcNs_(currentTimeCallbackNs_()) {}
 
-    // May be called by different threads via `ThreadData`.
-    void OnSafePoint(gc::GCScheduler::ThreadData& threadData) noexcept override {
+    void OnSafePoint(gc::GCSchedulerThreadData& threadData) noexcept override {
         size_t allocatedBytes = threadData.allocatedBytes();
-        if (allocatedBytes > config_.allocationThresholdBytes || currentTimeCallbackNs_() - timeOfLastGcNs_ >= config_.cooldownThresholdNs) {
+        if (allocatedBytes > config_.allocationThresholdBytes ||
+            currentTimeCallbackNs_() - timeOfLastGcNs_ >= config_.cooldownThresholdNs) {
             RuntimeAssert(static_cast<bool>(scheduleGC_), "scheduleGC_ cannot be empty");
             scheduleGC_();
         }
     }
 
-    // Always called by the GC thread.
-    void OnPerformFullGC() noexcept override {
-        timeOfLastGcNs_ = currentTimeCallbackNs_();
-    }
+    void OnPerformFullGC() noexcept override { timeOfLastGcNs_ = currentTimeCallbackNs_(); }
 
-    // Can only be called once.
     void SetScheduleGC(std::function<void()> scheduleGC) noexcept override {
         RuntimeAssert(static_cast<bool>(scheduleGC), "scheduleGC cannot be empty");
         RuntimeAssert(!static_cast<bool>(scheduleGC_), "scheduleGC must not have been set");
@@ -59,9 +57,22 @@ private:
     KStdUniquePtr<RepeatedTimer> timer_;
 };
 
+} // namespace
+
+KStdUniquePtr<gc::GCSchedulerData> gc::internal::MakeGCSchedulerDataWithTimer(
+        GCSchedulerConfig& config, std::function<uint64_t()> currentTimeCallbackNs) noexcept {
+    return ::make_unique<GCSchedulerDataWithTimer>(config, std::move(currentTimeCallbackNs));
 }
 
-// static
-KStdUniquePtr<gc::GCScheduler::GCData> gc::GCScheduler::NewGCDataImpl(GCSchedulerConfig& config, std::function<uint64_t()> currentTimeCallbackNs) noexcept {
-    return ::make_unique<GCDataImpl>(config, currentTimeCallbackNs);
+KStdUniquePtr<gc::GCSchedulerData> gc::internal::MakeGCSchedulerDataWithoutTimer(
+        GCSchedulerConfig& config, std::function<uint64_t()> currentTimeCallbackNs) noexcept {
+    return ::make_unique<GCSchedulerDataWithTimer>(config, std::move(currentTimeCallbackNs));
+}
+
+KStdUniquePtr<gc::GCSchedulerData> gc::internal::MakeGCSchedulerData(GCSchedulerConfig& config) noexcept {
+    if (internal::useGCTimer()) {
+        return MakeGCSchedulerDataWithTimer(config, []() { return konan::getTimeNanos(); });
+    } else {
+        return MakeGCSchedulerDataWithoutTimer(config, []() { return konan::getTimeNanos(); });
+    }
 }

@@ -33,7 +33,7 @@ public:
         threadId_(threadId),
         globalsThreadQueue_(GlobalsRegistry::Instance()),
         stableRefThreadQueue_(StableRefRegistry::Instance()),
-        gcScheduler_(GlobalData::Instance().gcScheduler().NewThreadData()),
+        gcScheduler_(GlobalData::Instance().gcScheduler().config(), GlobalData::Instance().gcScheduler().gcData()),
         gc_(GlobalData::Instance().gc(), *this),
         objectFactoryThreadQueue_(GlobalData::Instance().objectFactory(), gc_),
         suspensionData_(ThreadState::kNative) {}
@@ -58,7 +58,7 @@ public:
 
     KStdVector<std::pair<ObjHeader**, ObjHeader*>>& initializingSingletons() noexcept { return initializingSingletons_; }
 
-    gc::GCScheduler::ThreadData& gcScheduler() noexcept { return gcScheduler_; }
+    gc::GCSchedulerThreadData& gcScheduler() noexcept { return gcScheduler_; }
 
     gc::GC::ThreadData& gc() noexcept { return gc_; }
 
@@ -83,7 +83,7 @@ private:
     ThreadLocalStorage tls_;
     StableRefRegistry::ThreadQueue stableRefThreadQueue_;
     ShadowStack shadowStack_;
-    gc::GCScheduler::ThreadData gcScheduler_;
+    gc::GCSchedulerThreadData gcScheduler_;
     gc::GC::ThreadData gc_;
     ObjectFactory<gc::GC>::ThreadQueue objectFactoryThreadQueue_;
     KStdVector<std::pair<ObjHeader**, ObjHeader*>> initializingSingletons_;
