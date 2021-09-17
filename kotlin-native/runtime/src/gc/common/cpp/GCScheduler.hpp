@@ -104,37 +104,26 @@ public:
         size_t safePointsCounterThreshold_ = 0;
     };
 
-    // TODO: We need a separate `GCData` for targets without threads.
     class GCData {
     public:
-        using CurrentTimeCallback = std::function<uint64_t()>;
-
-        GCData(GCSchedulerConfig& config, CurrentTimeCallback currentTimeCallbackNs) noexcept;
+        virtual ~GCData() = default;
 
         // May be called by different threads via `ThreadData`.
-        void OnSafePoint(ThreadData& threadData) noexcept;
+        virtual void OnSafePoint(ThreadData& threadData) noexcept = 0;
 
         // Always called by the GC thread.
-        void OnPerformFullGC() noexcept;
+        virtual void OnPerformFullGC() noexcept = 0;;
 
         // Can only be called once.
-        void SetScheduleGC(std::function<void()> scheduleGC) noexcept;
-
-    private:
-        void OnTimer() noexcept;
-
-        GCSchedulerConfig& config_;
-        CurrentTimeCallback currentTimeCallbackNs_;
-
-        std::atomic<uint64_t> timeOfLastGcNs_;
-        std::function<void()> scheduleGC_;
-        KStdUniquePtr<RepeatedTimer> timer_;
+        virtual void SetScheduleGC(std::function<void()> scheduleGC) noexcept = 0;;
     };
 
-    GCScheduler() noexcept : gcData_(config_, []() { return konan::getTimeNanos(); }) {}
+    static KStdUniquePtr<GCData> NewGCDataImpl(GCSchedulerConfig& config, std::function<uint64_t()> currentTimeCallbackNs) noexcept;
+
+    GCScheduler() noexcept : gcData_(NewGCDataImpl(config_, []() { return konan::getTimeNanos(); })) {}
 
     GCSchedulerConfig& config() noexcept { return config_; }
-    GCData& gcData() noexcept { return gcData_; }
+    GCData& gcData() noexcept { return *gcData_; }
 
     ThreadData NewThreadData() noexcept {
         return ThreadData(config_, [this](ThreadData& threadData) { gcData().OnSafePoint(threadData); });
@@ -142,7 +131,7 @@ public:
 
 private:
     GCSchedulerConfig config_;
-    GCData gcData_;
+    KStdUniquePtr<GCData> gcData_;
 };
 
 } // namespace gc
