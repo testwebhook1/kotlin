@@ -43,7 +43,8 @@ bitcode {
             "${target}LegacyMemoryManager",
             "${target}ExperimentalMemoryManagerNoop",
             "${target}ExperimentalMemoryManagerStms",
-            "${target}CommonGc",
+            "${target}CommonGcNoop",
+            "${target}CommonGcStms",
             "${target}SameThreadMsGc",
             "${target}NoopGc"
         )
@@ -116,8 +117,13 @@ bitcode {
         includeRuntime()
     }
 
-    create("common_gc", file("src/gc/common")) {
-        headersDirs += files("src/mm/cpp")
+    create("common_gc_noop", file("src/gc/common")) {
+        headersDirs += files("src/gc/noop/cpp", "src/mm/cpp")
+        includeRuntime()
+    }
+
+    create("common_gc_stms", file("src/gc/common")) {
+        headersDirs += files("src/gc/stms/cpp", "src/mm/cpp")
         includeRuntime()
     }
 
@@ -175,7 +181,7 @@ targetList.forEach { targetName ->
             listOf(
                 "${targetName}Runtime",
                 "${targetName}ExperimentalMemoryManagerStms",
-                "${targetName}CommonGc",
+                "${targetName}CommonGcStms",
                 "${targetName}SameThreadMsGc",
                 "${targetName}Release",
                 "${targetName}Mimalloc",
@@ -194,7 +200,7 @@ targetList.forEach { targetName ->
             listOf(
                 "${targetName}Runtime",
                 "${targetName}ExperimentalMemoryManagerStms",
-                "${targetName}CommonGc",
+                "${targetName}CommonGcStms",
                 "${targetName}SameThreadMsGc",
                 "${targetName}Release",
                 "${targetName}StdAlloc",
@@ -212,7 +218,7 @@ targetList.forEach { targetName ->
             listOf(
                 "${targetName}Runtime",
                 "${targetName}ExperimentalMemoryManagerNoop",
-                "${targetName}CommonGc",
+                "${targetName}CommonGcNoop",
                 "${targetName}NoopGc",
                 "${targetName}Release",
                 "${targetName}Mimalloc",
@@ -231,7 +237,7 @@ targetList.forEach { targetName ->
             listOf(
                 "${targetName}Runtime",
                 "${targetName}ExperimentalMemoryManagerNoop",
-                "${targetName}CommonGc",
+                "${targetName}CommonGcNoop",
                 "${targetName}NoopGc",
                 "${targetName}Release",
                 "${targetName}StdAlloc",
