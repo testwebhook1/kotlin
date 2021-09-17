@@ -297,6 +297,8 @@ internal class FunctionReferenceLowering(val context: Context): FileLoweringPass
                     }
                     require(overridden.isNotEmpty())
                     val function = functionReferenceClass.addFunction {
+                        startOffset = SYNTHETIC_OFFSET
+                        endOffset = SYNTHETIC_OFFSET
                         this.name = Name.identifier(name)
                         modality = Modality.FINAL
                         returnType = overridden[0].owner.returnType
