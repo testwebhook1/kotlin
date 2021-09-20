@@ -12,7 +12,7 @@ object A {
             val a = A
             val b = B
             val x = nestedObejcts.A.B.A
-            val y = this@A
+            val y = this<!AMBIGUOUS_LABEL!>@A<!>
         }
     }
 
@@ -22,8 +22,4 @@ object B {
     val c = A.B
 }
 
-val a = A
-val b = B
-val c = A.B
-val d = A.B.A
 val e = B.<!UNRESOLVED_REFERENCE!>A<!>.B
