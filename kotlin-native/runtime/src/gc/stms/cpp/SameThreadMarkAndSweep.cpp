@@ -51,10 +51,10 @@ struct FinalizeTraits {
     using ObjectFactory = mm::ObjectFactory<gc::SameThreadMarkAndSweep>;
 };
 
+static_assert(std::atomic<gc::SameThreadMarkAndSweep::SafepointFlag>::is_always_lock_free);
+
 // Global, because it's accessed on a hot path: avoid memory load from `this`.
-std::atomic<bool> interesting = false;
-// TODO: Move needsGc to a field.
-std::atomic<bool> needsGc = false;
+std::atomic<gc::SameThreadMarkAndSweep::SafepointFlag> gSafepointFlag = gc::SameThreadMarkAndSweep::SafepointFlag::kNone;
 
 } // namespace
 
@@ -72,8 +72,9 @@ ALWAYS_INLINE void gc::SameThreadMarkAndSweep::ThreadData::SafePointExceptionUnw
 
 void gc::SameThreadMarkAndSweep::ThreadData::SafePointAllocation(size_t size) noexcept {
     threadData_.gcScheduler().OnSafePointAllocation(size);
-    if (interesting) {
-        SafePointSlowPath();
+    SafepointFlag flag = gSafepointFlag.load();
+    if (flag != SafepointFlag::kNone) {
+        SafePointSlowPath(flag);
     }
 }
 
@@ -109,14 +110,17 @@ void gc::SameThreadMarkAndSweep::ThreadData::OnOOM(size_t size) noexcept {
 
 ALWAYS_INLINE void gc::SameThreadMarkAndSweep::ThreadData::SafePointRegular(size_t weight) noexcept {
     threadData_.gcScheduler().OnSafePointRegular(weight);
-    if (interesting) {
-        SafePointSlowPath();
+    SafepointFlag flag = gSafepointFlag.load();
+    if (flag != SafepointFlag::kNone) {
+        SafePointSlowPath(flag);
     }
 }
 
-NO_INLINE void gc::SameThreadMarkAndSweep::ThreadData::SafePointSlowPath() noexcept {
+NO_INLINE void gc::SameThreadMarkAndSweep::ThreadData::SafePointSlowPath(SafepointFlag flag) noexcept {
+    RuntimeAssert(flag != SafepointFlag::kNone, "Must've been handled by the caller");
+    // No need to check for kNeedsSuspend, because `suspendIfRequested` checks for its own atomic.
     threadData_.suspensionData().suspendIfRequested();
-    if (needsGc) {
+    if (flag == SafepointFlag::kNeedsGC) {
         RuntimeLogDebug({kTagGC}, "Attempt to GC at SafePoint");
         PerformFullGC();
     }
@@ -124,15 +128,14 @@ NO_INLINE void gc::SameThreadMarkAndSweep::ThreadData::SafePointSlowPath() noexc
 
 gc::SameThreadMarkAndSweep::SameThreadMarkAndSweep() noexcept {
     mm::GlobalData::Instance().gcScheduler().gcData().SetScheduleGC([]() {
-        needsGc = true;
-        interesting = true;
+        gSafepointFlag = SafepointFlag::kNeedsGC;
     });
 }
 
 mm::ObjectFactory<gc::SameThreadMarkAndSweep>::FinalizerQueue gc::SameThreadMarkAndSweep::PerformFullGC() noexcept {
     RuntimeLogDebug({kTagGC}, "Attempt to suspend threads by thread %d", konan::currentThreadId());
     auto timeStartUs = konan::getTimeMicros();
-    interesting = true;
+    gSafepointFlag = SafepointFlag::kNeedsSuspend;
     bool didSuspend = mm::SuspendThreads();
     auto timeSuspendUs = konan::getTimeMicros();
     if (!didSuspend) {
@@ -202,8 +205,7 @@ mm::ObjectFactory<gc::SameThreadMarkAndSweep>::FinalizerQueue gc::SameThreadMark
     // Can be unsafe, because we've stopped the world.
     auto objectsCountAfter = mm::GlobalData::Instance().objectFactory().GetSizeUnsafe();
 
-    interesting = false;
-    needsGc = false;
+    gSafepointFlag = SafepointFlag::kNone;
     mm::ResumeThreads();
     auto timeResumeUs = konan::getTimeMicros();
 
