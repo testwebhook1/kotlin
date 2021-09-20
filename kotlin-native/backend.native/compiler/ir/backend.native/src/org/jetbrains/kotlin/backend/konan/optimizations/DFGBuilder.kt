@@ -604,16 +604,19 @@ internal class ModuleDFGBuilder(val context: Context, val irModule: IrModuleFrag
                     }
                 }
 
-        private fun mapReturnType(actualType: IrType, returnType: IrType): DataFlowIR.Type {
-            val returnedInlinedClass = returnType.getInlinedClassNative()
+        private fun mapWrappedType(actualType: IrType, wrapperType: IrType): DataFlowIR.Type {
+            val wrapperInlinedClass = wrapperType.getInlinedClassNative()
             val actualInlinedClass = actualType.getInlinedClassNative()
 
-            return if (returnedInlinedClass == null) {
+            return if (wrapperInlinedClass == null) {
                 if (actualInlinedClass == null) symbolTable.mapType(actualType) else symbolTable.mapClassReferenceType(actualInlinedClass)
             } else {
-                symbolTable.mapType(returnType)
+                symbolTable.mapType(wrapperType)
             }
         }
+
+        private fun mapReturnType(actualType: IrType, returnType: IrType) = mapWrappedType(actualType, returnType)
+
 
         private fun getNode(expression: IrExpression): Scoped<DataFlowIR.Node> {
             if (expression is IrGetValue) {
@@ -682,6 +685,12 @@ internal class ModuleDFGBuilder(val context: Context, val irModule: IrModuleFrag
                                     DataFlowIR.Node.Null
                                 else
                                     DataFlowIR.Node.SimpleConst(symbolTable.mapType(value.type), value.value!!)
+
+                            is IrConstantPrimitive ->
+                                if (value.value.value == null)
+                                    DataFlowIR.Node.Null
+                                else
+                                    DataFlowIR.Node.SimpleConst(mapWrappedType(value.value.type, value.type), value.value.value!!)
 
                             is IrGetObjectValue -> {
                                 val constructor = if (value.type.isNothing()) {
@@ -865,8 +874,6 @@ internal class ModuleDFGBuilder(val context: Context, val irModule: IrModuleFrag
                                 expressionToEdge(value.argument) // Put argument as a separate vertex.
                                 DataFlowIR.Node.Const(symbolTable.mapType(value.type)) // All operators except casts are basically constants.
                             }
-
-                            is IrConstantPrimitive -> getNode(value.value).value
 
                             is IrConstantArray ->
                                 DataFlowIR.Node.Singleton(symbolTable.mapType(value.type), null, null)
