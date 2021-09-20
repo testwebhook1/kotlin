@@ -7,33 +7,53 @@ package org.jetbrains.kotlin.resolve.calls.tower
 
 import org.jetbrains.kotlin.config.LanguageFeature
 import org.jetbrains.kotlin.config.LanguageVersionSettings
-import org.jetbrains.kotlin.descriptors.CallableDescriptor
-import org.jetbrains.kotlin.descriptors.ValueParameterDescriptor
+import org.jetbrains.kotlin.descriptors.*
+import org.jetbrains.kotlin.descriptors.synthetic.SyntheticMemberDescriptor
 import org.jetbrains.kotlin.psi.Call
 import org.jetbrains.kotlin.psi.ValueArgument
 import org.jetbrains.kotlin.resolve.calls.components.isVararg
+import org.jetbrains.kotlin.resolve.calls.inference.components.FreshVariableNewTypeSubstitutor
 import org.jetbrains.kotlin.resolve.calls.inference.components.NewTypeSubstitutor
+import org.jetbrains.kotlin.resolve.calls.inference.components.NewTypeSubstitutorByConstructorMap
+import org.jetbrains.kotlin.resolve.calls.inference.substitute
+import org.jetbrains.kotlin.resolve.calls.inference.substituteAndApproximateTypes
 import org.jetbrains.kotlin.resolve.calls.model.*
 import org.jetbrains.kotlin.resolve.calls.smartcasts.DataFlowInfo
+import org.jetbrains.kotlin.resolve.calls.util.isNotSimpleCall
+import org.jetbrains.kotlin.resolve.scopes.receivers.ReceiverValue
+import org.jetbrains.kotlin.types.KotlinType
+import org.jetbrains.kotlin.types.TypeApproximator
+import org.jetbrains.kotlin.types.isFlexible
+import org.jetbrains.kotlin.types.typeUtil.makeNotNullable
+import org.jetbrains.kotlin.types.typeUtil.makeNullable
 import org.jetbrains.kotlin.utils.SmartList
 import org.jetbrains.kotlin.utils.addToStdlib.compactIfPossible
 
 sealed class NewAbstractResolvedCall<D : CallableDescriptor> : ResolvedCall<D> {
     abstract val argumentMappingByOriginal: Map<ValueParameterDescriptor, ResolvedCallArgument>
-    abstract val kotlinCall: KotlinCall
+    abstract val kotlinCall: KotlinCall?
     abstract val languageVersionSettings: LanguageVersionSettings
     abstract val resolvedCallAtom: ResolvedCallAtom?
     abstract val psiKotlinCall: PSIKotlinCall
-    abstract val isCompleted: Boolean
+    abstract val typeApproximator: TypeApproximator
 
     protected var argumentToParameterMap: Map<ValueArgument, ArgumentMatchImpl>? = null
     protected var _valueArguments: Map<ValueParameterDescriptor, ResolvedValueArgument>? = null
 
     private var nonTrivialUpdatedResultInfo: DataFlowInfo? = null
 
+    protected abstract var _extensionReceiver: ReceiverValue?
+    protected abstract var _dispatchReceiver: ReceiverValue?
+
+    open var isCompleted: Boolean = false
+        protected set
+
     abstract fun containsOnlyOnlyInputTypesErrors(): Boolean
 
-    override fun getCall(): Call = kotlinCall.psiKotlinCall.psiCall
+    override fun getExtensionReceiver(): ReceiverValue? = _extensionReceiver
+    override fun getDispatchReceiver(): ReceiverValue? = _dispatchReceiver
+
+    override fun getCall(): Call = psiKotlinCall.psiCall
 
     override fun getValueArguments(): Map<ValueParameterDescriptor, ResolvedValueArgument> {
         if (_valueArguments == null) {
@@ -47,6 +67,100 @@ sealed class NewAbstractResolvedCall<D : CallableDescriptor> : ResolvedCall<D> {
     }
 
     open fun setResultingSubstitutor(substitutor: NewTypeSubstitutor?) {}
+
+    abstract val freshSubstitutor: FreshVariableNewTypeSubstitutor?
+
+    private fun CallableDescriptor.substituteInferredVariablesAndApproximate(
+        substitutor: NewTypeSubstitutor?,
+        shouldApproximate: Boolean = true
+    ): CallableDescriptor {
+        val inferredTypeVariablesSubstitutor = substitutor ?: FreshVariableNewTypeSubstitutor.Empty
+
+        val freshVariablesSubstituted = freshSubstitutor?.let(::substitute) ?: this
+        val knownTypeParameterSubstituted = resolvedCallAtom?.knownParametersSubstitutor?.let(freshVariablesSubstituted::substitute)
+            ?: freshVariablesSubstituted
+
+        return knownTypeParameterSubstituted.substituteAndApproximateTypes(
+            inferredTypeVariablesSubstitutor,
+            typeApproximator = if (shouldApproximate) typeApproximator else null,
+            positionDependentApproximation
+        )
+    }
+
+    protected open val positionDependentApproximation = false
+
+    protected fun substitutedResultingDescriptor(substitutor: NewTypeSubstitutor?) =
+        when (val candidateDescriptor = candidateDescriptor) {
+            is ClassConstructorDescriptor, is SyntheticMemberDescriptor<*> -> {
+                val explicitTypeArguments = resolvedCallAtom?.atom?.typeArguments?.filterIsInstance<SimpleTypeArgument>() ?: emptyList()
+
+                candidateDescriptor.substituteInferredVariablesAndApproximate(
+                    getSubstitutorWithoutFlexibleTypes(substitutor, explicitTypeArguments),
+                )
+            }
+            is FunctionDescriptor -> {
+                candidateDescriptor.substituteInferredVariablesAndApproximate(substitutor, candidateDescriptor.isNotSimpleCall())
+            }
+            is PropertyDescriptor -> {
+                if (candidateDescriptor.isNotSimpleCall()) {
+                    candidateDescriptor.substituteInferredVariablesAndApproximate(substitutor)
+                } else {
+                    candidateDescriptor
+                }
+            }
+            else -> candidateDescriptor
+        }
+
+    private fun getSubstitutorWithoutFlexibleTypes(
+        currentSubstitutor: NewTypeSubstitutor?,
+        explicitTypeArguments: List<SimpleTypeArgument>,
+    ): NewTypeSubstitutor? {
+        if (currentSubstitutor !is NewTypeSubstitutorByConstructorMap || explicitTypeArguments.isEmpty()) return currentSubstitutor
+        if (!currentSubstitutor.map.any { (_, value) -> value.isFlexible() }) return currentSubstitutor
+
+        val typeVariables = freshSubstitutor?.freshVariables ?: return null
+        val newSubstitutorMap = currentSubstitutor.map.toMutableMap()
+
+        explicitTypeArguments.forEachIndexed { index, typeArgument ->
+            val typeVariableConstructor = typeVariables.getOrNull(index)?.freshTypeConstructor ?: return@forEachIndexed
+
+            newSubstitutorMap[typeVariableConstructor] =
+                newSubstitutorMap[typeVariableConstructor]?.withNullabilityFromExplicitTypeArgument(typeArgument)
+                    ?: return@forEachIndexed
+        }
+
+        return NewTypeSubstitutorByConstructorMap(newSubstitutorMap)
+    }
+
+    private fun KotlinType.withNullabilityFromExplicitTypeArgument(typeArgument: SimpleTypeArgument) =
+        (if (typeArgument.type.isMarkedNullable) makeNullable() else makeNotNullable()).unwrap()
+
+    private fun updateDispatchReceiverType(newType: KotlinType) {
+        if (_dispatchReceiver?.type == newType) return
+        _dispatchReceiver = _dispatchReceiver?.replaceType(newType)
+    }
+
+    private fun updateExtensionReceiverType(newType: KotlinType) {
+        if (_extensionReceiver?.type == newType) return
+        _extensionReceiver = _extensionReceiver?.replaceType(newType)
+    }
+
+    fun substituteReceivers(substitutor: NewTypeSubstitutor?) {
+        if (substitutor != null) {
+            // todo: add asset that we do not complete call many times
+            isCompleted = true
+
+            _dispatchReceiver?.type?.let {
+                val newType = substitutor.safeSubstitute(it.unwrap())
+                updateDispatchReceiverType(newType)
+            }
+
+            _extensionReceiver?.type?.let {
+                val newType = substitutor.safeSubstitute(it.unwrap())
+                updateExtensionReceiverType(newType)
+            }
+        }
+    }
 
     override fun getValueArgumentsByIndex(): List<ResolvedValueArgument>? {
         val arguments = ArrayList<ResolvedValueArgument?>(candidateDescriptor.valueParameters.size)
@@ -75,14 +189,14 @@ sealed class NewAbstractResolvedCall<D : CallableDescriptor> : ResolvedCall<D> {
     }
 
     override fun getDataFlowInfoForArguments() = object : DataFlowInfoForArguments {
-        override fun getResultInfo(): DataFlowInfo = nonTrivialUpdatedResultInfo ?: kotlinCall.psiKotlinCall.resultDataFlowInfo
+        override fun getResultInfo(): DataFlowInfo = nonTrivialUpdatedResultInfo ?: psiKotlinCall.resultDataFlowInfo
 
         override fun getInfo(valueArgument: ValueArgument): DataFlowInfo {
-            val externalPsiCallArgument = kotlinCall.externalArgument?.psiCallArgument
+            val externalPsiCallArgument = kotlinCall?.externalArgument?.psiCallArgument
             if (externalPsiCallArgument?.valueArgument == valueArgument) {
                 return externalPsiCallArgument.dataFlowInfoAfterThisArgument
             }
-            return kotlinCall.psiKotlinCall.dataFlowInfoForArguments.getInfo(valueArgument)
+            return psiKotlinCall.dataFlowInfoForArguments.getInfo(valueArgument)
         }
     }
 
@@ -92,7 +206,7 @@ sealed class NewAbstractResolvedCall<D : CallableDescriptor> : ResolvedCall<D> {
         assert(nonTrivialUpdatedResultInfo == null) {
             "Attempt to rewrite resulting dataFlowInfo enhancement for call: $kotlinCall"
         }
-        nonTrivialUpdatedResultInfo = dataFlowInfo.and(kotlinCall.psiKotlinCall.resultDataFlowInfo)
+        nonTrivialUpdatedResultInfo = dataFlowInfo.and(psiKotlinCall.resultDataFlowInfo)
     }
 
     abstract fun argumentToParameterMap(

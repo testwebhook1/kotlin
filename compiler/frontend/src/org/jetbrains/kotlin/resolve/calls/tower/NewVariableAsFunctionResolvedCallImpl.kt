@@ -5,12 +5,13 @@
 
 package org.jetbrains.kotlin.resolve.calls.tower
 
-import org.jetbrains.kotlin.descriptors.CallableDescriptor
-import org.jetbrains.kotlin.descriptors.FunctionDescriptor
-import org.jetbrains.kotlin.descriptors.ValueParameterDescriptor
-import org.jetbrains.kotlin.descriptors.VariableDescriptor
+import org.jetbrains.kotlin.descriptors.*
+import org.jetbrains.kotlin.resolve.calls.inference.components.FreshVariableNewTypeSubstitutor
 import org.jetbrains.kotlin.resolve.calls.model.ResolvedValueArgument
 import org.jetbrains.kotlin.resolve.calls.model.VariableAsFunctionResolvedCall
+import org.jetbrains.kotlin.resolve.scopes.receivers.ReceiverValue
+import org.jetbrains.kotlin.types.KotlinType
+import org.jetbrains.kotlin.types.TypeApproximator
 import org.jetbrains.kotlin.utils.addToStdlib.cast
 
 class NewVariableAsFunctionResolvedCallImpl(
@@ -36,5 +37,10 @@ class NewVariableAsFunctionResolvedCallImpl(
         resultingDescriptor: CallableDescriptor,
         valueArguments: Map<ValueParameterDescriptor, ResolvedValueArgument>
     ) = functionCall.argumentToParameterMap(resultingDescriptor, valueArguments)
-    override val isCompleted: Boolean = functionCall.isCompleted
+
+    override var isCompleted: Boolean = functionCall.isCompleted
+    override val typeApproximator: TypeApproximator = functionCall.typeApproximator
+    override val freshSubstitutor: FreshVariableNewTypeSubstitutor? = functionCall.freshSubstitutor
+    override var _extensionReceiver: ReceiverValue? = functionCall.extensionReceiver
+    override var _dispatchReceiver: ReceiverValue? = functionCall.dispatchReceiver
 }

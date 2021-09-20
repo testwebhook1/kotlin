@@ -466,7 +466,11 @@ class ResolvedAtomCompleter(
             else -> null
         }
         val dataFlowInfo = resolvedAtom.atom.psiCallArgument.dataFlowInfoAfterThisArgument
-        val resolvedCall = NewCallableReferenceResolvedCall<CallableDescriptor>(resolvedAtom, typeApproximator, null)
+        val resolvedCall = NewCallableReferenceResolvedCall<CallableDescriptor>(
+            resolvedAtom,
+            typeApproximator,
+            expressionTypingServices.languageVersionSettings
+        )
 
         return completeCallableReference(callableReferenceCallCandidate, descriptor, resolvedCall, dataFlowInfo)
             .also { resolvedAtom.completed = true }
