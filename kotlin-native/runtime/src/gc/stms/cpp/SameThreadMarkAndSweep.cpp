@@ -71,12 +71,13 @@ ALWAYS_INLINE void gc::SameThreadMarkAndSweep::ThreadData::SafePointExceptionUnw
 }
 
 void gc::SameThreadMarkAndSweep::ThreadData::SafePointAllocation(size_t size) noexcept {
-    threadData_.suspensionData().suspendIfRequested();
-    auto& scheduler = threadData_.gcScheduler();
-    scheduler.OnSafePointAllocation(size);
-    if (needsGc) {
-        RuntimeLogDebug({kTagGC}, "Attempt to GC at SafePointAllocation size=%zu", size);
-        PerformFullGC();
+    threadData_.gcScheduler().OnSafePointAllocation(size);
+    if (interesting) {
+        threadData_.suspensionData().suspendIfRequested();
+        if (needsGc) {
+            RuntimeLogDebug({kTagGC}, "Attempt to GC at SafePointAllocation size=%zu", size);
+            PerformFullGC();
+        }
     }
 }
 
