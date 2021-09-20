@@ -384,7 +384,7 @@ class KotlinToResolvedCallTransformer(
         )
     }
 
-    private fun getResolvedCallForArgumentExpression(expression: KtExpression, context: BasicCallResolutionContext) =
+    fun getResolvedCallForArgumentExpression(expression: KtExpression, context: BasicCallResolutionContext) =
         if (!ExpressionTypingUtils.dependsOnExpectedType(expression))
             null
         else

@@ -3,7 +3,7 @@
  * Use of this source code is governed by the Apache 2.0 license that can be found in the license/LICENSE.txt file.
  */
 
-package org.jetbrains.kotlin.resolve.calls.components
+package org.jetbrains.kotlin.resolve.calls.model
 
 import org.jetbrains.kotlin.builtins.KotlinBuiltIns
 import org.jetbrains.kotlin.builtins.ReflectionTypes
@@ -13,35 +13,52 @@ import org.jetbrains.kotlin.config.ApiVersion
 import org.jetbrains.kotlin.config.LanguageFeature
 import org.jetbrains.kotlin.descriptors.*
 import org.jetbrains.kotlin.descriptors.annotations.Annotations
-import org.jetbrains.kotlin.resolve.calls.inference.ConstraintSystemOperation
-import org.jetbrains.kotlin.resolve.calls.model.*
+import org.jetbrains.kotlin.resolve.calls.components.*
+import org.jetbrains.kotlin.resolve.calls.components.candidate.CallableReferenceResolutionCandidate
+import org.jetbrains.kotlin.resolve.calls.inference.model.ConstraintStorage
+import org.jetbrains.kotlin.resolve.calls.inference.model.TypeVariableTypeConstructor
 import org.jetbrains.kotlin.resolve.calls.tasks.ExplicitReceiverKind
 import org.jetbrains.kotlin.resolve.calls.tower.*
 import org.jetbrains.kotlin.resolve.descriptorUtil.builtIns
 import org.jetbrains.kotlin.resolve.descriptorUtil.isCompanionObject
 import org.jetbrains.kotlin.resolve.scopes.receivers.DetailedReceiver
+import org.jetbrains.kotlin.resolve.scopes.receivers.ReceiverValue
 import org.jetbrains.kotlin.resolve.scopes.receivers.ReceiverValueWithSmartCastInfo
-import org.jetbrains.kotlin.types.ErrorUtils
-import org.jetbrains.kotlin.types.KotlinType
-import org.jetbrains.kotlin.types.UnwrappedType
-import org.jetbrains.kotlin.types.Variance
+import org.jetbrains.kotlin.types.*
 import org.jetbrains.kotlin.types.expressions.CoercionStrategy
 import org.jetbrains.kotlin.types.typeUtil.isUnit
 import org.jetbrains.kotlin.utils.SmartList
-import org.jetbrains.kotlin.utils.addIfNotNull
 
 class CallableReferencesCandidateFactory(
-    val argument: CallableReferenceKotlinCallArgument,
+    val kotlinCall: CallableReferenceResolutionAtom,
     val callComponents: KotlinCallComponents,
     val scopeTower: ImplicitScopeTower,
-    val compatibilityChecker: ((ConstraintSystemOperation) -> Unit) -> Unit,
     val expectedType: UnwrappedType?,
-    private val csBuilder: ConstraintSystemOperation,
+    private val baseSystem: ConstraintStorage?,
     private val resolutionCallbacks: KotlinResolutionCallbacks
 ) : CandidateFactory<CallableReferenceResolutionCandidate> {
+    override fun createErrorCandidate(): CallableReferenceResolutionCandidate {
+        val errorScope = ErrorUtils.createErrorScope("Error resolution candidate for call $kotlinCall")
+        val errorDescriptor = errorScope.getContributedFunctions(kotlinCall.rhsName, scopeTower.location).first()
+
+        val (reflectionCandidateType, callableReferenceAdaptation) = buildReflectionType(
+            errorDescriptor,
+            dispatchReceiver = null,
+            extensionReceiver = null,
+            expectedType,
+            callComponents.builtIns,
+            buildTypeWithConversions = kotlinCall is CallableReferenceKotlinCallArgument
+        )
+
+        return CallableReferenceResolutionCandidate(
+            errorDescriptor, dispatchReceiver = null, extensionReceiver = null,
+            ExplicitReceiverKind.NO_EXPLICIT_RECEIVER, reflectionCandidateType, callableReferenceAdaptation,
+            kotlinCall, callComponents, scopeTower, resolutionCallbacks, expectedType, baseSystem
+        )
+    }
 
     fun createCallableProcessor(explicitReceiver: DetailedReceiver?) =
-        createCallableReferenceProcessor(scopeTower, argument.rhsName, this, explicitReceiver)
+        createCallableReferenceProcessor(scopeTower, kotlinCall.rhsName, this, explicitReceiver)
 
     override fun createCandidate(
         towerCandidate: CandidateWithBoundDispatchReceiver,
@@ -59,18 +76,20 @@ class CallableReferencesCandidateFactory(
             dispatchCallableReceiver,
             extensionCallableReceiver,
             expectedType,
-            callComponents.builtIns
+            callComponents.builtIns,
+            // conversions aren't needed for top-level callable references
+            buildTypeWithConversions = kotlinCall is CallableReferenceKotlinCallArgument
         )
 
-        fun createReferenceCandidate(): CallableReferenceResolutionCandidate =
-            CallableReferenceResolutionCandidate(
-                candidateDescriptor, dispatchCallableReceiver, extensionCallableReceiver,
-                explicitReceiverKind, reflectionCandidateType, callableReferenceAdaptation, diagnostics
-            )
+        fun createCallableReferenceCallCandidate(diagnostics: List<KotlinCallDiagnostic>) = CallableReferenceResolutionCandidate(
+            candidateDescriptor, dispatchCallableReceiver, extensionCallableReceiver,
+            explicitReceiverKind, reflectionCandidateType, callableReferenceAdaptation,
+            kotlinCall, callComponents, scopeTower, resolutionCallbacks, expectedType, baseSystem
+        ).also { diagnostics.forEach(it::addDiagnostic) }
 
-        if (callComponents.statelessCallbacks.isHiddenInResolution(candidateDescriptor, argument, resolutionCallbacks)) {
+        if (callComponents.statelessCallbacks.isHiddenInResolution(candidateDescriptor, kotlinCall.call, resolutionCallbacks)) {
             diagnostics.add(HiddenDescriptor)
-            return createReferenceCandidate()
+            return createCallableReferenceCallCandidate(diagnostics)
         }
 
         if (needCompatibilityResolveForCallableReference(callableReferenceAdaptation, candidateDescriptor)) {
@@ -79,7 +98,7 @@ class CallableReferencesCandidateFactory(
 
         if (callableReferenceAdaptation != null && expectedType != null && hasNonTrivialAdaptation(callableReferenceAdaptation)) {
             if (!expectedType.isFunctionType && !expectedType.isSuspendFunctionType) { // expectedType has some reflection type
-                diagnostics.add(AdaptedCallableReferenceIsUsedWithReflection(argument))
+                diagnostics.add(AdaptedCallableReferenceIsUsedWithReflection(kotlinCall))
             }
         }
 
@@ -87,41 +106,17 @@ class CallableReferencesCandidateFactory(
             callableReferenceAdaptation.defaults != 0 &&
             !callComponents.languageVersionSettings.supportsFeature(LanguageFeature.FunctionReferenceWithDefaultValueAsOtherType)
         ) {
-            diagnostics.add(CallableReferencesDefaultArgumentUsed(argument, candidateDescriptor, callableReferenceAdaptation.defaults))
+            diagnostics.add(CallableReferencesDefaultArgumentUsed(kotlinCall, candidateDescriptor, callableReferenceAdaptation.defaults))
         }
 
         if (candidateDescriptor !is CallableMemberDescriptor) {
-            return CallableReferenceResolutionCandidate(
-                candidateDescriptor, dispatchCallableReceiver, extensionCallableReceiver,
-                explicitReceiverKind, reflectionCandidateType, callableReferenceAdaptation,
-                listOf(NotCallableMemberReference(argument, candidateDescriptor))
-            )
+            return createCallableReferenceCallCandidate(listOf(NotCallableMemberReference(kotlinCall, candidateDescriptor)))
         }
 
         diagnostics.addAll(towerCandidate.diagnostics)
         // todo smartcast on receiver diagnostic and CheckInstantiationOfAbstractClass
 
-        compatibilityChecker {
-            if (it.hasContradiction) return@compatibilityChecker
-
-            val (_, visibilityError) = it.checkCallableReference(
-                argument, dispatchCallableReceiver, extensionCallableReceiver, candidateDescriptor,
-                reflectionCandidateType, expectedType, scopeTower.lexicalScope.ownerDescriptor
-            )
-
-            diagnostics.addIfNotNull(visibilityError)
-
-            if (it.hasContradiction) diagnostics.add(
-                CallableReferenceNotCompatible(
-                    argument,
-                    candidateDescriptor,
-                    expectedType,
-                    reflectionCandidateType
-                )
-            )
-        }
-
-        return createReferenceCandidate()
+        return createCallableReferenceCallCandidate(diagnostics)
     }
 
     private fun needCompatibilityResolveForCallableReference(
@@ -129,7 +124,7 @@ class CallableReferencesCandidateFactory(
         candidate: CallableDescriptor
     ): Boolean {
         // KT-13934: reference to companion object member via class name
-        if (candidate.containingDeclaration.isCompanionObject() && argument.lhsResult is LHSResult.Type) return true
+        if (candidate.containingDeclaration.isCompanionObject() && kotlinCall.lhsResult is LHSResult.Type) return true
 
         if (callableReferenceAdaptation == null) return false
 
@@ -154,7 +149,7 @@ class CallableReferencesCandidateFactory(
     ): CallableReferenceAdaptation? {
         if (callComponents.languageVersionSettings.apiVersion < ApiVersion.KOTLIN_1_4) return null
 
-        if (expectedType == null) return null
+        if (expectedType == null || TypeUtils.noExpectedType(expectedType)) return null
 
         // Do not adapt references against KCallable type as it's impossible to map defaults/vararg to absent parameters of KCallable
         if (ReflectionTypes.hasKCallableTypeFqName(expectedType)) return null
@@ -302,7 +297,7 @@ class CallableReferencesCandidateFactory(
         return when (varargMappingState) {
             VarargMappingState.UNMAPPED -> {
                 if (KotlinBuiltIns.isArrayOrPrimitiveArray(expectedParameterType) ||
-                    csBuilder.isTypeVariable(expectedParameterType)
+                    expectedParameterType.constructor is TypeVariableTypeConstructor
                 ) {
                     val arrayType = builtins.getPrimitiveArrayKotlinTypeByPrimitiveKotlinType(elementType)
                         ?: builtins.getArrayType(Variance.OUT_VARIANCE, elementType)
@@ -327,7 +322,8 @@ class CallableReferencesCandidateFactory(
         dispatchReceiver: CallableReceiver?,
         extensionReceiver: CallableReceiver?,
         expectedType: UnwrappedType?,
-        builtins: KotlinBuiltIns
+        builtins: KotlinBuiltIns,
+        buildTypeWithConversions: Boolean = true
     ): Pair<UnwrappedType, CallableReferenceAdaptation?> {
         val argumentsAndReceivers = ArrayList<KotlinType>(descriptor.valueParameters.size + 2)
 
@@ -365,7 +361,7 @@ class CallableReferencesCandidateFactory(
                     builtins = builtins
                 )
 
-                val returnType = if (callableReferenceAdaptation == null) {
+                val returnType = if (callableReferenceAdaptation == null || !buildTypeWithConversions) {
                     descriptor.valueParameters.mapTo(argumentsAndReceivers) { it.type }
                     descriptorReturnType
                 } else {
@@ -380,7 +376,8 @@ class CallableReferencesCandidateFactory(
                 }
 
                 val suspendConversionStrategy = callableReferenceAdaptation?.suspendConversionStrategy
-                val isSuspend = descriptor.isSuspend || suspendConversionStrategy == SuspendConversionStrategy.SUSPEND_CONVERSION
+                val isSuspend = descriptor.isSuspend ||
+                        (suspendConversionStrategy == SuspendConversionStrategy.SUSPEND_CONVERSION && buildTypeWithConversions)
 
                 callComponents.reflectionTypes.getKFunctionType(
                     Annotations.EMPTY, null, argumentsAndReceivers, null,
@@ -397,7 +394,7 @@ class CallableReferencesCandidateFactory(
     private fun toCallableReceiver(receiver: ReceiverValueWithSmartCastInfo, isExplicit: Boolean): CallableReceiver {
         if (!isExplicit) return CallableReceiver.ScopeReceiver(receiver)
 
-        return when (val lhsResult = argument.lhsResult) {
+        return when (val lhsResult = kotlinCall.lhsResult) {
             is LHSResult.Expression -> CallableReceiver.ExplicitValueReceiver(receiver)
             is LHSResult.Type -> {
                 if (lhsResult.qualifier?.classValueReceiver?.type == receiver.receiverValue.type) {
@@ -410,4 +407,8 @@ class CallableReferencesCandidateFactory(
             else -> throw IllegalStateException("Unsupported kind of lhsResult: $lhsResult")
         }
     }
+
+    // todo investigate similar code in CheckVisibility
+    private val CallableReceiver.asReceiverValueForVisibilityChecks: ReceiverValue
+        get() = receiver.receiverValue
 }
