@@ -149,6 +149,8 @@ internal object InlineFunctionBodyReferenceSerializer {
     }
 }
 
+// [binaryType] is needed in case a field is of a private inline class type (which can't be deserialized).
+// But it is safe to just set the field's type to the primitive type the inline class will be erased to.
 class SerializedClassFieldInfo(val name: Int, val binaryType: Int, val type: Int, val flags: Int) {
     companion object {
         const val FLAG_IS_CONST = 1
