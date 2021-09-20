@@ -5,7 +5,6 @@
 
 package org.jetbrains.kotlin.analysis.api.fir.symbols.annotations
 
-import org.jetbrains.kotlin.analysis.api.fir.KtSymbolByFirBuilder
 import org.jetbrains.kotlin.fir.FirSession
 import org.jetbrains.kotlin.fir.declarations.FirAnnotatedDeclaration
 import org.jetbrains.kotlin.fir.resolve.fullyExpandedType
@@ -24,10 +23,8 @@ import org.jetbrains.kotlin.name.ClassId
 internal fun FirAnnotation.getClassId(session: FirSession): ClassId? =
     coneClassLikeType?.fullyExpandedType(session)?.classId
 
-internal fun FirRefWithValidityCheck<FirAnnotatedDeclaration>.toAnnotationsList(
-    builder: KtSymbolByFirBuilder
-) = withFir { fir ->
-    fir.annotations.map { KtFirAnnotationCall(this, it, builder) }
+internal fun FirRefWithValidityCheck<FirAnnotatedDeclaration>.toAnnotationsList() = withFir { fir ->
+    fir.annotations.map { KtFirAnnotationCall(this, it) }
 }
 
 internal fun FirRefWithValidityCheck<FirAnnotatedDeclaration>.containsAnnotation(classId: ClassId): Boolean =
