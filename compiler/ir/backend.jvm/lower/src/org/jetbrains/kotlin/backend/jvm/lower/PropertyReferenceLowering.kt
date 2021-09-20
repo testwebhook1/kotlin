@@ -272,7 +272,9 @@ internal class PropertyReferenceLowering(val context: JvmBackendContext) : IrEle
             return loadCompiledInlineFunction(containerId, signature.asmMethod, isSuspend, hasMangledReturnType, context.state)
                 .node.usesLocalExceptParameterNullCheck(localIndex)
         }
-        return hasChild { it is IrGetValue && it.symbol == valueParameters[index].symbol }
+        val resolved = resolveFakeOverride() ?: this
+        val parameterSymbol = resolved.valueParameters[index].symbol
+        return resolved.hasChild { it is IrGetValue && it.symbol == parameterSymbol }
     }
 
     // Assuming that the only functions that take PROPERTY_REFERENCE_FOR_DELEGATE-kind references are getValue,
