@@ -8,7 +8,6 @@ package org.jetbrains.kotlin.backend.konan.lower
 import org.jetbrains.kotlin.backend.common.deepCopyWithVariables
 import org.jetbrains.kotlin.backend.common.lower.AnnotationImplementationTransformer
 import org.jetbrains.kotlin.backend.konan.*
-import org.jetbrains.kotlin.ir.builders.*
 import org.jetbrains.kotlin.ir.declarations.*
 import org.jetbrains.kotlin.ir.expressions.*
 import org.jetbrains.kotlin.ir.types.*
@@ -24,24 +23,11 @@ internal class NativeAnnotationImplementationTransformer(context: Context, irFil
 
     private val arrayContentEqualsMap = context.ir.symbols.arraysContentEquals
 
-    override fun generatedEquals(irBuilder: IrBlockBodyBuilder, type: IrType, arg1: IrExpression, arg2: IrExpression): IrExpression {
-        return if (type.isArray() || type.isPrimitiveArray()) {
-            val requiredSymbol =
-                    if (type.isPrimitiveArray())
-                        arrayContentEqualsMap[type]
-                    else
-                        arrayContentEqualsMap.entries.singleOrNull { (k, _) -> k.isArray() }?.value
-            if (requiredSymbol == null) {
-                error("Can't find an Arrays.contentEquals method for array type ${type.render()}")
-            }
-            irBuilder.irCall(
-                    requiredSymbol
-            ).apply {
-                extensionReceiver = arg1
-                putValueArgument(0, arg2)
-            }
-        } else super.generatedEquals(irBuilder, type, arg1, arg2)
-    }
+    override fun getArrayContentEqualsSymbol(type: IrType) =
+            when {
+                type.isPrimitiveArray() -> arrayContentEqualsMap[type]
+                else -> arrayContentEqualsMap.entries.singleOrNull { (k, _) -> k.isArray() }?.value
+            } ?: error("Can't find an Arrays.contentEquals method for array type ${type.render()}")
 
     override fun IrClass.platformSetup() {
         visibility = DescriptorVisibilities.PRIVATE

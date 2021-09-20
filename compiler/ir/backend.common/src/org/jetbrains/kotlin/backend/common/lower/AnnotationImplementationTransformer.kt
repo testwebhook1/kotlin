@@ -17,8 +17,10 @@ import org.jetbrains.kotlin.ir.declarations.*
 import org.jetbrains.kotlin.ir.expressions.IrConstructorCall
 import org.jetbrains.kotlin.ir.expressions.IrExpression
 import org.jetbrains.kotlin.ir.expressions.impl.IrConstructorCallImpl
+import org.jetbrains.kotlin.ir.symbols.IrFunctionSymbol
 import org.jetbrains.kotlin.ir.types.IrType
 import org.jetbrains.kotlin.ir.types.classOrNull
+import org.jetbrains.kotlin.ir.types.isArray
 import org.jetbrains.kotlin.ir.util.*
 import org.jetbrains.kotlin.ir.visitors.transformChildrenVoid
 import org.jetbrains.kotlin.name.Name
@@ -114,8 +116,24 @@ abstract class AnnotationImplementationTransformer(val context: BackendContext, 
 
     open fun IrBuilderWithScope.kClassExprToJClassIfNeeded(irExpression: IrExpression): IrExpression = irExpression
 
-    open fun generatedEquals(irBuilder: IrBlockBodyBuilder, type: IrType, arg1: IrExpression, arg2: IrExpression): IrExpression =
-        irBuilder.irEquals(arg1, arg2)
+    abstract fun getArrayContentEqualsSymbol(type: IrType): IrFunctionSymbol
+
+    fun generatedEquals(irBuilder: IrBlockBodyBuilder, type: IrType, arg1: IrExpression, arg2: IrExpression): IrExpression =
+        if (type.isArray() || type.isPrimitiveArray()) {
+            val requiredSymbol = getArrayContentEqualsSymbol(type)
+            irBuilder.irCall(
+                requiredSymbol
+            ).apply {
+                if (requiredSymbol.owner.extensionReceiverParameter != null) {
+                    extensionReceiver = arg1
+                    putValueArgument(0, arg2)
+                } else {
+                    putValueArgument(0, arg1)
+                    putValueArgument(1, arg2)
+                }
+            }
+        } else
+            irBuilder.irEquals(arg1, arg2)
 
     fun IrClass.createGeneratedFunctions(): GeneratedFunctions {
         val creator = MethodsFromAnyGeneratorForLowerings(context, this, ANNOTATION_IMPLEMENTATION)

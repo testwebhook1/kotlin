@@ -29,6 +29,7 @@ import org.jetbrains.kotlin.ir.expressions.impl.IrDelegatingConstructorCallImpl
 import org.jetbrains.kotlin.ir.expressions.impl.IrGetValueImpl
 import org.jetbrains.kotlin.ir.expressions.impl.IrSetFieldImpl
 import org.jetbrains.kotlin.ir.symbols.IrClassSymbol
+import org.jetbrains.kotlin.ir.symbols.IrFunctionSymbol
 import org.jetbrains.kotlin.ir.types.*
 import org.jetbrains.kotlin.ir.util.*
 import org.jetbrains.kotlin.utils.addToStdlib.safeAs
@@ -78,20 +79,13 @@ class JvmAnnotationImplementationTransformer(val jvmContext: JvmBackendContext, 
         }
     }
 
-    override fun generatedEquals(irBuilder: IrBlockBodyBuilder, type: IrType, arg1: IrExpression, arg2: IrExpression): IrExpression {
-        return if (type.isArray() || type.isPrimitiveArray()) {
-            val targetType = if (type.isPrimitiveArray()) type else jvmContext.ir.symbols.arrayOfAnyNType
-            val requiredSymbol = jvmContext.ir.symbols.arraysClass.owner.findDeclaration<IrFunction> {
-                it.name.asString() == "equals" && it.valueParameters.size == 2 && it.valueParameters.first().type == targetType
-            }
-            requireNotNull(requiredSymbol) { "Can't find Arrays.equals method for type ${targetType.render()}" }
-            irBuilder.irCall(
-                requiredSymbol.symbol
-            ).apply {
-                putValueArgument(0, arg1)
-                putValueArgument(1, arg2)
-            }
-        } else super.generatedEquals(irBuilder, type, arg1, arg2)
+    override fun getArrayContentEqualsSymbol(type: IrType): IrFunctionSymbol {
+        val targetType = if (type.isPrimitiveArray()) type else jvmContext.ir.symbols.arrayOfAnyNType
+        val requiredSymbol = jvmContext.ir.symbols.arraysClass.owner.findDeclaration<IrFunction> {
+            it.name.asString() == "equals" && it.valueParameters.size == 2 && it.valueParameters.first().type == targetType
+        }
+        requireNotNull(requiredSymbol) { "Can't find Arrays.equals method for type ${targetType.render()}" }
+        return requiredSymbol.symbol
     }
 
     override fun implementPlatformSpecificParts(annotationClass: IrClass, implClass: IrClass) {

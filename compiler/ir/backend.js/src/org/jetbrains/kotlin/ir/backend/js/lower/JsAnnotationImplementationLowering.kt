@@ -15,6 +15,7 @@ import org.jetbrains.kotlin.ir.declarations.IrConstructor
 import org.jetbrains.kotlin.ir.declarations.IrDeclaration
 import org.jetbrains.kotlin.ir.expressions.IrConstructorCall
 import org.jetbrains.kotlin.ir.expressions.IrExpression
+import org.jetbrains.kotlin.ir.symbols.IrFunctionSymbol
 import org.jetbrains.kotlin.ir.symbols.IrSimpleFunctionSymbol
 import org.jetbrains.kotlin.ir.types.IrType
 import org.jetbrains.kotlin.ir.types.isArray
@@ -48,24 +49,11 @@ class JsAnnotationImplementationTransformer(val jsContext: JsIrBackendContext) :
     private val arraysContentEquals: Map<IrType, IrSimpleFunctionSymbol> =
         requireNotNull(jsContext.ir.symbols.arraysContentEquals) { "contentEquals symbols should be defined in JS IR context" }
 
-    override fun generatedEquals(irBuilder: IrBlockBodyBuilder, type: IrType, arg1: IrExpression, arg2: IrExpression): IrExpression {
-        return if (type.isArray() || type.isPrimitiveArray()) {
-            val requiredSymbol =
-                if (type.isPrimitiveArray())
-                    arraysContentEquals[type]
-                else
-                    arraysContentEquals.entries.singleOrNull { (k, _) -> k.isArray() }?.value
-            if (requiredSymbol == null) {
-                error("Can't find an Arrays.contentEquals method for array type ${type.render()}")
-            }
-            irBuilder.irCall(
-                requiredSymbol
-            ).apply {
-                extensionReceiver = arg1
-                putValueArgument(0, arg2)
-            }
-        } else super.generatedEquals(irBuilder, type, arg1, arg2)
-    }
+    override fun getArrayContentEqualsSymbol(type: IrType) =
+        when {
+            type.isPrimitiveArray() -> arraysContentEquals[type]
+            else -> arraysContentEquals.entries.singleOrNull { (k, _) -> k.isArray() }?.value
+        } ?: error("Can't find an Arrays.contentEquals method for array type ${type.render()}")
 
     override fun getEqualsProperties(annotationClass: IrClass, implClass: IrClass) = annotationClass.getAnnotationProperties()
     override fun getHashCodeProperties(annotationClass: IrClass, implClass: IrClass) = annotationClass.getAnnotationProperties()
