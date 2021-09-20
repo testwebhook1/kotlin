@@ -92,9 +92,7 @@ abstract class AnnotationImplementationTransformer(val context: BackendContext, 
             visibility = DescriptorVisibilities.PUBLIC
         }
         implementAnnotationPropertiesAndConstructor(subclass, annotationClass, ctor)
-        val generatedFunctions = subclass.createGeneratedFunctions()
-        subclass.addFakeOverrides(context.typeSystem)
-        implementGeneratedFunctions(annotationClass, subclass, generatedFunctions)
+        implementGeneratedFunctions(annotationClass, subclass)
         implementPlatformSpecificParts(annotationClass, subclass)
         return subclass
     }
@@ -135,24 +133,31 @@ abstract class AnnotationImplementationTransformer(val context: BackendContext, 
         } else
             irBuilder.irEquals(arg1, arg2)
 
-    fun IrClass.createGeneratedFunctions(): GeneratedFunctions {
-        val creator = MethodsFromAnyGeneratorForLowerings(context, this, ANNOTATION_IMPLEMENTATION)
+    open val forbidDirectFieldAccessInMethods = false
+
+    open fun generateFunctionBodies(
+        annotationClass: IrClass,
+        implClass: IrClass,
+        eqFun: IrSimpleFunction,
+        hcFun: IrSimpleFunction,
+        toStringFun: IrSimpleFunction,
+        generator: AnnotationImplementationMemberGenerator
+    ) {
+        val properties = annotationClass.getAnnotationProperties()
+        generator.generateEqualsUsingGetters(eqFun, annotationClass.defaultType, properties)
+        generator.generateHashCodeMethod(hcFun, properties)
+        generator.generateToStringMethod(toStringFun, properties)
+    }
+
+    fun implementGeneratedFunctions(annotationClass: IrClass, implClass: IrClass) {
+        val creator = MethodsFromAnyGeneratorForLowerings(context, implClass, ANNOTATION_IMPLEMENTATION)
         val eqFun = creator.createEqualsMethodDeclaration()
         val hcFun = creator.createHashCodeMethodDeclaration()
         val toStringFun = creator.createToStringMethodDeclaration()
-        return GeneratedFunctions(eqFun, hcFun, toStringFun)
-    }
+        if (annotationClass != implClass) {
+            implClass.addFakeOverrides(context.typeSystem)
+        }
 
-    abstract fun getEqualsProperties(annotationClass: IrClass, implClass: IrClass): List<IrProperty>
-    abstract fun getHashCodeProperties(annotationClass: IrClass, implClass: IrClass): List<IrProperty>
-    abstract fun getToStringProperties(annotationClass: IrClass, implClass: IrClass): List<IrProperty>
-    open val forbidDirectFieldAccessInMethods = false
-
-    fun implementGeneratedFunctions(
-        annotationClass: IrClass,
-        implClass: IrClass,
-        functions: GeneratedFunctions
-    ) {
         val generator = AnnotationImplementationMemberGenerator(
             context, implClass,
             nameForToString = "@" + annotationClass.fqNameWhenAvailable!!.asString(),
@@ -161,9 +166,7 @@ abstract class AnnotationImplementationTransformer(val context: BackendContext, 
             generatedEquals(this, type, a, b)
         }
 
-        generator.generateEqualsUsingGetters(functions.eqFun, annotationClass.defaultType, getEqualsProperties(annotationClass, implClass))
-        generator.generateHashCodeMethod(functions.hcFun, getHashCodeProperties(annotationClass, implClass))
-        generator.generateToStringMethod(functions.toStringFun, getToStringProperties(annotationClass, implClass))
+        generateFunctionBodies(annotationClass, implClass, eqFun, hcFun, toStringFun, generator)
     }
 
     open fun implementPlatformSpecificParts(annotationClass: IrClass, implClass: IrClass) {}

@@ -7,10 +7,7 @@ package org.jetbrains.kotlin.backend.jvm.lower
 
 import org.jetbrains.kotlin.backend.common.deepCopyWithVariables
 import org.jetbrains.kotlin.backend.common.ir.copyTo
-import org.jetbrains.kotlin.backend.common.lower.ANNOTATION_IMPLEMENTATION
-import org.jetbrains.kotlin.backend.common.lower.AnnotationImplementationLowering
-import org.jetbrains.kotlin.backend.common.lower.AnnotationImplementationTransformer
-import org.jetbrains.kotlin.backend.common.lower.createIrBuilder
+import org.jetbrains.kotlin.backend.common.lower.*
 import org.jetbrains.kotlin.backend.common.phaser.makeIrFilePhase
 import org.jetbrains.kotlin.backend.jvm.JvmBackendContext
 import org.jetbrains.kotlin.backend.jvm.ir.createJvmIrBuilder
@@ -186,8 +183,19 @@ class JvmAnnotationImplementationTransformer(val jvmContext: JvmBackendContext, 
         }
     }
 
-    override fun getEqualsProperties(annotationClass: IrClass, implClass: IrClass) = annotationClass.getAnnotationProperties()
-    override fun getHashCodeProperties(annotationClass: IrClass, implClass: IrClass) = implClass.getAnnotationProperties()
-    override fun getToStringProperties(annotationClass: IrClass, implClass: IrClass) = implClass.getAnnotationProperties()
+    override fun generateFunctionBodies(
+        annotationClass: IrClass,
+        implClass: IrClass,
+        eqFun: IrSimpleFunction,
+        hcFun: IrSimpleFunction,
+        toStringFun: IrSimpleFunction,
+        generator: AnnotationImplementationMemberGenerator
+    ) {
+        val properties = annotationClass.getAnnotationProperties()
+        val implProperties = implClass.getAnnotationProperties()
+        generator.generateEqualsUsingGetters(eqFun, annotationClass.defaultType, properties)
+        generator.generateHashCodeMethod(hcFun, implProperties)
+        generator.generateToStringMethod(toStringFun, implProperties)
+    }
 
 }

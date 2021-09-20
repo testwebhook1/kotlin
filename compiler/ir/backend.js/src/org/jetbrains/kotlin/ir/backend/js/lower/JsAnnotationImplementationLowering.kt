@@ -41,7 +41,7 @@ class JsAnnotationImplementationTransformer(val jsContext: JsIrBackendContext) :
     override fun visitClassNew(declaration: IrClass): IrClass {
         if (!declaration.isAnnotationClass) return declaration
         context.irFactory.stageController.unrestrictDeclarationListsAccess {
-            implementGeneratedFunctions(declaration, declaration, declaration.createGeneratedFunctions())
+            implementGeneratedFunctions(declaration, declaration)
         }
         return declaration
     }
@@ -54,10 +54,6 @@ class JsAnnotationImplementationTransformer(val jsContext: JsIrBackendContext) :
             type.isPrimitiveArray() -> arraysContentEquals[type]
             else -> arraysContentEquals.entries.singleOrNull { (k, _) -> k.isArray() }?.value
         } ?: error("Can't find an Arrays.contentEquals method for array type ${type.render()}")
-
-    override fun getEqualsProperties(annotationClass: IrClass, implClass: IrClass) = annotationClass.getAnnotationProperties()
-    override fun getHashCodeProperties(annotationClass: IrClass, implClass: IrClass) = annotationClass.getAnnotationProperties()
-    override fun getToStringProperties(annotationClass: IrClass, implClass: IrClass) = annotationClass.getAnnotationProperties()
 
     override fun implementAnnotationPropertiesAndConstructor(
         implClass: IrClass,

@@ -60,8 +60,5 @@ internal class NativeAnnotationImplementationTransformer(context: Context, irFil
         ))
     }
 
-    override fun getEqualsProperties(annotationClass: IrClass, implClass: IrClass) = annotationClass.getAnnotationProperties()
-    override fun getHashCodeProperties(annotationClass: IrClass, implClass: IrClass) = annotationClass.getAnnotationProperties()
-    override fun getToStringProperties(annotationClass: IrClass, implClass: IrClass) = annotationClass.getAnnotationProperties()
     override val forbidDirectFieldAccessInMethods = true
 }
