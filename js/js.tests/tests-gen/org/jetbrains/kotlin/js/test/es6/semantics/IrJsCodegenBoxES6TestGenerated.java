@@ -117,6 +117,11 @@ public class IrJsCodegenBoxES6TestGenerated extends AbstractIrJsCodegenBoxES6Tes
                 runTest("compiler/testData/codegen/box/annotations/instances/annotationToString.kt");
             }
 
+            @TestMetadata("inInlineFunction.kt")
+            public void testInInlineFunction() throws Exception {
+                runTest("compiler/testData/codegen/box/annotations/instances/inInlineFunction.kt");
+            }
+
             @TestMetadata("multifileEqHc.kt")
             public void testMultifileEqHc() throws Exception {
                 runTest("compiler/testData/codegen/box/annotations/instances/multifileEqHc.kt");
@@ -125,6 +130,11 @@ public class IrJsCodegenBoxES6TestGenerated extends AbstractIrJsCodegenBoxES6Tes
             @TestMetadata("multiplatformInstantiation.kt")
             public void testMultiplatformInstantiation() throws Exception {
                 runTest("compiler/testData/codegen/box/annotations/instances/multiplatformInstantiation.kt");
+            }
+
+            @TestMetadata("nestedAnnotationInstances.kt")
+            public void testNestedAnnotationInstances() throws Exception {
+                runTest("compiler/testData/codegen/box/annotations/instances/nestedAnnotationInstances.kt");
             }
         }
 

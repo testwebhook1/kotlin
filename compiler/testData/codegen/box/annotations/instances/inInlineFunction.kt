@@ -1,13 +1,13 @@
 // IGNORE_BACKEND_FIR: JVM_IR
-// TARGET_BACKEND: JVM_IR
-// TARGET_BACKEND: NATIVE
+// IGNORE_BACKEND: JVM
+// IGNORE_BACKEND: WASM
+// DONT_TARGET_EXACT_BACKEND: JS
 // IGNORE_DEXING
 
 // WITH_RUNTIME
 // !LANGUAGE: +InstantiationOfAnnotationClasses
 
-// MODULE: lib
-// FILE: lib.kt
+import kotlin.test.*
 
 annotation class A(val i: Int)
 
@@ -23,9 +23,9 @@ class C {
 fun box(): String {
     val one = C().one()
     val two = C().two()
-    assert(one.i == 1)
-    assert(two.i == 2)
-    assert(one == A(1))
-    assert(two == A(2))
+    assertEquals(1, one.i)
+    assertEquals(2, two.i)
+    assertEquals(A(1), one)
+    assertEquals(A(2), two)
     return "OK"
 }

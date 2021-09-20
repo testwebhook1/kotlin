@@ -420,6 +420,12 @@ public class BlackBoxCodegenTestGenerated extends AbstractBlackBoxCodegenTest {
             }
 
             @Test
+            @TestMetadata("inInlineFunction.kt")
+            public void testInInlineFunction() throws Exception {
+                runTest("compiler/testData/codegen/box/annotations/instances/inInlineFunction.kt");
+            }
+
+            @Test
             @TestMetadata("multifileEqHc.kt")
             public void testMultifileEqHc() throws Exception {
                 runTest("compiler/testData/codegen/box/annotations/instances/multifileEqHc.kt");
@@ -429,6 +435,12 @@ public class BlackBoxCodegenTestGenerated extends AbstractBlackBoxCodegenTest {
             @TestMetadata("multiplatformInstantiation.kt")
             public void testMultiplatformInstantiation() throws Exception {
                 runTest("compiler/testData/codegen/box/annotations/instances/multiplatformInstantiation.kt");
+            }
+
+            @Test
+            @TestMetadata("nestedAnnotationInstances.kt")
+            public void testNestedAnnotationInstances() throws Exception {
+                runTest("compiler/testData/codegen/box/annotations/instances/nestedAnnotationInstances.kt");
             }
         }
 

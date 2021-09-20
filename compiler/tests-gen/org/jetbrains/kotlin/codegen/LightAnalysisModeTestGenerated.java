@@ -364,6 +364,11 @@ public class LightAnalysisModeTestGenerated extends AbstractLightAnalysisModeTes
                 runTest("compiler/testData/codegen/box/annotations/instances/annotationToString.kt");
             }
 
+            @TestMetadata("inInlineFunction.kt")
+            public void ignoreInInlineFunction() throws Exception {
+                runTest("compiler/testData/codegen/box/annotations/instances/inInlineFunction.kt");
+            }
+
             @TestMetadata("multifileEqHc.kt")
             public void ignoreMultifileEqHc() throws Exception {
                 runTest("compiler/testData/codegen/box/annotations/instances/multifileEqHc.kt");
@@ -372,6 +377,11 @@ public class LightAnalysisModeTestGenerated extends AbstractLightAnalysisModeTes
             @TestMetadata("multiplatformInstantiation.kt")
             public void ignoreMultiplatformInstantiation() throws Exception {
                 runTest("compiler/testData/codegen/box/annotations/instances/multiplatformInstantiation.kt");
+            }
+
+            @TestMetadata("nestedAnnotationInstances.kt")
+            public void ignoreNestedAnnotationInstances() throws Exception {
+                runTest("compiler/testData/codegen/box/annotations/instances/nestedAnnotationInstances.kt");
             }
 
             private void runTest(String testDataFilePath) throws Exception {
