@@ -18,38 +18,38 @@ import kotlin.collections.builders.SetBuilder
 public fun <T> setOf(element: T): Set<T> = java.util.Collections.singleton(element)
 
 @PublishedApi
-@SinceKotlin("1.3")
-@ExperimentalStdlibApi
+@SinceKotlin("1.6")
+@WasExperimental(ExperimentalStdlibApi::class)
 @kotlin.internal.InlineOnly
 internal actual inline fun <E> buildSetInternal(builderAction: MutableSet<E>.() -> Unit): Set<E> {
     return build(createSetBuilder<E>().apply(builderAction))
 }
 
 @PublishedApi
-@SinceKotlin("1.3")
-@ExperimentalStdlibApi
+@SinceKotlin("1.6")
+@WasExperimental(ExperimentalStdlibApi::class)
 @kotlin.internal.InlineOnly
 internal actual inline fun <E> buildSetInternal(capacity: Int, builderAction: MutableSet<E>.() -> Unit): Set<E> {
     return build(createSetBuilder<E>(capacity).apply(builderAction))
 }
 
 @PublishedApi
-@SinceKotlin("1.3")
-@ExperimentalStdlibApi
+@SinceKotlin("1.6")
+@WasExperimental(ExperimentalStdlibApi::class)
 internal fun <E> createSetBuilder(): MutableSet<E> {
     return SetBuilder()
 }
 
 @PublishedApi
-@SinceKotlin("1.3")
-@ExperimentalStdlibApi
+@SinceKotlin("1.6")
+@WasExperimental(ExperimentalStdlibApi::class)
 internal fun <E> createSetBuilder(capacity: Int): MutableSet<E> {
     return SetBuilder(capacity)
 }
 
 @PublishedApi
-@SinceKotlin("1.3")
-@ExperimentalStdlibApi
+@SinceKotlin("1.6")
+@WasExperimental(ExperimentalStdlibApi::class)
 internal fun <E> build(builder: MutableSet<E>): Set<E> {
     return (builder as SetBuilder<E>).build()
 }

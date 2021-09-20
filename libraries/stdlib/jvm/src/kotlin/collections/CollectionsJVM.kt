@@ -20,38 +20,38 @@ import kotlin.internal.apiVersionIsAtLeast
 public fun <T> listOf(element: T): List<T> = java.util.Collections.singletonList(element)
 
 @PublishedApi
-@SinceKotlin("1.3")
-@ExperimentalStdlibApi
+@SinceKotlin("1.6")
+@WasExperimental(ExperimentalStdlibApi::class)
 @kotlin.internal.InlineOnly
 internal actual inline fun <E> buildListInternal(builderAction: MutableList<E>.() -> Unit): List<E> {
     return build(createListBuilder<E>().apply(builderAction))
 }
 
 @PublishedApi
-@SinceKotlin("1.3")
-@ExperimentalStdlibApi
+@SinceKotlin("1.6")
+@WasExperimental(ExperimentalStdlibApi::class)
 @kotlin.internal.InlineOnly
 internal actual inline fun <E> buildListInternal(capacity: Int, builderAction: MutableList<E>.() -> Unit): List<E> {
     return build(createListBuilder<E>(capacity).apply(builderAction))
 }
 
 @PublishedApi
-@SinceKotlin("1.3")
-@ExperimentalStdlibApi
+@SinceKotlin("1.6")
+@WasExperimental(ExperimentalStdlibApi::class)
 internal fun <E> createListBuilder(): MutableList<E> {
     return ListBuilder<E>()
 }
 
 @PublishedApi
-@SinceKotlin("1.3")
-@ExperimentalStdlibApi
+@SinceKotlin("1.6")
+@WasExperimental(ExperimentalStdlibApi::class)
 internal fun <E> createListBuilder(capacity: Int): MutableList<E> {
     return ListBuilder<E>(capacity)
 }
 
 @PublishedApi
-@SinceKotlin("1.3")
-@ExperimentalStdlibApi
+@SinceKotlin("1.6")
+@WasExperimental(ExperimentalStdlibApi::class)
 internal fun <E> build(builder: MutableList<E>): List<E> {
     return (builder as ListBuilder<E>).build()
 }

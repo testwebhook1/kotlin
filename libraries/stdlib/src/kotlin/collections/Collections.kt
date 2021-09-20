@@ -166,8 +166,8 @@ public inline fun <T> MutableList(size: Int, init: (index: Int) -> T): MutableLi
  *
  * @sample samples.collections.Builders.Lists.buildListSample
  */
-@SinceKotlin("1.3")
-@ExperimentalStdlibApi
+@SinceKotlin("1.6")
+@WasExperimental(ExperimentalStdlibApi::class)
 @kotlin.internal.InlineOnly
 public inline fun <E> buildList(@BuilderInference builderAction: MutableList<E>.() -> Unit): List<E> {
     contract { callsInPlace(builderAction, InvocationKind.EXACTLY_ONCE) }
@@ -175,8 +175,8 @@ public inline fun <E> buildList(@BuilderInference builderAction: MutableList<E>.
 }
 
 @PublishedApi
-@SinceKotlin("1.3")
-@ExperimentalStdlibApi
+@SinceKotlin("1.6")
+@WasExperimental(ExperimentalStdlibApi::class)
 @kotlin.internal.InlineOnly
 internal expect inline fun <E> buildListInternal(builderAction: MutableList<E>.() -> Unit): List<E>
 
@@ -195,8 +195,8 @@ internal expect inline fun <E> buildListInternal(builderAction: MutableList<E>.(
  *
  * @sample samples.collections.Builders.Lists.buildListSampleWithCapacity
  */
-@SinceKotlin("1.3")
-@ExperimentalStdlibApi
+@SinceKotlin("1.6")
+@WasExperimental(ExperimentalStdlibApi::class)
 @kotlin.internal.InlineOnly
 public inline fun <E> buildList(capacity: Int, @BuilderInference builderAction: MutableList<E>.() -> Unit): List<E> {
     contract { callsInPlace(builderAction, InvocationKind.EXACTLY_ONCE) }
@@ -204,8 +204,8 @@ public inline fun <E> buildList(capacity: Int, @BuilderInference builderAction: 
 }
 
 @PublishedApi
-@SinceKotlin("1.3")
-@ExperimentalStdlibApi
+@SinceKotlin("1.6")
+@WasExperimental(ExperimentalStdlibApi::class)
 @kotlin.internal.InlineOnly
 internal expect inline fun <E> buildListInternal(capacity: Int, builderAction: MutableList<E>.() -> Unit): List<E>
 

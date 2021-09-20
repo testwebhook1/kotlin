@@ -27,38 +27,38 @@ import kotlin.collections.builders.MapBuilder
 public fun <K, V> mapOf(pair: Pair<K, V>): Map<K, V> = java.util.Collections.singletonMap(pair.first, pair.second)
 
 @PublishedApi
-@SinceKotlin("1.3")
-@ExperimentalStdlibApi
+@SinceKotlin("1.6")
+@WasExperimental(ExperimentalStdlibApi::class)
 @kotlin.internal.InlineOnly
 internal actual inline fun <K, V> buildMapInternal(builderAction: MutableMap<K, V>.() -> Unit): Map<K, V> {
     return build(createMapBuilder<K, V>().apply(builderAction))
 }
 
 @PublishedApi
-@SinceKotlin("1.3")
-@ExperimentalStdlibApi
+@SinceKotlin("1.6")
+@WasExperimental(ExperimentalStdlibApi::class)
 @kotlin.internal.InlineOnly
 internal actual inline fun <K, V> buildMapInternal(capacity: Int, builderAction: MutableMap<K, V>.() -> Unit): Map<K, V> {
     return build(createMapBuilder<K, V>(capacity).apply(builderAction))
 }
 
 @PublishedApi
-@SinceKotlin("1.3")
-@ExperimentalStdlibApi
+@SinceKotlin("1.6")
+@WasExperimental(ExperimentalStdlibApi::class)
 internal fun <K, V> createMapBuilder(): MutableMap<K, V> {
     return MapBuilder()
 }
 
 @PublishedApi
-@SinceKotlin("1.3")
-@ExperimentalStdlibApi
+@SinceKotlin("1.6")
+@WasExperimental(ExperimentalStdlibApi::class)
 internal fun <K, V> createMapBuilder(capacity: Int): MutableMap<K, V> {
     return MapBuilder(capacity)
 }
 
 @PublishedApi
-@SinceKotlin("1.3")
-@ExperimentalStdlibApi
+@SinceKotlin("1.6")
+@WasExperimental(ExperimentalStdlibApi::class)
 internal fun <K, V> build(builder: MutableMap<K, V>): Map<K, V> {
     return (builder as MapBuilder<K, V>).build()
 }
