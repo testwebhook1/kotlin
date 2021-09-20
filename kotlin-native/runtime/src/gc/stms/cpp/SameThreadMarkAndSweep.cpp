@@ -73,11 +73,7 @@ ALWAYS_INLINE void gc::SameThreadMarkAndSweep::ThreadData::SafePointExceptionUnw
 void gc::SameThreadMarkAndSweep::ThreadData::SafePointAllocation(size_t size) noexcept {
     threadData_.gcScheduler().OnSafePointAllocation(size);
     if (interesting) {
-        threadData_.suspensionData().suspendIfRequested();
-        if (needsGc) {
-            RuntimeLogDebug({kTagGC}, "Attempt to GC at SafePointAllocation size=%zu", size);
-            PerformFullGC();
-        }
+        SafePointSlowPath();
     }
 }
 
@@ -114,14 +110,14 @@ void gc::SameThreadMarkAndSweep::ThreadData::OnOOM(size_t size) noexcept {
 ALWAYS_INLINE void gc::SameThreadMarkAndSweep::ThreadData::SafePointRegular(size_t weight) noexcept {
     threadData_.gcScheduler().OnSafePointRegular(weight);
     if (interesting) {
-        SafePointRegularSlowPath(weight);
+        SafePointSlowPath();
     }
 }
 
-NO_INLINE void gc::SameThreadMarkAndSweep::ThreadData::SafePointRegularSlowPath(size_t weight) noexcept {
+NO_INLINE void gc::SameThreadMarkAndSweep::ThreadData::SafePointSlowPath() noexcept {
     threadData_.suspensionData().suspendIfRequested();
     if (needsGc) {
-        RuntimeLogDebug({kTagGC}, "Attempt to GC at SafePointRegular weight=%zu", weight);
+        RuntimeLogDebug({kTagGC}, "Attempt to GC at SafePoint");
         PerformFullGC();
     }
 }
