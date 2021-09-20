@@ -682,6 +682,26 @@ class KotlinJavaToolchainTest : KGPBaseTest() {
         }
     }
 
+    @DisplayName("Should skip JVM target validation if no java sources are available")
+    @GradleTest
+    internal fun shouldSkipJvmTargetValidationNoJavaSources(gradleVersion: GradleVersion) {
+        project(
+            projectName = "simple".fullProjectName,
+            gradleVersion = gradleVersion,
+            buildJdk = getJdk11().javaHome // should differ from default Kotlin jvm target value
+        ) {
+            //language=properties
+            gradleProperties.append(
+                """
+                kotlin.jvm.target.validation.mode = error
+                """.trimIndent()
+            )
+
+            build("assemble")
+        }
+    }
+
+
     @DisplayName("Build should not produce warninings when '-no-jdk' option is present")
     @GradleTestVersions(minVersion = "6.7.1")
     @GradleTest
