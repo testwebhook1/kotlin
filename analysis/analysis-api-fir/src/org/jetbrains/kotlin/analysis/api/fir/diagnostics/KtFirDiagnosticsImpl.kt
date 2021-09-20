@@ -3374,6 +3374,13 @@ internal class CannotCheckForErasedImpl(
     override val firDiagnostic: FirPsiDiagnostic by weakRef(firDiagnostic)
 }
 
+internal class CastNeverSucceedsImpl(
+    firDiagnostic: FirPsiDiagnostic,
+    override val token: ValidityToken,
+) : KtFirDiagnostic.CastNeverSucceeds(), KtAbstractFirDiagnostic<KtBinaryExpressionWithTypeRHS> {
+    override val firDiagnostic: FirPsiDiagnostic by weakRef(firDiagnostic)
+}
+
 internal class UselessCastImpl(
     firDiagnostic: FirPsiDiagnostic,
     override val token: ValidityToken,
