@@ -15164,6 +15164,11 @@ public class LightAnalysisModeTestGenerated extends AbstractLightAnalysisModeTes
             runTest("compiler/testData/codegen/box/inlineClasses/inlineClassWithCustomEquals.kt");
         }
 
+        @TestMetadata("kclassInAnnotation.kt")
+        public void ignoreKclassInAnnotation() throws Exception {
+            runTest("compiler/testData/codegen/box/inlineClasses/kclassInAnnotation.kt");
+        }
+
         @TestMetadata("kt31994.kt")
         public void ignoreKt31994() throws Exception {
             runTest("compiler/testData/codegen/box/inlineClasses/kt31994.kt");
@@ -15690,11 +15695,6 @@ public class LightAnalysisModeTestGenerated extends AbstractLightAnalysisModeTes
         @TestMetadata("jvmStaticVarInInlineClassCompanion.kt")
         public void testJvmStaticVarInInlineClassCompanion() throws Exception {
             runTest("compiler/testData/codegen/box/inlineClasses/jvmStaticVarInInlineClassCompanion.kt");
-        }
-
-        @TestMetadata("kclassInAnnotation.kt")
-        public void testKclassInAnnotation() throws Exception {
-            runTest("compiler/testData/codegen/box/inlineClasses/kclassInAnnotation.kt");
         }
 
         @TestMetadata("kt25246.kt")
