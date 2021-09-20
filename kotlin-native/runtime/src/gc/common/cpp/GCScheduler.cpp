@@ -19,8 +19,7 @@ namespace {
 
 class GCSchedulerDataWithTimer : public gc::GCSchedulerData {
 public:
-    explicit GCSchedulerDataWithTimer(gc::GCSchedulerConfig& config) noexcept :
-        config_(config) {}
+    explicit GCSchedulerDataWithTimer(gc::GCSchedulerConfig& config) noexcept : config_(config) {}
 
     void OnSafePoint(gc::GCSchedulerThreadData& threadData) noexcept override {
         size_t allocatedBytes = threadData.allocatedBytes();
@@ -51,8 +50,7 @@ private:
             });
         }();
         // Don't run, if kotlin code is not being executed.
-        if (allThreadsAreNative)
-            return;
+        if (allThreadsAreNative) return;
 
         // TODO: Probably makes sense to check memory usage of the process.
         scheduleGC_();
