@@ -320,7 +320,7 @@ abstract class BasicIrBoxTest(
             isMainModule,
             skipDceDriven = true,
             splitPerModule = false, // TODO??
-            propertyLazyInitialization = false, // ??
+            propertyLazyInitialization = true,
             safeExternalBoolean = false,
             safeExternalBooleanDiagnostic = null,
             skipMangleVerification = false,
