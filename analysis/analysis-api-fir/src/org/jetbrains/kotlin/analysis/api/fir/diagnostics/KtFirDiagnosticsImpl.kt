@@ -3388,6 +3388,15 @@ internal class UselessCastImpl(
     override val firDiagnostic: FirPsiDiagnostic by weakRef(firDiagnostic)
 }
 
+internal class UncheckedCastImpl(
+    override val originalType: KtType,
+    override val targetType: KtType,
+    firDiagnostic: FirPsiDiagnostic,
+    override val token: ValidityToken,
+) : KtFirDiagnostic.UncheckedCast(), KtAbstractFirDiagnostic<KtBinaryExpressionWithTypeRHS> {
+    override val firDiagnostic: FirPsiDiagnostic by weakRef(firDiagnostic)
+}
+
 internal class UselessIsCheckImpl(
     override val compileTimeCheckResult: Boolean,
     firDiagnostic: FirPsiDiagnostic,
