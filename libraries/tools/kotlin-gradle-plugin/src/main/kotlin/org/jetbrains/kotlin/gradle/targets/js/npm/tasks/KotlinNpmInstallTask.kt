@@ -8,6 +8,7 @@ package org.jetbrains.kotlin.gradle.targets.js.npm.tasks
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.*
 import org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsRootPlugin
+import org.jetbrains.kotlin.gradle.targets.js.npm.asNpmEnvironment
 import java.io.File
 
 open class KotlinNpmInstallTask : DefaultTask() {
@@ -40,7 +41,7 @@ open class KotlinNpmInstallTask : DefaultTask() {
     @get:IgnoreEmptyDirectories
     @get:InputFiles
     val preparedFiles: Collection<File> by lazy {
-        nodeJs.packageManager.preparedFiles(nodeJs)
+        nodeJs.packageManager.preparedFiles(nodeJs.asNpmEnvironment)
     }
 
     @get:OutputFile

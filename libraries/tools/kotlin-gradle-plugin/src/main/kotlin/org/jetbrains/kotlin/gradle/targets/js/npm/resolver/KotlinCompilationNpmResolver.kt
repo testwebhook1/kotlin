@@ -464,7 +464,7 @@ internal class KotlinCompilationNpmResolver(
             }
                 .filterNotNull()
 
-            val toolsNpmDependencies = compilationResolver.rootResolver.nodeJs.taskRequirements
+            val toolsNpmDependencies = compilationResolver.rootResolver.taskRequirements
                 .getCompilationNpmRequirements(projectPath, compilationResolver.compilationDisambiguatedName)
 
             val dukatIfNecessary = if (externalNpmDependencies.any { it.generateExternals }) {

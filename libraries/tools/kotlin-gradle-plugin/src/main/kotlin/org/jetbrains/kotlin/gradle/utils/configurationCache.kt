@@ -23,3 +23,7 @@ internal fun Project.getSystemProperty(key: String): String? {
         System.getProperty(key)
     }
 }
+
+class LazyWrapper<T>(initializer: () -> T) {
+    val value by lazy(initializer)
+}

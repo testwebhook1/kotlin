@@ -119,10 +119,11 @@ internal class KotlinProjectNpmResolver(
         check(!closed)
         closed = true
 
+        @Suppress("UNNECESSARY_SAFE_CALL") // nodeJs is transient
         return KotlinProjectNpmResolution(
             projectPath,
             byCompilation.values.mapNotNull { it.close() },
-            resolver.nodeJs.taskRequirements.byTask
+            resolver.taskRequirements.byTask
         )
     }
 }

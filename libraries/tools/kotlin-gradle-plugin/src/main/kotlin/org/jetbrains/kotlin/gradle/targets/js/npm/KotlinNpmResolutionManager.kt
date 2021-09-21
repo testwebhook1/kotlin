@@ -80,7 +80,7 @@ import java.io.File
  *
  * Note that in this case resolution process will be performed outside of task execution.
  */
-class KotlinNpmResolutionManager(private val nodeJsSettings: NodeJsRootExtension) {
+class KotlinNpmResolutionManager(@Transient private val nodeJsSettings: NodeJsRootExtension) {
     private val forceFullResolve: Boolean by lazy {
         nodeJsSettings.rootProject.isInIdeaSync
     }
@@ -159,7 +159,7 @@ class KotlinNpmResolutionManager(private val nodeJsSettings: NodeJsRootExtension
                 return (state as ResolutionState.Installed).resolved
             }
 
-            val installUpToDate = nodeJsSettings.npmInstallTaskProvider?.get()?.state?.upToDate ?: false
+            val installUpToDate = nodeJsSettings?.npmInstallTaskProvider?.get()?.state?.upToDate ?: false
             val forceUpToDate = installUpToDate && !forceFullResolve
 
             val installation = prepareIfNeeded(requireUpToDateReason = reason, logger = logger)
@@ -202,7 +202,7 @@ class KotlinNpmResolutionManager(private val nodeJsSettings: NodeJsRootExtension
                     when (state1) {
                         is ResolutionState.Prepared -> alreadyResolved(state1.preparedInstallation)
                         is ResolutionState.Configuring -> {
-                            val upToDate = nodeJsSettings.rootPackageJsonTaskProvider?.get()?.state?.upToDate ?: true
+                            val upToDate = nodeJsSettings?.rootPackageJsonTaskProvider?.get()?.state?.upToDate ?: true
                             if (requireUpToDateReason != null && !upToDate) {
                                 error("NPM dependencies should be resolved $requireUpToDateReason")
                             }
