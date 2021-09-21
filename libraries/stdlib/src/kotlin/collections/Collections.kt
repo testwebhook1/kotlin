@@ -175,8 +175,7 @@ public inline fun <E> buildList(@BuilderInference builderAction: MutableList<E>.
 }
 
 @PublishedApi
-@SinceKotlin("1.6")
-@WasExperimental(ExperimentalStdlibApi::class)
+@SinceKotlin("1.3")
 @kotlin.internal.InlineOnly
 internal expect inline fun <E> buildListInternal(builderAction: MutableList<E>.() -> Unit): List<E>
 
@@ -204,8 +203,7 @@ public inline fun <E> buildList(capacity: Int, @BuilderInference builderAction: 
 }
 
 @PublishedApi
-@SinceKotlin("1.6")
-@WasExperimental(ExperimentalStdlibApi::class)
+@SinceKotlin("1.3")
 @kotlin.internal.InlineOnly
 internal expect inline fun <E> buildListInternal(capacity: Int, builderAction: MutableList<E>.() -> Unit): List<E>
 

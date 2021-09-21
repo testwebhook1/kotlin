@@ -12,16 +12,14 @@ package kotlin.collections
 public fun <T> setOf(element: T): Set<T> = hashSetOf(element)
 
 @PublishedApi
-@SinceKotlin("1.6")
-@WasExperimental(ExperimentalStdlibApi::class)
+@SinceKotlin("1.3")
 @kotlin.internal.InlineOnly
 internal actual inline fun <E> buildSetInternal(builderAction: MutableSet<E>.() -> Unit): Set<E> {
     return HashSet<E>().apply(builderAction).build()
 }
 
 @PublishedApi
-@SinceKotlin("1.6")
-@WasExperimental(ExperimentalStdlibApi::class)
+@SinceKotlin("1.3")
 @kotlin.internal.InlineOnly
 internal actual inline fun <E> buildSetInternal(capacity: Int, builderAction: MutableSet<E>.() -> Unit): Set<E> {
     return HashSet<E>(capacity).apply(builderAction).build()

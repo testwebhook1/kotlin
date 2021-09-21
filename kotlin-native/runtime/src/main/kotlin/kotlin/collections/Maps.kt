@@ -6,16 +6,14 @@
 package kotlin.collections
 
 @PublishedApi
-@SinceKotlin("1.6")
-@WasExperimental(ExperimentalStdlibApi::class)
+@SinceKotlin("1.3")
 @kotlin.internal.InlineOnly
 internal actual inline fun <K, V> buildMapInternal(builderAction: MutableMap<K, V>.() -> Unit): Map<K, V> {
     return HashMap<K, V>().apply(builderAction).build()
 }
 
 @PublishedApi
-@SinceKotlin("1.6")
-@WasExperimental(ExperimentalStdlibApi::class)
+@SinceKotlin("1.3")
 @kotlin.internal.InlineOnly
 internal actual inline fun <K, V> buildMapInternal(capacity: Int, builderAction: MutableMap<K, V>.() -> Unit): Map<K, V> {
     return HashMap<K, V>(capacity).apply(builderAction).build()
